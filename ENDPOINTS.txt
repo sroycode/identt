@@ -1,0 +1,14 @@
+_matrix/identity/api/v1/validate/email/requestToken
+_matrix/identity/api/v1/validate/email/submitToken
+_matrix/identity/api/v1/validate/msisdn/requestToken
+_matrix/identity/api/v1/validate/msisdn/submitToken
+_matrix/identity/api/v1/3pid/getValidated3pid
+_matrix/identity/api/v1/3pid/bind
+_matrix/identity/api/v1/lookup
+_matrix/identity/api/v1/bulk_lookup
+_matrix/identity/api/v1/pubkey/isvalid
+_matrix/identity/api/v1/pubkey/ed25519:0
+_matrix/identity/api/v1/pubkey/ephemeral/isvalid
+_matrix/identity/api/v1/store-invite
+_matrix/identity/api/v1/sign-ed25519:0
+_identt/identity/api/v1/getmailstosend

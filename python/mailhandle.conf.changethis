@@ -1,0 +1,17 @@
+[DEFAULT]
+log.path = /tmp/
+pidfile.path = mailhandle.pid
+token.length = 6
+server.name = identt.doesntexist.com
+
+[general]
+
+[http]
+
+[email]
+
+[crypto]
+ed25519.seed = 1UfbvW0r7HYk2tavQW+Iy4E8JSYpESIlTR7GxeFzqQk
+
+[sms]
+

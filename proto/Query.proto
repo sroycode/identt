@@ -1,0 +1,159 @@
+syntax =  "proto3";
+option optimize_for =  SPEED;
+// option cc_enable_arenas =  true;
+
+package identt.query;
+
+message ErrorT {
+	string errorcode                                               =  1;
+	string error                                                   =  2;
+	bool success                                                   =  3;
+}
+
+message RequestTokenT {
+	string client_secret                                           =  1;
+	int32  send_attempt                                            =  2;
+	string email                                                   =  3;
+	string country                                                 =  4;
+	string phone_number                                            =  5;
+	string next_link                                               =  9;
+}
+
+message SuccessSidT {
+	bool success                                                   =  1;
+	string sid                                                     =  2;
+	string msisdn                                                  =  3;
+	string intl_fmt                                                =  4;
+}
+
+message SubmitTokenT {
+	string sid                                                     =  1;
+	string client_secret                                           =  2;
+	string token                                                   =  3;
+	string mxid                                                    =  4;
+}
+
+message PubKeyT {
+	string algo                                                    =  1;
+	string identifier                                              =  2;
+	bool   valid                                                   =  3;
+	string owner                                                   =  4;
+	string public_key                                              =  5;
+	string private_key                                             =  6;
+	bool   no_keyring                                              =  7;
+}
+
+message LookupQueryT {
+	string medium                                                  =  1;
+	string address                                                 =  2;
+}
+
+message LookupResultT {
+	string medium                                                  =  2;
+	string address                                                 =  3;
+	string mxid                                                    =  4;
+	uint64 ts                                                      =  5;
+	uint64 not_before                                              =  6;
+	uint64 not_after                                               =  7;
+}
+
+message BulkLookupQueryT {
+	repeated LookupQueryT threepids                                =  1;
+}
+
+message BulkLookupResultT {
+	repeated LookupResultT threepids                               =  1;
+}
+
+message MxidSignedT {
+	string mxid                                                    =  1;
+	string token                                                   =  2;
+}
+
+message InviteItemT {
+	uint64 id                                                      =  1;
+	string medium                                                  =  2;
+	string address                                                 =  3;
+	string room_id                                                 =  4;
+	string sender                                                  =  5;
+	string token                                                   =  6;
+	uint64 received_ts                                             =  7;
+	uint64 sent_ts                                                 =  8;
+	string mxid                                                    =  9;
+}
+
+message ValidatedAtT {
+	string medium                                                  =  1;
+	string address                                                 =  2;
+	uint64 validated_at                                            =  3;
+}
+
+message ValidatedInviteT {
+	string medium                                                  =  1;
+	string address                                                 =  2;
+	uint64 validated_at                                            =  3;
+	repeated InviteItemT invites                                   =  4;
+}
+
+message InviteQueryT {
+	string medium                                                  =  1;
+	string address                                                 =  2;
+	string room_id                                                 =  3;
+	string sender                                                  =  4;
+}
+
+message PubKeyRetT {
+	string key_validity_url                                        =  1;
+	string public_key                                              =  2;
+}
+
+message InviteResultT {
+	string token                                                   =  1;
+	string public_key                                              =  2;
+	repeated PubKeyRetT public_keys                                =  3;
+	string display_name                                            =  4;
+}
+
+message ToSignQueryT {
+	string private_key                                             =  1;
+	string mxid                                                    =  2;
+	string token                                                   =  3;
+	string sender                                                  =  4;
+}
+
+message RequestTokenDataT {
+	RequestTokenT reqtok                                           =  1;
+	SuccessSidT ssid                                               =  2;
+	string medium                                                  =  3;
+}
+
+message SubmitTokenDataT {
+	SubmitTokenT subtok                                            =  1;
+	ErrorT result                                                  =  2;
+	string medium                                                  =  3;
+}
+
+message GetValidated3pidDataT {
+	SubmitTokenT subtok                                            =  1;
+	ValidatedAtT valresult                                         =  2;
+}
+
+message Bind3pidDataT {
+	SubmitTokenT subtok                                            =  1;
+	string output                                                  =  2;
+}
+
+message LookupDataT {
+	LookupQueryT query                                             =  1;
+	LookupResultT result                                           =  2;
+}
+
+message BulkLookupDataT {
+	BulkLookupQueryT query                                         =  1;
+	BulkLookupResultT result                                       =  2;
+}
+
+message StoreInviteDataT {
+	InviteQueryT invqry                                            =  1;
+	InviteResultT invres                                           =  2;
+}

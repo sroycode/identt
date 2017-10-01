@@ -1,0 +1,43 @@
+syntax =  "proto3";
+option optimize_for =  SPEED;
+// option cc_enable_arenas =  true;
+
+package identt.mail;
+
+enum ActTypeE {
+	A_NOACTION                                                     =  0;
+	A_MAILSENT                                                     =  1; // delete on server
+	A_AUTHTOKEN                                                    = 11;
+	A_USERINVITE                                                   = 12;
+	A_ROOMINVITE                                                   = 13;
+};
+
+message MPOneT {
+	string sid                                                     =  1;
+	string country                                                 =  2;
+}
+
+message MPTwoT {
+	string room_id                                                 =  1;
+	string sender                                                  =  2;
+	string token                                                   =  3;
+	string ephemeral_private_key                                   =  4;
+}
+
+message MPayloadT {
+	uint64 id                                                      =  1;
+	string medium                                                  =  2;
+	string address                                                 =  3;
+	ActTypeE actkey                                                =  5;
+	int32  retry                                                   =  6;
+	// payloads
+	MPOneT mpone                                                   = 11;
+	MPTwoT mptwo                                                   = 12;
+}
+
+message MailQueryT {
+	string medium                                                  =  1;
+	uint64 lastid                                                  =  2;
+	uint64 limit                                                   =  3;
+	repeated MPayloadT payload                                     =  5;
+}

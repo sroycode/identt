@@ -1,0 +1,183 @@
+syntax =  "proto3";
+option optimize_for =  SPEED;
+// option cc_enable_arenas =  true;
+
+import "Mail.proto";
+
+package identt.store;
+
+enum KeyTypeE {
+	NOKEY                                                          =  0;
+	SYSKEY                                                         =  1;
+	KEYPAIRS                                                       =  2;
+
+// Primary 
+	K_NONODE                                                       = 10;
+	K_INVITETOKEN                                                  = 11;
+	K_EPHEMERALPUBLICKEY                                           = 12;
+	K_PEER                                                         = 13;
+	K_PEERPUBKEY                                                   = 14;
+	K_LOCALASSOC                                                   = 15;
+	K_GLOBALASSOC                                                  = 16;
+	K_VALIDATIONSESSION                                            = 17;
+	K_TOKENAUTH                                                    = 18;
+	K_PARAVION                                                     = 19;
+	K_MAXNODE                                                      = 20;
+
+// Indexes
+	I_NOINDEX                                                      = 50;
+	I_INVITETOKEN_MEDIUM_ADDRESS                                   = 51;
+	I_INVITETOKEN_TOKEN                                            = 52;
+	U_EPHEMERALPUBLICKEY_PUBLICKEY                                 = 53;
+	U_PEER_NAME                                                    = 54;
+	U_PEERPUBKEY_PEERNAME_ALG                                      = 55;
+	U_LOCALASSOC_MEDIUM_ADDRESS                                    = 56;
+	I_GLOBALASSOC_MEDIUM_ADDRESS                                   = 57;
+
+	U_GLOBALASSOC_ORIGINSERVER_ORIGINID                            = 59;
+
+	U_TOKENAUTH_VALIDATIONSESSION_SENDATTEMPT                      = 60;
+	U_TOKENAUTH_TOKEN                                              = 61;
+	U_VALIDATIONSESSION_MEDIUM_ADDRESS_CLIENTSECRET                = 62;
+
+};
+
+message ErrorT {
+	string status                                                  =  1;
+	string msg                                                     =  2;
+}
+
+message NodeT {
+	KeyTypeE keytype                                               =  1;
+	uint64 id                                                      =  2;
+}
+
+message NodeListT {
+	repeated NodeT node                                            =  1;
+}
+
+message InviteTokenT {
+	uint64 id                                                      =  1;
+	string medium                                                  =  2;
+	string address                                                 =  3;
+	string room_id                                                 =  4;
+	string sender                                                  =  5;
+	string token                                                   =  6;
+	uint64 received_ts                                             =  7;
+	uint64 sent_ts                                                 =  8;
+
+	bool notfound                                                  = 21;
+}
+
+message EphemeralPublicKeyT {
+	uint64 id                                                      =  1;
+	string public_key                                              =  2;
+	uint64 verify_count                                            =  3;
+	uint64 persistence_ts                                          =  4;
+
+	bool notfound                                                  = 21;
+}
+
+message PeerT {
+	uint64 id                                                      =  1;
+	string name                                                    =  2;
+	uint32 port                                                    =  3;
+	uint64 last_seen_version                                       =  4;
+	uint64 last_poke_succeded_at                                   =  5;
+	uint32 active                                                  =  6;
+
+	bool notfound                                                  = 21;
+}
+
+message PeerPubKeyT {
+	uint64 id                                                      =  1;
+	string peername                                                =  2;
+	string alg                                                     =  3;
+	string key                                                     =  4;
+
+	bool notfound                                                  = 21;
+}
+
+message LocalAssocT {
+	uint64 id                                                      =  1;
+	string medium                                                  =  2;
+	string address                                                 =  3;
+	string mxid                                                    =  4;
+	uint64 ts                                                      =  5;
+	uint64 not_before                                              =  6;
+	uint64 not_after                                               =  7;
+
+	bool notfound                                                  = 21;
+}
+
+message GlobalAssocT {
+	uint64 id                                                      =  1;
+	string medium                                                  =  2;
+	string address                                                 =  3;
+	string mxid                                                    =  4;
+	uint64 ts                                                      =  5;
+	uint64 not_before                                              =  6;
+	uint64 not_after                                               =  7;
+	string origin_server                                           =  8;
+	uint64 origin_id                                               =  9;
+	string sg_assoc                                                = 10;
+
+	bool notfound                                                  = 21;
+}
+
+message ValidationSessionT {
+	uint64 id                                                      =  1;
+	string medium                                                  =  2;
+	string address                                                 =  3;
+	string client_secret                                           =  4;
+	uint32 validated                                               =  5;
+	uint64 mtime                                                   =  6;
+
+	bool notfound                                                  = 21;
+}
+
+message TokenAuthT {
+	uint64 id                                                      =  1;
+	uint64 validation_session                                      =  2;
+	string token                                                   =  3;
+	int32  send_attempt_number                                     =  4;
+
+	bool notfound                                                  = 21;
+}
+
+message MyCollectT {
+	repeated InviteTokenT invitetoken                              =  1;
+	repeated EphemeralPublicKeyT ephemeralpublickey                =  2;
+	repeated PeerT peer                                            =  3;
+	repeated PeerPubKeyT peerpubkey                                =  4;
+	repeated LocalAssocT localassoc                                =  5;
+	repeated GlobalAssocT globalassoc                              =  6;
+	repeated ValidationSessionT validationsession                  =  7;
+	repeated TokenAuthT tokenauth                                  =  8;
+}
+
+message TransItemT {
+	string key                                                     =  1;
+	string value                                                   =  2;
+	bool   to_del                                                  =  3;
+}
+
+message TransactionT {
+	uint64   id                                                    =  1;
+	repeated TransItemT item                                       =  2;
+}
+
+message CryptoKeyT {
+	string pubkey                                                  =  1;
+	string seckey                                                  =  2;
+	string algo                                                    =  3;
+	string identifier                                              =  4;
+}
+
+message ParAvionT {
+	uint64   id                                                    =  1;
+	string   medium                                                =  2;
+	identt.mail.MPayloadT payload                                  =  5;
+
+	bool     notfound                                              = 21;
+}

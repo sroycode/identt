@@ -1,0 +1,6 @@
+IDENTT_SOURCE=$(dirname $(cd ${0%/*} 2>>/dev/null ; echo `pwd`/${0##*/}))
+export IDENTT_SOURCE
+. /opt/rh/devtoolset-4/enable
+export BOOST_ROOT=/opt/local/boost
+alias cmake=cmake3 -DBOOST_ROOT="$BOOST_ROOT"
+export GLOG_logtostderr=1 

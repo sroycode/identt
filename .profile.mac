@@ -1,0 +1,10 @@
+IDENTT_SOURCE=$(dirname $(cd ${0%/*} 2>>/dev/null ; echo `pwd`/${0##*/}))
+export IDENTT_SOURCE
+export PATH=${PATH}:${IDENTT_SOURCE}/thirdparty/bin
+export CPPFLAGS="-I/opt/local/include -I/usr/local/include -I${IDENTT_SOURCE}/thirdparty/include"
+export CXXFLAGS="-I/opt/local/include -I/usr/local/include -I${IDENTT_SOURCE}/thirdparty/include"
+export LDFLAGS="-L/opt/local/lib -L/usr/local/lib -L${IDENTT_SOURCE}/thirdparty/lib"
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${IDENTT_SOURCE}/thirdparty/lib:${IDENTT_SOURCE}/thirdparty/lib64
+export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:${IDENTT_SOURCE}/thirdparty/lib:${IDENTT_SOURCE}/thirdparty/lib64
+export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig:/usr/local/lib/pkgconfig"
+export GLOG_logtostderr=1 

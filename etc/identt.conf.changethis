@@ -1,0 +1,22 @@
+[system]
+accesslog = /tmp/identt_access.log 
+errorlog = /tmp/identt_error.log 
+
+[work]
+datadir = /tmp/data_identt 
+cachesize=10
+mail_host = identt.doesntexist.com 
+base_url  = https:://identt.doesntexist.com/_matrix/v1
+hostseed_ed25519 = VoS7JYmeOqWDas5Hh1qFBOtptVmmBhagXCzw6/5pEVo
+mailkey_ed25519 = qu++AtusT++FVHqvQdPXJlgPtxeo678gXRcGfnTLqKk
+
+[http]
+host = 127.0.0.1
+port = 9091
+
+[https]
+enabled = 0
+host = 127.0.0.1
+port = 9092
+server_crt = ../keys/server.crt
+server_key = ../keys/server.key
