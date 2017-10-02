@@ -56,9 +56,6 @@ public:
 	* @param pkey
 	*   const KeyTypeE primary key
 	*
-	* @param pname
-	*   const std::string primary key name
-	*
 	* @param ukeys
 	*   const KeySetT unique keys to initialize
 	*
@@ -66,11 +63,10 @@ public:
 	*   const KeySetT non unique keys to initialize
 	*
 	*/
-	StoreTable(dbpointer trydb, const KeyTypeE pkey,const std::string pname, const KeySetT ukeys, const KeySetT ikeys)
+	StoreTable(dbpointer trydb, const KeyTypeE pkey, const KeySetT ukeys, const KeySetT ikeys)
 		:
 		StoreLevel(trydb),
 		PrimaryKey(pkey),
-		PrimaryName(pname),
 		unique_keys(ukeys),
 		index_keys(ikeys)
 	{}
@@ -86,50 +82,10 @@ public:
 	*/
 
 	StoreTable() = delete;
-	StoreTable(const std::string, const size_t) = delete;
 	StoreTable(const StoreTable&) = delete;
 	StoreTable& operator=(const StoreTable&) = delete;
-	void Initialize(const std::string datadir, const size_t cache_in_mb, uint64_t& last_pkey)=delete;
-
-	/**
-	* InsertOne: insert a new record
-	*
-	* @param record
-	*   T* record
-	*
-	* @param upsert
-	*   bool upsert if true
-	*
-	* @return
-	*   bool if inserted
-	*/
-	bool InsertOne(T* record, bool upsert)
-	{
-		TransactionT trans;
-		bool status = AddRecord(record,&trans,upsert);
-		if (status) status = DoTrans(&trans);
-		return status;
-	}
-
-
-	/**
-	* DeleteOne: delete a record
-	*
-	* @param record
-	*   T* record
-	*
-	* @return
-	*   bool if deleted
-	*/
-	bool DeleteOne(T* record)
-	{
-		bool status = GetOne(record,PrimaryKey);
-		if (!status || record->notfound()) return false;
-		TransactionT trans;
-		status = DelRecord(record,&trans);
-		if (status) status = DoTrans(&trans);
-		return status;
-	}
+	// StoreTable(const std::string, const size_t) = delete;
+	// void Initialize(const std::string , const size_t , uint64_t& ,uint64_t& )=delete;
 
 	/**
 	* GetOne: get a record by primary or unique key
@@ -254,33 +210,6 @@ public:
 		item->set_to_del(to_del);
 	}
 
-
-	/**
-	* DoTrans : do transactions
-	*
-	* @param trans
-	*   TransactionT* transaction to handle
-	*
-	* @return
-	*   bool true if ok
-	*/
-	bool DoTrans(TransactionT* trans)
-	{
-		if (trans->item_size()==0) {
-			return true;
-		}
-		usemydb::WriteBatch batch;
-		for (auto i=0; i<trans->item_size(); ++i) {
-			if (! trans->mutable_item(i)->to_del() ) {
-				batch.Put(trans->mutable_item(i)->key(), trans->mutable_item(i)->value() );
-			} else {
-				batch.Delete(trans->mutable_item(i)->key());
-			}
-		}
-		usemydb::WriteOptions write_options;
-		usemydb::Status s = getDB()->Write(write_options, &batch);
-		return s.ok();
-	}
 
 	/**
 	* GetKey: get a  key
@@ -508,7 +437,6 @@ public:
 
 protected:
 	const KeyTypeE PrimaryKey;
-	const std::string PrimaryName;
 	const KeySetT unique_keys;
 	const KeySetT index_keys;
 

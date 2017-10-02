@@ -41,7 +41,6 @@ identt::store::ParAvionTable::ParAvionTable( identt::store::ParAvionTable::dbpoi
 	: identt::store::ParAvionTable::ParAvionTable(
 	trydb,
 	K_PARAVION,
-	"paravion",
 	{  },
 	{  }
 	)

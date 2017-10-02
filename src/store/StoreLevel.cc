@@ -59,7 +59,10 @@ identt::store::StoreLevel::StoreLevel(dbpointer trydb)
 	: db(trydb)
 {}
 
-void identt::store::StoreLevel::Initialize(const std::string datadir, const size_t cache_in_mb, uint64_t& last_pkey)
+/*
+* Initialize : main init
+*/
+void identt::store::StoreLevel::Initialize(const std::string datadir, const size_t cache_in_mb,uint64_t& last_pkey, uint64_t& last_lkey)
 {
 	// db options
 	usemydb::Options db_options;
@@ -98,9 +101,30 @@ void identt::store::StoreLevel::Initialize(const std::string datadir, const size
 	}
 	this->db = dbpointer(trydb);
 
-	// now get the last used primary key
 	std::shared_ptr<usemydb::Iterator> it(getDB()->NewIterator(usemydb::ReadOptions()));
-	for (size_t keytype=K_MAXNODE; keytype > K_NONODE; --keytype) {
+	// get the last used log key
+	do {
+		uint64_t id;
+		std::string value;
+		// first key of type
+		std::string key = EncodePrimaryKey(K_MAXNODE,0);
+		usemydb::Slice start = usemydb::Slice ( key.c_str(), IDENTT_KEYID_LEN );
+		std::string prekey = EncodePrimaryKey(K_LOGNODE,0);
+		usemydb::Slice match = usemydb::Slice ( prekey.c_str(), IDENTT_KEYID_LEN );
+		// check if key exists
+		it->Seek(start);
+		if (!it->Valid()) throw identt::InitialException("Fixed record K_MAXNODE missing");
+		it->Prev();
+		if (!it->Valid()) throw identt::InitialException("Zero record before K_MAXNODE missing");
+		if (!it->key().starts_with(match)) continue; // has exceeded
+		value=it->key().ToString();
+		size_t usekey;
+		std::tie(usekey,id) = DecodePrimaryKey(value);
+		if (id>last_lkey) last_lkey=id;
+	} while(false);
+	
+	// now get the last used primary key
+	for (size_t keytype=K_LOGNODE; keytype > K_NONODE; --keytype) {
 		uint64_t id;
 		std::string value;
 		// first key of type

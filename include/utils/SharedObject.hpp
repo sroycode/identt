@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/store/StoreLevel.hpp
+ * @file include/utils/SharedObject.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,82 +27,96 @@
  *
  * @section DESCRIPTION
  *
- *  StoreLevel.hpp :   Shared headers for store
+ *  SharedObject.hpp :   Shared Object
  *
  */
-#ifndef _IDENTT_STORE_STORELEVEL_HPP_
-#define _IDENTT_STORE_STORELEVEL_HPP_
+#ifndef _IDENTT_UTILS_SHARED_OBJECT_HPP_
+#define _IDENTT_UTILS_SHARED_OBJECT_HPP_
 
-#include <store/StoreBase.hpp>
-
-#ifdef IDENTT_BUILD_WITH_LEVELDB
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
-namespace usemydb = ::leveldb;
-#elif IDENTT_BUILD_WITH_ROCKSDB
-#include <rocksdb/db.h>
-namespace usemydb = ::rocksdb;
-#endif
+#include <functional>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace identt {
-namespace store {
-class StoreLevel : virtual public StoreBase {
+namespace utils {
+template <class T>
+class SharedObject {
 public:
-#ifdef IDENTT_BUILD_WITH_LEVELDB
-	using dbpointer=std::shared_ptr<leveldb::DB>;
-#elif IDENTT_BUILD_WITH_ROCKSDB
-	using dbpointer=std::shared_ptr<rocksdb::DB>;
-#endif
-
-	/**
-	* Constructor
-	*
-	* @param trydb
-	*   dbpointer shared pointer to db
-	*
-	*/
-	StoreLevel(dbpointer trydb);
+	using LockT = boost::shared_mutex;
+	using WriteLockT = boost::unique_lock< LockT >;
+	using ReadLockT = boost::shared_lock< LockT >;
 
 	/**
 	* make noncopyable and remove default
 	*/
 
-	StoreLevel(const StoreLevel&) = delete;
-	StoreLevel& operator=(const StoreLevel&) = delete;
-
+	SharedObject(const SharedObject&) = delete;
+	SharedObject& operator=(const SharedObject&) = delete;
 
 	/**
-	* Initialize: init main db
+	* Constructor : default
 	*
-	* @param datadir
-	*   std::string data directory to store
+	* @param t
+	*   T initial value
 	*
-	* @param cache_in_mb
-	*   size_t cache size in MB
+	*/
+	SharedObject() {}
+	SharedObject(T t) : t_(t) {}
+
+	/**
+	* destructor
+	*/
+	virtual ~SharedObject () {}
+
+	/**
+	* Set : set
 	*
-	* @param last_pkey
-	*   uint64_t& last primary key
-	*
-	* @param last_lkey
-	*   uint64_t& last log key
+	* @param t
+	*   T value to set
 	*
 	* @return
 	*   none
 	*/
-	void Initialize(const std::string datadir, const size_t cache_in_mb, uint64_t& last_pkey, uint64_t& last_lkey);
+	void Set(T t)
+	{
+		WriteLockT writelock(mutex_);
+		t_=t;
+	}
 
 	/**
-	* getDB: Get shared pointer to DB
+	* Get : get
 	*
 	* @return
-	*   dbpointer
+	*   T value copy
 	*/
-	dbpointer getDB();
+	T Get()
+	{
+		ReadLockT readlock(mutex_);
+		return t_;
+	}
 
-protected:
-	dbpointer db;
+	/**
+	* Oper: operate
+	*
+	* @param f
+	*   std::function<void(T)> function to operate
+	*
+	* @return
+	*   T value after open
+	*/
+	T Oper(std::function<void(T)> f)
+	{
+		WriteLockT writelock(mutex_);
+		f(t_);
+		return t_;
+	}
+
+private:
+
+	T t_;
+	LockT mutex_;
 
 };
-} // namespace store
+} // namespace utils
 } // namespace identt
-#endif /* _IDENTT_STORE_STORELEVEL_HPP_ */
+#endif /* _IDENTT_UTILS_SHARED_OBJECT_HPP_ */

@@ -42,6 +42,8 @@
 #include <store/ParAvionTable.hpp>
 #include <crypto/CryptoTraits.hpp>
 
+#include <store/StoreTrans.hpp>
+
 /**
 * StoreInviteAction : invite query internals
 *
@@ -56,7 +58,7 @@ void identt::store::InviteService::StoreInviteAction(::identt::utils::SharedTabl
 	// globalassoc
 	::identt::store::GlobalAssocT globalassoc;
 	::identt::store::GlobalAssocTable::MapT globalassoc_map;
-	::identt::store::GlobalAssocTable globalassoc_table{stptr->getDB()};
+	::identt::store::GlobalAssocTable globalassoc_table{stptr->maindb.Get()};
 	globalassoc.set_medium( invqry->medium() );
 	globalassoc.set_address ( invqry->address() );
 	bool globalassoc_found = globalassoc_table.GetMany(&globalassoc,&globalassoc_map,
@@ -71,14 +73,14 @@ void identt::store::InviteService::StoreInviteAction(::identt::utils::SharedTabl
 	::identt::store::TransactionT trans;
 
 	// create an entry for token store
-	::identt::store::InviteTokenTable token_table{stptr->getDB()};
+	::identt::store::InviteTokenTable token_table{stptr->maindb.Get()};
 	::identt::store::InviteTokenT token;
 	::identt::store::InviteTokenTable::MapT token_map;
 	token.set_token( tok.str() );
 	bool tok_found = token_table.GetMany(&token,&token_map,I_INVITETOKEN_TOKEN,0,1);
 	if (tok_found && token_map.size()>0)
 		throw ::identt::BadDataException("Duplicate token Generated , please retry");
-	token.set_id( stptr->GenKey() );
+	token.set_id( stptr->maincounter.GetNext() );
 	token.set_medium( invqry->medium() );
 	token.set_address ( invqry->address() );
 	token.set_room_id ( invqry->room_id() );
@@ -88,22 +90,22 @@ void identt::store::InviteService::StoreInviteAction(::identt::utils::SharedTabl
 		throw ::identt::BadDataException("Cannot Insert token");
 
 	// create an entry for public_key
-	::identt::store::EphemeralPublicKeyTable epk_table{stptr->getDB()};
+	::identt::store::EphemeralPublicKeyTable epk_table{stptr->maindb.Get()};
 	::identt::store::EphemeralPublicKeyT epk;
 	epk.set_public_key( key->GetPublicKey() );
 	bool epk_found = epk_table.GetOne(&epk,U_EPHEMERALPUBLICKEY_PUBLICKEY);
 	if (epk_found)
 		throw ::identt::BadDataException("Duplicate Public Key Generated , please retry");
-	epk.set_id( stptr->GenKey() );
+	epk.set_id( stptr->maincounter.GetNext() );
 	epk.set_persistence_ts( currtime );
 	epk.set_verify_count( 0 );
 	if (!epk_table.AddRecord(&epk,&trans,false))
 		throw ::identt::BadDataException("Cannot Insert ephemeral key");
 
 	// create an entry for outgoing
-	::identt::store::ParAvionTable paravion_table(stptr->getDB());
+	::identt::store::ParAvionTable paravion_table(stptr->maindb.Get());
 	::identt::store::ParAvionT paravion;
-	paravion.set_id( stptr->GenKey() );
+	paravion.set_id( stptr->maincounter.GetNext() );
 	::identt::mail::MPayloadT* payload = paravion.mutable_payload();
 	payload->set_id( paravion.id() );
 	payload->set_medium( invqry->medium() );
@@ -119,19 +121,20 @@ void identt::store::InviteService::StoreInviteAction(::identt::utils::SharedTabl
 	if (!paravion_table.AddRecord(&paravion,&trans,false))
 		throw ::identt::BadDataException("Cannot Insert paravion");
 
-	// transaction
-	if (!paravion_table.DoTrans(&trans))
-		throw ::identt::BadDataException("Insert failed");
+	// transaction , throws on fail
+	trans.set_id( stptr->logcounter.GetNext() );
+	::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
+	storetrans.Commit(&trans);
 
 	// return data
 	invres->set_token( tok.str() );
 	invres->set_public_key( stptr->keyring[ THREEPID_DEFAULT_ALGO_WITH_ID ]->GetPublicKey() );
 	// add system public key
 	auto nkey = invres->add_public_keys();
-	nkey->set_key_validity_url( stptr->get_baseurl() + "/pubkey/isvalid" );
+	nkey->set_key_validity_url( stptr->baseurl.Get() + "/pubkey/isvalid" );
 	nkey->set_public_key( invres->public_key() );
 	// add ephemeral key
 	nkey = invres->add_public_keys();
-	nkey->set_key_validity_url( stptr->get_baseurl() + "/pubkey/ephemeral/isvalid" );
+	nkey->set_key_validity_url( stptr->baseurl.Get() + "/pubkey/ephemeral/isvalid" );
 	nkey->set_public_key( key->GetPublicKey() );
 }

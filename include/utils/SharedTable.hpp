@@ -39,14 +39,15 @@
 #include <chrono>
 #include <random>
 #include <boost/asio.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 
+#include <utils/SharedObject.hpp>
+#include <utils/SharedCounter.hpp>
 #include <utils/HelpQuery.hpp>
 #include <store/StoreLevel.hpp>
 #include <crypto/CryptoBase.hpp>
 
-
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace identt {
 namespace utils {
@@ -58,6 +59,8 @@ public:
 	using LockT = boost::shared_mutex;
 	using WriteLockT = boost::unique_lock< LockT >;
 	using ReadLockT = boost::shared_lock< LockT >;
+	using SharedString = SharedObject<std::string>;
+	using SharedDBPointer = SharedObject<dbpointer>;
 
 	using KeyRingT = std::unordered_map<std::string,std::shared_ptr<identt::crypto::CryptoBase> >;
 
@@ -66,6 +69,15 @@ public:
 	*/
 	HelpQuery httphelp;
 	KeyRingT keyring;
+	// string shared
+	SharedString mailhost;
+	SharedString baseurl;
+	// counter shared
+	SharedCounter maincounter;
+	SharedCounter logcounter;
+	// database pointers
+	SharedDBPointer maindb;
+	SharedDBPointer logdb;
 
 	/**
 	* make noncopyable
@@ -98,22 +110,6 @@ public:
 	* destructor
 	*/
 	virtual ~SharedTable ();
-
-	/**
-	* setDB : set shared db pointer
-	*
-	* @param db
-	*   dbpointer shared db pointer
-	*/
-	void setDB(dbpointer db_);
-
-	/**
-	* getDB : get shared db pointer
-	*
-	* @return
-	*   dbpointer shared db pointer
-	*/
-	dbpointer getDB();
 
 	/**
 	* setIO : set shared io pointer
@@ -163,74 +159,10 @@ public:
 	*/
 	bool is_ready();
 
-	/**
-	* set_lastkey : set a primary key id
-	*
-	* @param key
-	*   uint64_t key
-	*
-	* @return
-	*   none
-	*/
-	void set_lastkey(uint64_t key);
-
-
-	/**
-	* get_lastkey: get last key id
-	*
-	* @return
-	*   uint64_t key
-	*/
-	uint64_t get_lastkey();
-
-	/**
-	* GenKey: generate a primary key id
-	*
-	* @return
-	*   uint64_t key
-	*/
-	uint64_t GenKey();
-
-	/**
-	* set_mailhost : set mailhost
-	*
-	* @param h
-	*   std::string mailhost
-	*/
-	void set_mailhost(std::string h);
-
-	/**
-	* get_mailhost : get mailhost name
-	*
-	* @return
-	*   std::string mailhost name
-	*/
-	std::string get_mailhost();
-
-	/**
-	* set_baseurl : set baseurl
-	*
-	* @param h
-	*   std::string baseurl
-	*/
-	void set_baseurl(std::string h);
-
-	/**
-	* get_baseurl : get baseurl name
-	*
-	* @return
-	*   std::string baseurl name
-	*/
-	std::string get_baseurl();
-
-protected:
+private:
 
 	bool ready;
 	bool master;
-	uint64_t number;
-	std::string mailhost;
-	std::string baseurl;
-	dbpointer db;
 	iopointer io;
 	LockT class_mutex;
 	LockT number_mutex;

@@ -52,7 +52,7 @@ void identt::store::LookupService::LookupAction(
 	// globalassoc
 	::identt::store::GlobalAssocT globalassoc;
 	::identt::store::GlobalAssocTable::MapT globalassoc_map;
-	::identt::store::GlobalAssocTable globalassoc_table{stptr->getDB()};
+	::identt::store::GlobalAssocTable globalassoc_table{stptr->maindb.Get()};
 	globalassoc.set_medium( query->medium() );
 	globalassoc.set_address( query->address() );
 	bool globalassoc_found = globalassoc_table.GetMany(

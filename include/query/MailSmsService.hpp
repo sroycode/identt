@@ -91,7 +91,7 @@ public:
 					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
 
 					::identt::query::PubKeyT pubkey;
-					pubkey.set_owner( stptr->get_mailhost() );
+					pubkey.set_owner( stptr->mailhost.Get() );
 					pubkey.set_algo(THREEPID_EXTMAIL_ALGO);
 					pubkey.set_identifier(THREEPID_EXTMAIL_ALGO_ID);
 					std::vector<::identt::query::SignatureT> signature;

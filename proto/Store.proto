@@ -22,7 +22,8 @@ enum KeyTypeE {
 	K_VALIDATIONSESSION                                            = 17;
 	K_TOKENAUTH                                                    = 18;
 	K_PARAVION                                                     = 19;
-	K_MAXNODE                                                      = 20;
+	K_LOGNODE                                                      = 20; // must be before K_MAXNODE
+	K_MAXNODE                                                      = 21;
 
 // Indexes
 	I_NOINDEX                                                      = 50;
@@ -158,7 +159,7 @@ message MyCollectT {
 
 message TransItemT {
 	string key                                                     =  1;
-	string value                                                   =  2;
+	bytes  value                                                   =  2;
 	bool   to_del                                                  =  3;
 }
 

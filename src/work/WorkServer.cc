@@ -35,6 +35,10 @@
 #include <query/SydentQuery.hpp>
 #include <query/bin2ascii.h>
 
+#ifndef IDENTT_USE_SEPARATE_LOGDB
+#define IDENTT_USE_SEPARATE_LOGDB 0
+#endif
+
 identt::work::WorkServer::WorkServer(identt::utils::SharedTable::pointer stptr)
 	: identt::utils::ServerBase(stptr)
 {
@@ -53,7 +57,16 @@ const std::string identt::work::WorkServer::GetSection()
 
 const identt::utils::ServerBase::ParamsListT identt::work::WorkServer::GetRequire()
 {
-	return {"datadir","cachesize","mail_host","hostseed_ed25519","mailkey_ed25519","base_url"};
+	return {
+		"datadir",
+		"logdatadir",
+		"cachesize",
+		"logcachesize",
+		"mail_host",
+		"hostseed_ed25519",
+		"mailkey_ed25519",
+		"base_url"
+	};
 }
 
 
@@ -62,20 +75,40 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 
 	try {
 		std::string datadir = params[0];
-		std::size_t cachesize = std::stoul(params[1]);
-		std::string mailhost = params[2];
-		std::string hostseed = params[3];
-		std::string mailkey = params[4];
-		std::string baseurl = params[5];
+		std::string logdatadir = params[1];
+		std::size_t cachesize = std::stoul(params[2]);
+		std::size_t logcachesize = std::stoul(params[3]);
+		std::string mailhost = params[4];
+		std::string hostseed = params[5];
+		std::string mailkey = params[6];
+		std::string baseurl = params[7];
+
+		// validations
+		if (datadir=="") throw identt::InitialException("datadir unset");
+		if (logdatadir=="") throw identt::InitialException("logdatadir unset the variable is needed");
 
 		// db setup
 		uint64_t last_pkey=0;
+		uint64_t last_lkey=0;
 		identt::store::StoreLevel s{NULL};
-		s.Initialize(datadir,cachesize,last_pkey);
-		sharedtable->set_lastkey ( (last_pkey>0) ? last_pkey : 1 );
-		sharedtable->setDB( s.getDB() );
-		sharedtable->set_mailhost( mailhost );
-		sharedtable->set_baseurl( baseurl );
+		s.Initialize(datadir,cachesize,last_pkey,last_lkey);
+		sharedtable->maincounter.Set ( (last_pkey>0) ? last_pkey : 1 );
+		sharedtable->maindb.Set( s.getDB() );
+
+		// logdb
+		if (IDENTT_USE_SEPARATE_LOGDB) {
+			identt::store::StoreLevel p{NULL};
+			p.Initialize(logdatadir,logcachesize,last_pkey,last_lkey);
+			sharedtable->logdb.Set( p.getDB() );
+		} else {
+			sharedtable->logdb.Set( s.getDB() );
+		}
+
+		// if resets last_lkey
+		sharedtable->logcounter.Set ( (last_lkey>0) ? last_lkey : 1 );
+
+		sharedtable->mailhost.Set( mailhost );
+		sharedtable->baseurl.Set( baseurl );
 
 		// init Ed25519:0 key
 		sharedtable->keyring[ THREEPID_DEFAULT_ALGO_WITH_ID ] =

@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/store/StoreLevel.hpp
+ * @file include/store/TransLogTable.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,32 +27,23 @@
  *
  * @section DESCRIPTION
  *
- *  StoreLevel.hpp :   Shared headers for store
+ *  TransLogTable.hpp :   Headers for TransLogTable  translog
  *
  */
-#ifndef _IDENTT_STORE_STORELEVEL_HPP_
-#define _IDENTT_STORE_STORELEVEL_HPP_
+#ifndef _IDENTT_STORE_TRANS_LOG_TABLE_HPP_
+#define _IDENTT_STORE_TRANS_LOG_TABLE_HPP_
 
-#include <store/StoreBase.hpp>
+#include "StoreTable.hpp"
 
-#ifdef IDENTT_BUILD_WITH_LEVELDB
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
-namespace usemydb = ::leveldb;
-#elif IDENTT_BUILD_WITH_ROCKSDB
-#include <rocksdb/db.h>
-namespace usemydb = ::rocksdb;
-#endif
+// extern template class identt::store::StoreTable<identt::store::TransLogT>;
 
 namespace identt {
 namespace store {
-class StoreLevel : virtual public StoreBase {
+class TransLogTable : public StoreTable<TransLogT> {
 public:
-#ifdef IDENTT_BUILD_WITH_LEVELDB
-	using dbpointer=std::shared_ptr<leveldb::DB>;
-#elif IDENTT_BUILD_WITH_ROCKSDB
-	using dbpointer=std::shared_ptr<rocksdb::DB>;
-#endif
+	using StoreTable<TransLogT>::dbpointer;
+	using StoreTable<TransLogT>::StoreTable;
+	using StoreTable<TransLogT>::MapT;
 
 	/**
 	* Constructor
@@ -61,48 +52,44 @@ public:
 	*   dbpointer shared pointer to db
 	*
 	*/
-	StoreLevel(dbpointer trydb);
+	TransLogTable(dbpointer trydb);
+
+	/**
+	* Destructor
+	*
+	*/
+	virtual ~TransLogTable() {}
 
 	/**
 	* make noncopyable and remove default
 	*/
 
-	StoreLevel(const StoreLevel&) = delete;
-	StoreLevel& operator=(const StoreLevel&) = delete;
+	TransLogTable() = delete;
+	TransLogTable(const std::string, const size_t) = delete;
+	TransLogTable(const TransLogTable&) = delete;
+	TransLogTable& operator=(const TransLogTable&) = delete;
 
-
-	/**
-	* Initialize: init main db
-	*
-	* @param datadir
-	*   std::string data directory to store
-	*
-	* @param cache_in_mb
-	*   size_t cache size in MB
-	*
-	* @param last_pkey
-	*   uint64_t& last primary key
-	*
-	* @param last_lkey
-	*   uint64_t& last log key
-	*
-	* @return
-	*   none
-	*/
-	void Initialize(const std::string datadir, const size_t cache_in_mb, uint64_t& last_pkey, uint64_t& last_lkey);
-
-	/**
-	* getDB: Get shared pointer to DB
-	*
-	* @return
-	*   dbpointer
-	*/
-	dbpointer getDB();
 
 protected:
-	dbpointer db;
+
+	/**
+	* GetKey: get a key
+	*
+	* @param record
+	*   TransLogT* record
+	*
+	* @param keytype
+	*   KeyTypeE key type for index
+	*
+	* @param pre
+	*   bool non unique keys
+	*
+	* @return
+	*   std::string key
+	*/
+	std::string GetKey(TransLogT* record, KeyTypeE keytype, bool pre) override;
 
 };
 } // namespace store
 } // namespace identt
-#endif /* _IDENTT_STORE_STORELEVEL_HPP_ */
+#endif /* _IDENTT_STORE_TRANS_LOG_TABLE_HPP_ */

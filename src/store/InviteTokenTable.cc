@@ -41,7 +41,6 @@ identt::store::InviteTokenTable::InviteTokenTable( identt::store::InviteTokenTab
 	: identt::store::InviteTokenTable::InviteTokenTable(
 	trydb,
 	K_INVITETOKEN,
-	"invitetoken",
 	{  },
 	{ I_INVITETOKEN_TOKEN,I_INVITETOKEN_MEDIUM_ADDRESS }
 	)

@@ -41,7 +41,6 @@ identt::store::PeerPubKeyTable::PeerPubKeyTable( identt::store::PeerPubKeyTable:
 	: identt::store::PeerPubKeyTable::PeerPubKeyTable(
 	trydb,
 	K_PEERPUBKEY,
-	"peerpubkey",
 	{ U_PEERPUBKEY_PEERNAME_ALG },
 	{  }
 	)

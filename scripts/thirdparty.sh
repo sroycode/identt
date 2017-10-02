@@ -247,6 +247,31 @@ PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
 ..  && make && make install
 }
+
+# Building googletest git-f1a87d7
+
+function build_googletest () {
+local MVERSION=git-f1a87d7
+local MSOURCEFILE=${IDENTT_TPSRC}/googletest-${MVERSION}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/googletest-${MVERSION}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/googletest/nn.h ] ; then echo "googletest already installed"; return ; fi
+if [ ! -d ${MWORKDIR} ] ; then
+	cd ${IDENTT_TEMP}
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		git clone https://github.com/google/googletest.git googletest-${MVERSION}
+		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
+		tar -zcf ${MSOURCEFILE} googletest-${MVERSION}
+	else
+		tar -zxf ${MSOURCEFILE}
+	fi
+	mkdir -p ${MWORKDIR}/build
+fi
+cd ${MWORKDIR}/build
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
+..  && make && make install
+}
+
 ### Control ####
 
 build_gperftools
@@ -257,3 +282,4 @@ build_rocksdb
 build_rocks_compression
 build_sodium
 build_nanomsg
+build_googletest

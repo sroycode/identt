@@ -68,8 +68,8 @@ int main(int argc, char *argv[])
 
 	try {
 		::identt::store::StoreTablePrint s{NULL};
-		uint64_t ignore;
-		s.Initialize(FLAGS_path, FLAGS_cachesize, ignore);
+		uint64_t pk,lk;
+		s.Initialize(FLAGS_path, FLAGS_cachesize, pk,lk);
 		s.PrintAll();
 
 	} catch(identt::JdException& e) {

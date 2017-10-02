@@ -111,6 +111,12 @@ public:
 				if (status && x.id()>0) std::cout << "case K_PARAVION:" << std::endl << x.DebugString() << std::endl;
 				break;
 			}
+			case K_LOGNODE:	{
+				TransactionT x;
+				bool status = x.ParseFromString(it->value().ToString());
+				if (status && x.id()>0) std::cout << "case K_LOGNODE:" << std::endl << x.DebugString() << std::endl;
+				break;
+			}
 			}
 		}
 	}

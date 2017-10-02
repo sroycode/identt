@@ -41,7 +41,6 @@ identt::store::TokenAuthTable::TokenAuthTable( identt::store::TokenAuthTable::db
 	: identt::store::TokenAuthTable::TokenAuthTable(
 	trydb,
 	K_TOKENAUTH,
-	"tokenauth",
 	{ U_TOKENAUTH_TOKEN,U_TOKENAUTH_VALIDATIONSESSION_SENDATTEMPT },
 	{  }
 	)

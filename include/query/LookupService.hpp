@@ -103,7 +103,7 @@ public:
 					::identt::query::PubKeyT pubkey;
 
 					// set owners
-					pubkey.set_owner(stptr->get_mailhost());
+					pubkey.set_owner(stptr->mailhost.Get());
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
 
@@ -162,7 +162,7 @@ public:
 					::identt::query::PubKeyT pubkey;
 
 					// set owners
-					pubkey.set_owner(stptr->get_mailhost());
+					pubkey.set_owner(stptr->mailhost.Get());
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
 
@@ -225,7 +225,7 @@ public:
 					::identt::query::PubKeyT pubkey;
 
 					// set owners
-					pubkey.set_owner(stptr->get_mailhost());
+					pubkey.set_owner(stptr->mailhost.Get());
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
 

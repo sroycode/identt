@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file src/store/LocalAssocTable.cc
+ * @file src/store/TransLogTable.cc
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,21 +27,21 @@
  *
  * @section DESCRIPTION
  *
- *  LocalAssocTable.cc :   Implementation for LocalAssocTable  local assoc
+ *  TransLogTable.cc :   Implementation for TransLogTable  translog
  *
  */
-#include <store/LocalAssocTable.hpp>
-// template class identt::store::StoreTable<identt::store::LocalAssocT>;
+#include <store/TransLogTable.hpp>
+// template class identt::store::StoreTable<identt::store::TransLogT>;
 
 /**
 * Constructor
 *
 */
-identt::store::LocalAssocTable::LocalAssocTable( identt::store::LocalAssocTable::dbpointer trydb )
-	: identt::store::LocalAssocTable::LocalAssocTable(
+identt::store::TransLogTable::TransLogTable( identt::store::TransLogTable::dbpointer trydb )
+	: identt::store::TransLogTable::TransLogTable(
 	trydb,
-	K_LOCALASSOC,
-	{ U_LOCALASSOC_MEDIUM_ADDRESS },
+	K_LOGNODE,
+	{  },
 	{  }
 	)
 
@@ -50,19 +50,15 @@ identt::store::LocalAssocTable::LocalAssocTable( identt::store::LocalAssocTable:
 * GetKey: get a secondary key
 *
 */
-std::string identt::store::LocalAssocTable::GetKey(identt::store::LocalAssocT* record, identt::store::KeyTypeE keytype, bool pre)
+std::string identt::store::TransLogTable::GetKey(identt::store::TransLogT* record, identt::store::KeyTypeE keytype, bool pre)
 {
 
 	std::string key;
 	switch (keytype) {
 	default:
-	case K_LOCALASSOC:
+	case K_LOGNODE:
 		key = EncodePrimaryKey(PrimaryKey,record->id());
 		break;
-	case U_LOCALASSOC_MEDIUM_ADDRESS : {
-		key = EncodeSecondaryKey<std::string,std::string>(keytype , record->medium(),record->address()  );
-		break;
-	}
 	}
 	return key;
 }

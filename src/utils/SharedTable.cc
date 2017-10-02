@@ -37,7 +37,7 @@
 * Constructor : default private
 *
 */
-identt::utils::SharedTable::SharedTable() : ready(false), master(false), number(1) {}
+identt::utils::SharedTable::SharedTable() : ready(false), master(false) {}
 
 
 /**
@@ -53,26 +53,6 @@ identt::utils::SharedTable::pointer identt::utils::SharedTable::share()
 * destructor
 */
 identt::utils::SharedTable::~SharedTable () {}
-
-/**
-* setDB : set shared db pointer
-*
-*/
-void identt::utils::SharedTable::setDB(identt::utils::SharedTable::dbpointer db_)
-{
-	WriteLockT writelock(class_mutex);
-	db=db_;
-}
-
-/**
-* getDB : get shared db pointer
-*
-*/
-identt::utils::SharedTable::dbpointer identt::utils::SharedTable::getDB()
-{
-	ReadLockT readlock(class_mutex);
-	return db;
-}
 
 /**
 * setIO : set shared io pointer
@@ -133,78 +113,4 @@ bool identt::utils::SharedTable::is_ready()
 	ReadLockT readlock(class_mutex);
 	return ready;
 }
-
-/**
-* set_lastkey : set a primary key id
-*
-*/
-void identt::utils::SharedTable::set_lastkey(uint64_t key)
-{
-	WriteLockT writelock(number_mutex);
-	number=key;
-}
-
-
-/**
-* get_lastkey: get last key id
-*
-*/
-uint64_t identt::utils::SharedTable::get_lastkey()
-{
-	ReadLockT readlock(number_mutex);
-	return number;
-}
-
-
-/**
-* GenKey: generate a primary key id
-*
-*/
-uint64_t identt::utils::SharedTable::GenKey()
-{
-	WriteLockT writelock(number_mutex);
-	++number;
-	return number;
-}
-
-/**
-* set_mailhost : set mailhost
-*
-*/
-void identt::utils::SharedTable::set_mailhost(std::string h)
-{
-	WriteLockT writelock(class_mutex);
-	mailhost=h;
-}
-
-/**
-* get_mailhost : get mailhost name
-*
-*/
-std::string identt::utils::SharedTable::get_mailhost()
-{
-	ReadLockT readlock(class_mutex);
-	return mailhost;
-}
-
-/**
-* set_baseurl : set baseurl
-*
-*/
-void identt::utils::SharedTable::set_baseurl(std::string h)
-{
-	WriteLockT writelock(class_mutex);
-	baseurl=h;
-}
-
-/**
-* get_baseurl : get baseurl name
-*
-*/
-std::string identt::utils::SharedTable::get_baseurl()
-{
-	ReadLockT readlock(class_mutex);
-	return baseurl;
-}
-
 

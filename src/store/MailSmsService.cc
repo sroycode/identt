@@ -36,6 +36,8 @@
 #include <query/bin2ascii.h>
 #include <store/ParAvionTable.hpp>
 
+#include <store/StoreTrans.hpp>
+
 /**
 * PendingAction : Get Pending as required
 *
@@ -44,7 +46,7 @@ void identt::store::MailSmsService::PendingAction(::identt::utils::SharedTable::
 {
 
 	::identt::store::ParAvionT paravion;
-	::identt::store::ParAvionTable paravion_table{stptr->getDB()};
+	::identt::store::ParAvionTable paravion_table{stptr->maindb.Get()};
 
 	// delete done records
 	if (mailq->payload_size()>0) {
@@ -53,8 +55,12 @@ void identt::store::MailSmsService::PendingAction(::identt::utils::SharedTable::
 			paravion.set_id(mailq->mutable_payload(i)->id());
 			paravion_table.DelRecord(&paravion,&trans);
 		}
-		if (!paravion_table.DoTrans(&trans))
-			throw ::identt::BadDataException("Delete failed");
+
+		// transaction , throws on fail
+		trans.set_id( stptr->logcounter.GetNext() );
+		::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
+		storetrans.Commit(&trans);
+
 		mailq->clear_payload();
 	}
 

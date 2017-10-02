@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file src/store/LocalAssocTable.cc
+ * @file include/utils/SharedCounter.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,42 +27,51 @@
  *
  * @section DESCRIPTION
  *
- *  LocalAssocTable.cc :   Implementation for LocalAssocTable  local assoc
+ *  SharedCounter.hpp :   Shared Counter
  *
  */
-#include <store/LocalAssocTable.hpp>
-// template class identt::store::StoreTable<identt::store::LocalAssocT>;
+#ifndef _IDENTT_UTILS_SHARED_COUNTER_HPP_
+#define _IDENTT_UTILS_SHARED_COUNTER_HPP_
 
-/**
-* Constructor
-*
-*/
-identt::store::LocalAssocTable::LocalAssocTable( identt::store::LocalAssocTable::dbpointer trydb )
-	: identt::store::LocalAssocTable::LocalAssocTable(
-	trydb,
-	K_LOCALASSOC,
-	{ U_LOCALASSOC_MEDIUM_ADDRESS },
-	{  }
-	)
+#include <utils/SharedObject.hpp>
 
-{}
-/**
-* GetKey: get a secondary key
-*
-*/
-std::string identt::store::LocalAssocTable::GetKey(identt::store::LocalAssocT* record, identt::store::KeyTypeE keytype, bool pre)
-{
+namespace identt {
+namespace utils {
+class SharedCounter : public SharedObject<uint64_t> {
+public:
 
-	std::string key;
-	switch (keytype) {
-	default:
-	case K_LOCALASSOC:
-		key = EncodePrimaryKey(PrimaryKey,record->id());
-		break;
-	case U_LOCALASSOC_MEDIUM_ADDRESS : {
-		key = EncodeSecondaryKey<std::string,std::string>(keytype , record->medium(),record->address()  );
-		break;
+	/**
+	* make noncopyable and remove default
+	*/
+
+	SharedCounter(const SharedCounter&) = delete;
+	SharedCounter& operator=(const SharedCounter&) = delete;
+
+	/**
+	* Constructor : default
+	*
+	*/
+	SharedCounter() : SharedObject<uint64_t>(1) {}
+
+	/**
+	* destructor
+	*/
+	virtual ~SharedCounter () {}
+
+	/**
+	* GetNext : increment and get next value
+	*
+	* @return
+	*   uint64_t next value
+	*/
+	uint64_t GetNext()
+	{
+		return Oper([](uint64_t t){ ++t;});
 	}
-	}
-	return key;
-}
+
+private:
+
+};
+} // namespace utils
+} // namespace identt
+#endif /* _IDENTT_UTILS_SHARED_COUNTER_HPP_ */

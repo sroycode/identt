@@ -78,7 +78,7 @@ void identt::store::PubKeyService::GetEphemeralValidAction(::identt::utils::Shar
 {
 
 	// action
-	::identt::store::EphemeralPublicKeyTable epk_table{stptr->getDB()};
+	::identt::store::EphemeralPublicKeyTable epk_table{stptr->maindb.Get()};
 	::identt::store::EphemeralPublicKeyT epk;
 	epk.set_public_key( pubkey->public_key() );
 	bool epk_found = epk_table.GetOne(&epk,U_EPHEMERALPUBLICKEY_PUBLICKEY);

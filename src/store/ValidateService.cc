@@ -37,6 +37,9 @@
 #include <store/ValidationSessionTable.hpp>
 #include <store/TokenAuthTable.hpp>
 #include <store/ParAvionTable.hpp>
+
+#include <store/StoreTrans.hpp>
+
 #include <utils/sole.hpp>
 
 /**
@@ -55,7 +58,7 @@ void identt::store::ValidateService::RequestTokenAction(
 
 	::identt::store::TransactionT trans;
 	::identt::store::ValidationSessionT valsession;
-	::identt::store::ValidationSessionTable valsession_table{stptr->getDB()};
+	::identt::store::ValidationSessionTable valsession_table{stptr->maindb.Get()};
 
 	std::string address;
 	PopulateAddress(reqtok,medium,address);
@@ -71,7 +74,7 @@ void identt::store::ValidateService::RequestTokenAction(
 	if (validation_found) {
 		// nothing
 	} else {
-		valsession.set_id( stptr->GenKey() );
+		valsession.set_id( stptr->maincounter.GetNext() );
 		valsession.set_mtime( currtime );
 		if (!valsession_table.AddRecord(&valsession,&trans,false))
 			throw ::identt::BadDataException("Cannot Insert vsession");
@@ -80,7 +83,7 @@ void identt::store::ValidateService::RequestTokenAction(
 	unsigned int sid = (unsigned int) valsession.id() % 99999;
 
 	// get token auth if exists
-	::identt::store::TokenAuthTable tokenauth_table(stptr->getDB());
+	::identt::store::TokenAuthTable tokenauth_table(stptr->maindb.Get());
 	::identt::store::TokenAuthT tokenauth;
 	tokenauth.set_validation_session( valsession.id() );
 	tokenauth.set_send_attempt_number( reqtok->send_attempt() );
@@ -95,7 +98,7 @@ void identt::store::ValidateService::RequestTokenAction(
 				throw ::identt::BadDataException("Token out of Sync");
 		}
 		// set id for new record
-		tokenauth.set_id( stptr->GenKey() );
+		tokenauth.set_id( stptr->maincounter.GetNext() );
 		auto tok = sole::uuid4();
 		tokenauth.set_token( tok.str() );
 		LOG(INFO) << "token=" <<  tokenauth.token() << " sid=" <<  sid;
@@ -104,9 +107,9 @@ void identt::store::ValidateService::RequestTokenAction(
 			throw ::identt::BadDataException("Cannot Insert tokenauth");
 
 		// create an entry for outgoing
-		::identt::store::ParAvionTable paravion_table(stptr->getDB());
+		::identt::store::ParAvionTable paravion_table(stptr->maindb.Get());
 		::identt::store::ParAvionT paravion;
-		paravion.set_id( stptr->GenKey() );
+		paravion.set_id( stptr->maincounter.GetNext() );
 		::identt::mail::MPayloadT* payload = paravion.mutable_payload();
 		payload->set_id( paravion.id() );
 		payload->set_medium( medium );
@@ -120,9 +123,10 @@ void identt::store::ValidateService::RequestTokenAction(
 		if (!paravion_table.AddRecord(&paravion,&trans,false))
 			throw ::identt::BadDataException("Cannot Insert paravion");
 
-		// final step , transaction
-		if (!valsession_table.DoTrans(&trans))
-			throw ::identt::BadDataException("Insert failed");
+		// final step , transaction throws on fail
+		trans.set_id( stptr->logcounter.GetNext() );
+		::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
+		storetrans.Commit(&trans);
 	}
 
 	ssid->set_success( true);
@@ -149,7 +153,7 @@ void identt::store::ValidateService::SubmitTokenAction(
 	std::string medium = stoka->medium();
 
 	::identt::store::TokenAuthT tokenauth;
-	::identt::store::TokenAuthTable tokenauth_table(stptr->getDB());
+	::identt::store::TokenAuthTable tokenauth_table(stptr->maindb.Get());
 	// tokenauth_table.PrintAll();
 	tokenauth.set_token( subtok->token() );
 	bool found = tokenauth_table.GetOne(&tokenauth,::identt::store::U_TOKENAUTH_TOKEN);
@@ -160,7 +164,7 @@ void identt::store::ValidateService::SubmitTokenAction(
 	if (sid != subtok->sid())
 		throw ::identt::query::SydentException("Sid does not match ", M_NO_VALID_SESSION);
 	::identt::store::ValidationSessionT valsession;
-	::identt::store::ValidationSessionTable valsession_table{stptr->getDB()};
+	::identt::store::ValidationSessionTable valsession_table{stptr->maindb.Get()};
 
 	valsession.set_id( tokenauth.validation_session() );
 	found = valsession_table.GetOne(&valsession,::identt::store::K_VALIDATIONSESSION);
@@ -186,8 +190,10 @@ void identt::store::ValidateService::SubmitTokenAction(
 	valsession.set_mtime( currtime );
 	if (!valsession_table.AddRecord(&valsession,&trans,true))
 		throw ::identt::BadDataException("Cannot Insert vsession");
-	if (!valsession_table.DoTrans(&trans))
-		throw ::identt::BadDataException("Insert failed");
+	// transaction , throws on fail
+	trans.set_id( stptr->logcounter.GetNext() );
+	::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
+	storetrans.Commit(&trans);
 	// set
 	result->set_success(true);
 	result->set_error("This session is now validated");

@@ -41,7 +41,6 @@ identt::store::ValidationSessionTable::ValidationSessionTable( identt::store::Va
 	: identt::store::ValidationSessionTable::ValidationSessionTable(
 	trydb,
 	K_VALIDATIONSESSION,
-	"validationsession",
 	{ U_VALIDATIONSESSION_MEDIUM_ADDRESS_CLIENTSECRET },
 	{  }
 	)

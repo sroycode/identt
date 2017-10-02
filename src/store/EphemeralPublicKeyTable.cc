@@ -41,7 +41,6 @@ identt::store::EphemeralPublicKeyTable::EphemeralPublicKeyTable( identt::store::
 	: identt::store::EphemeralPublicKeyTable::EphemeralPublicKeyTable(
 	trydb,
 	K_EPHEMERALPUBLICKEY,
-	"ephemeralpublickey",
 	{ U_EPHEMERALPUBLICKEY_PUBLICKEY },
 	{  }
 	)

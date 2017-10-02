@@ -41,7 +41,6 @@ identt::store::PeerTable::PeerTable( identt::store::PeerTable::dbpointer trydb )
 	: identt::store::PeerTable::PeerTable(
 	trydb,
 	K_PEER,
-	"peer",
 	{ U_PEER_NAME },
 	{  }
 	)

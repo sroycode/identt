@@ -42,6 +42,8 @@
 #include <store/InviteTokenTable.hpp>
 #include <store/ParAvionTable.hpp>
 
+#include <store/StoreTrans.hpp>
+
 #include <set>
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/writer.h"
@@ -69,7 +71,7 @@ void identt::store::ThreePidService::GetValidated3pidAction(
 	// start
 	::identt::store::ValidationSessionT valsession;
 	valsession.set_id ( sid );
-	::identt::store::ValidationSessionTable valsession_table{stptr->getDB()};
+	::identt::store::ValidationSessionTable valsession_table{stptr->maindb.Get()};
 	bool validation_found = valsession_table.GetOne(&valsession,::identt::store::K_VALIDATIONSESSION);
 	if (!validation_found || valsession.client_secret() != subtok->client_secret())
 		throw ::identt::query::SydentException("No valid session was found matching that sid and client secret",M_NO_VALID_SESSION);
@@ -105,7 +107,7 @@ void identt::store::ThreePidService::Bind3pidAction(
 	// start
 	::identt::store::ValidationSessionT valsession;
 	valsession.set_id ( sid );
-	::identt::store::ValidationSessionTable valsession_table{stptr->getDB()};
+	::identt::store::ValidationSessionTable valsession_table{stptr->maindb.Get()};
 	bool validation_found = valsession_table.GetOne(&valsession,::identt::store::K_VALIDATIONSESSION);
 	if (!validation_found || valsession.client_secret() != subtok->client_secret())
 		throw ::identt::query::SydentException("No valid session was found matching that sid and client secret",M_NO_VALID_SESSION);
@@ -116,12 +118,12 @@ void identt::store::ThreePidService::Bind3pidAction(
 		throw ::identt::query::SydentException("This validation session has not yet been completed",M_SESSION_NOT_VALIDATED);
 	}
 	// work starts here
-	std::string origin_server = stptr->get_mailhost();
+	std::string origin_server = stptr->mailhost.Get();
 	::identt::store::TransactionT trans;
 	uint64_t expires = THREEPID_SESSION_VALID_LIFETIME_MS + currtime;
 	// localassoc
 	::identt::store::LocalAssocT localassoc;
-	::identt::store::LocalAssocTable localassoc_table{stptr->getDB()};
+	::identt::store::LocalAssocTable localassoc_table{stptr->maindb.Get()};
 	localassoc.set_medium( valsession.medium() );
 	localassoc.set_address ( valsession.address() );
 	bool localassoc_found = localassoc_table.GetOne(&localassoc,::identt::store::U_LOCALASSOC_MEDIUM_ADDRESS);
@@ -129,7 +131,7 @@ void identt::store::ThreePidService::Bind3pidAction(
 	// if (localassoc_found) throw ::identt::query::BadQueryException("This threepid is already associated");
 
 	// blindly update local
-	if (!localassoc_found) localassoc.set_id( stptr->GenKey() );
+	if (!localassoc_found) localassoc.set_id( stptr->maincounter.GetNext() );
 	localassoc.set_mxid( subtok->mxid() );
 	localassoc.set_ts( currtime );
 	localassoc.set_not_before( currtime );
@@ -138,11 +140,11 @@ void identt::store::ThreePidService::Bind3pidAction(
 	if (!status) throw ::identt::BadDataException("Cannot Insert local 3pid assoc");
 	// globalassoc
 	::identt::store::GlobalAssocT globalassoc;
-	::identt::store::GlobalAssocTable globalassoc_table{stptr->getDB()};
+	::identt::store::GlobalAssocTable globalassoc_table{stptr->maindb.Get()};
 	globalassoc.set_origin_id( localassoc.id() );
 	globalassoc.set_origin_server( origin_server );
 	bool globalassoc_found = globalassoc_table.GetOne(&globalassoc,::identt::store::U_GLOBALASSOC_ORIGINSERVER_ORIGINID);
-	if (!globalassoc_found) globalassoc.set_id( stptr->GenKey() );
+	if (!globalassoc_found) globalassoc.set_id( stptr->maincounter.GetNext() );
 	globalassoc.set_medium( valsession.medium() );
 	globalassoc.set_address ( valsession.address() );
 	globalassoc.set_mxid( subtok->mxid() );
@@ -174,7 +176,7 @@ void identt::store::ThreePidService::Bind3pidAction(
 	result.set_validated_at( currtime );
 
 	// invite-tokens start
-	::identt::store::InviteTokenTable token_table{stptr->getDB()};
+	::identt::store::InviteTokenTable token_table{stptr->maindb.Get()};
 	::identt::store::InviteTokenT token;
 	::identt::store::InviteTokenTable::MapT token_map;
 	std::set<std::pair<std::string,std::string> > dup_set;
@@ -243,8 +245,10 @@ void identt::store::ThreePidService::Bind3pidAction(
 	this->AddSign(stptr, tmpstr , &pubkey, output,signatures);
 	bpa->set_output( output );
 
-	if (!globalassoc_table.DoTrans(&trans))
-		throw ::identt::BadDataException("Insert failed");
+	// transaction , throws on fail
+	trans.set_id( stptr->logcounter.GetNext() );
+	::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
+	storetrans.Commit(&trans);
 
 }
 

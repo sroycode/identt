@@ -41,7 +41,6 @@ identt::store::GlobalAssocTable::GlobalAssocTable( identt::store::GlobalAssocTab
 	: identt::store::GlobalAssocTable::GlobalAssocTable(
 	trydb,
 	K_GLOBALASSOC,
-	"globalassoc",
 	{ U_GLOBALASSOC_ORIGINSERVER_ORIGINID },
 	{ I_GLOBALASSOC_MEDIUM_ADDRESS }
 	)
