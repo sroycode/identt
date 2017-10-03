@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file src/http/NotFoundService.hpp
+ * @file include/http/ServerConfig.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,55 +27,25 @@
  *
  * @section DESCRIPTION
  *
- *  NotFoundService.hpp :   NotFound Server Implementation
+ *  ServerConfig.hpp :  Server Config
  *
  */
-#ifndef _IDENTT_HTTP_NOTFOUNDSERVICE_HPP_
-#define _IDENTT_HTTP_NOTFOUNDSERVICE_HPP_
+#ifndef _IDENTT_HTTP_SERVER_CONFIG_HPP_
+#define _IDENTT_HTTP_SERVER_CONFIG_HPP_
 
-#include <http/ServiceBase.hpp>
+#include <string>
 
 namespace identt {
 namespace http {
 
-template <class HttpServerT>
-class NotFoundService : protected identt::http::ServiceBase<HttpServerT> {
-public:
-
-	/**
-	* NotFoundService : constructor
-	*
-	* @param context
-	*   identt::utils::SharedTable::pointer stptr
-	*
-	* @param server
-	*   HttpServerT server
-	*
-	* @param scope
-	*   unsigned int scope check
-	*
-	* @return
-	*   none
-	*/
-
-	NotFoundService(identt::utils::SharedTable::pointer stptr, typename std::shared_ptr<HttpServerT> server, unsigned int scope)
-		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
-	{
-		if (!(this->myscope & scope)) return; // scope mismatch
-		server->default_resource["GET"] =
-		[this](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
-			this->HttpErrorAction(response,request,404,"NOT FOUND");
-		};
-		server->default_resource["POST"] =
-		[this](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
-			this->HttpErrorAction(response,request,404,"NOT FOUND");
-		};
-	}
-
-private:
+struct ServerConfig {
+	ServerConfig(std::string address, unsigned short port):
+		address(address),port(port), reuse_address(true) {}
+	unsigned short port;
+	std::string address;
+	bool reuse_address;
 };
 
 } // namespace http
 } // namespace identt
-
-#endif // _IDENTT_HTTP_NOTFOUNDSERVICE_HPP_
+#endif	/* _IDENTT_HTTP_SERVER_CONFIG_HPP_ */

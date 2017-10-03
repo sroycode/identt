@@ -79,7 +79,7 @@ public:
 		                    });
 
 		server->resource["/_matrix/identity/api/v1/pubkey/([A-z0-9]*)(%3[Aa]|:)(.*)$"]["GET"]
-		=[this,stptr](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
 					std::string err;
@@ -127,7 +127,7 @@ public:
 		                    });
 
 		server->resource["/_matrix/identity/api/v1/pubkey/isvalid\\\?(.*)$"]["GET"]
-		=[this,stptr](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
 					std::string err;
@@ -176,7 +176,7 @@ public:
 		                    });
 
 		server->resource["/_matrix/identity/api/v1/pubkey/ephemeral/isvalid\\\?(.*)$"]["GET"]
-		=[this,stptr](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
 					std::string err;
@@ -223,7 +223,7 @@ public:
 		});
 
 		server->resource["/_matrix/identity/api/v1/sign-([A-z0-9]*)(%3[Aa]|:)(.*)$"]["POST"]
-		=[this,stptr](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
 					std::string err;

@@ -33,10 +33,9 @@
 #ifndef _IDENTT_HTTP_CLIENTBASE_HPP_
 #define _IDENTT_HTTP_CLIENTBASE_HPP_
 
-#include <boost/asio.hpp>
-#include <unordered_map>
 #include <map>
 #include <random>
+#include "ClientResponse.hpp"
 
 namespace identt {
 namespace http {
@@ -44,20 +43,10 @@ namespace http {
 template <class socket_type>
 class ClientBase {
 public:
-	class Response {
-		friend class ClientBase<socket_type>;
+	using Response = ClientResponse;
+	using RespPtr = std::shared_ptr<Response>;
 
-	public:
-		std::string http_version, status_code;
-		std::istream content;
-		std::unordered_map<std::string, std::string> header;
-
-	private:
-		boost::asio::streambuf content_buffer;
-		Response(): content(&content_buffer) {};
-	};
-
-	std::shared_ptr<Response> request(
+	RespPtr request(
 	    const std::string& request_type,
 	    const std::string& path="/",
 	    const std::map<std::string,
@@ -67,7 +56,7 @@ public:
 		return request(request_type, path, empty_ss, header);
 	}
 
-	std::shared_ptr<Response> request(const std::string& request_type, const std::string& path, std::ostream& content,
+	RespPtr request(const std::string& request_type, const std::string& path, std::ostream& content,
 	                                  const std::map<std::string, std::string>& header=std::map<std::string, std::string>())
 	{
 		std::string corrected_path=path;
@@ -90,7 +79,7 @@ public:
 		if(content_length>0)
 			write_stream << content.rdbuf();
 
-		std::shared_ptr<Response> response(new Response());
+		RespPtr response(new Response());
 
 		try {
 			connect();
@@ -171,7 +160,7 @@ protected:
 
 	virtual void connect()=0;
 
-	void parse_response_header(std::shared_ptr<Response> response, std::istream& stream) const
+	void parse_response_header(RespPtr response, std::istream& stream) const
 	{
 		std::string line;
 		getline(stream, line);

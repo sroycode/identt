@@ -84,7 +84,7 @@ public:
 		});
 
 		server->resource["/_matrix/identity/api/v1/validate/(email|msisdn)/requestToken$"]["POST"]
-		=[this,stptr](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
 					std::string err;
@@ -139,7 +139,7 @@ public:
 		                    });
 
 		server->resource["/_matrix/identity/api/v1/validate/(email|msisdn)/requestToken\\\?(.*)$"]["GET"]
-		=[this,stptr](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
 					std::string err;
@@ -191,7 +191,7 @@ public:
 		});
 
 		server->resource["/_matrix/identity/api/v1/validate/(email|msisdn)/submitToken$"]["POST"]
-		=[this,stptr](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
 					std::string err;
@@ -246,7 +246,7 @@ public:
 		                    });
 
 		server->resource["/_matrix/identity/api/v1/validate/(email|msisdn)/submitToken\\\?(.*)$"]["GET"]
-		=[this,stptr](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
 					std::string err;

@@ -31,24 +31,17 @@
  *  - webservice is single threaded
  *
  */
-#ifndef _IDENTT_HTTP_HTTPSERVERBASE_HPP_
-#define _IDENTT_HTTP_HTTPSERVERBASE_HPP_
+#ifndef _IDENTT_HTTP_SERVER_BASE_HPP_
+#define _IDENTT_HTTP_SERVER_BASE_HPP_
 
-#include <boost/asio.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/functional/hash.hpp>
-#include <unordered_map>
 #include <functional>
 #include <iostream>
-#include <sstream>
-// Late 2017 TODO: remove the following checks and always use std::regex
-#ifdef USE_BOOST_REGEX
-#include <boost/regex.hpp>
-#define REGEX_NS boost
-#else
-#include <regex>
-#define REGEX_NS std
-#endif
+
+#include "ServerContent.hpp"
+#include "ServerRequest.hpp"
+#include "ServerResponse.hpp"
+#include "ServerConfig.hpp"
+
 namespace identt {
 namespace http {
 
@@ -56,88 +49,24 @@ template <class socket_type>
 class HttpServerBase {
 public:
 	using iopointer = std::shared_ptr<boost::asio::io_service>;
+	using Content = ServerContent;
+	using Request = ServerRequest;
+	using Response = ServerResponse<socket_type>;
+	using Config = ServerConfig;
+	using RespPtr = std::shared_ptr<Response>;
+	using ReqPtr = std::shared_ptr<Request>;
+	using RespReqF =  std::function<void(RespPtr,ReqPtr)>;
+
 	virtual ~HttpServerBase() {}
-	class Response : public std::ostream {
-		friend class HttpServerBase<socket_type>;
-		boost::asio::streambuf streambuf;
-		std::shared_ptr<socket_type> socket;
-		Response(const std::shared_ptr<socket_type> &socket): std::ostream(&streambuf), socket(socket) {}
-	public:
-		size_t size()
-		{
-			return streambuf.size();
-		}
-	};
-	class Content : public std::istream {
-		friend class HttpServerBase<socket_type>;
-	public:
-		size_t size()
-		{
-			return streambuf.size();
-		}
-		std::string string()
-		{
-			std::stringstream ss;
-			ss << rdbuf();
-			return ss.str();
-		}
-	private:
-		boost::asio::streambuf &streambuf;
-		Content(boost::asio::streambuf &streambuf): std::istream(&streambuf), streambuf(streambuf) {}
-	};
-	class Request {
-		friend class HttpServerBase<socket_type>;
-		//Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
-		class iequal_to {
-		public:
-			bool operator()(const std::string &key1, const std::string &key2) const
-			{
-				return boost::algorithm::iequals(key1, key2);
-			}
-		};
-		class ihash {
-		public:
-			size_t operator()(const std::string &key) const
-			{
-				std::size_t seed=0;
-				for(auto &c: key)
-					boost::hash_combine(seed, std::tolower(c));
-				return seed;
-			}
-		};
-	public:
-		std::string method, path, http_version;
-		Content content;
-		std::unordered_multimap<std::string, std::string, ihash, iequal_to> header;
-		REGEX_NS::smatch path_match;
-		std::string remote_endpoint_address;
-		unsigned short remote_endpoint_port;
-	private:
-		Request(): content(streambuf) {}
-		boost::asio::streambuf streambuf;
-	};
-	class Config {
-		friend class HttpServerBase<socket_type>;
-		Config(std::string address, unsigned short port):
-			address(address),port(port), reuse_address(true) {}
-	public:
-		unsigned short port;
-		///IPv4 address in dotted decimal form or IPv6 address in hexadecimal notation.
-		///If empty, the address will be any address.
-		std::string address;
-		///Set to false to avoid binding the socket to an address that is already in use.
-		bool reuse_address;
-	};
+
 	///Set before calling start().
 	Config config;
-	std::unordered_map<std::string, std::unordered_map<std::string,
-	    std::function<void(std::shared_ptr<typename HttpServerBase<socket_type>::Response>, std::shared_ptr<typename HttpServerBase<socket_type>::Request>)> > >  resource;
-	std::unordered_map<std::string,
-	    std::function<void(std::shared_ptr<typename HttpServerBase<socket_type>::Response>, std::shared_ptr<typename HttpServerBase<socket_type>::Request>)> > default_resource;
+
+	std::unordered_map<std::string, std::unordered_map<std::string, RespReqF > >  resource;
+	std::unordered_map<std::string, RespReqF > default_resource;
 	std::function<void(const std::exception&)> exception_handler;
 private:
-	std::vector<std::pair<std::string, std::vector<std::pair<REGEX_NS::regex,
-	    std::function<void(std::shared_ptr<typename HttpServerBase<socket_type>::Response>, std::shared_ptr<typename HttpServerBase<socket_type>::Request>)> > > > > opt_resource;
+	std::vector<std::pair<std::string, std::vector<std::pair<REGEX_NS::regex, RespReqF > > > > opt_resource;
 public:
 	void start(iopointer io_service_)
 	{
@@ -181,7 +110,7 @@ public:
 		acceptor->close();
 	}
 	///Use this function if you need to recursively send parts of a longer message
-	void send(const std::shared_ptr<Response> &response, const std::function<void(const boost::system::error_code&)>& callback=nullptr) const
+	void send(const RespPtr &response, const std::function<void(const boost::system::error_code&)>& callback=nullptr) const
 	{
 		boost::asio::async_write(*response->socket, response->streambuf, [this, response, callback](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
 			if(callback)
@@ -215,7 +144,7 @@ protected:
 	{
 		//Create new streambuf (Request::streambuf) for async_read_until()
 		//shared_ptr is used to pass temporary objects to the asynchronous functions
-		std::shared_ptr<Request> request(new Request());
+		ReqPtr request(new Request());
 		try {
 			request->remote_endpoint_address=socket->lowest_layer().remote_endpoint().address().to_string();
 			request->remote_endpoint_port=socket->lowest_layer().remote_endpoint().port();
@@ -267,7 +196,7 @@ protected:
 			}
 		});
 	}
-	bool parse_request(const std::shared_ptr<Request> &request) const
+	bool parse_request(const ReqPtr &request) const
 	{
 		std::string line;
 		getline(request->content, line);
@@ -302,7 +231,7 @@ protected:
 			return false;
 		return true;
 	}
-	void find_resource(const std::shared_ptr<socket_type> &socket, const std::shared_ptr<Request> &request)
+	void find_resource(const std::shared_ptr<socket_type> &socket, const ReqPtr &request)
 	{
 		//Find path- and method-match, and call write_response
 		for(auto& res: opt_resource) {
@@ -322,14 +251,12 @@ protected:
 			write_response(socket, request, it_method->second);
 		}
 	}
-	void write_response(const std::shared_ptr<socket_type> &socket, const std::shared_ptr<Request> &request,
-	                    std::function<void(std::shared_ptr<typename HttpServerBase<socket_type>::Response>,
-	                                       std::shared_ptr<typename HttpServerBase<socket_type>::Request>)>& resource_function)
+	void write_response(const std::shared_ptr<socket_type> &socket, const ReqPtr &request, RespReqF& resource_function)
 	{
 		//Set timeout on the following boost::asio::async-read or write function
 		auto timer=get_timeout_timer(socket, timeout_content);
-		auto response=std::shared_ptr<Response>(new Response(socket), [this, request, timer](Response *response_ptr) {
-			auto response=std::shared_ptr<Response>(response_ptr);
+		auto response=RespPtr(new Response(socket), [this, request, timer](Response *response_ptr) {
+			auto response=RespPtr(response_ptr);
 			send(response, [this, response, request, timer](const boost::system::error_code& ec) {
 				if(timer)
 					timer->cancel();
@@ -364,4 +291,4 @@ protected:
 
 } // namespace http
 } // namespace identt
-#endif	/* _IDENTT_HTTP_HTTPSERVERBASE_HPP_ */
+#endif	/* _IDENTT_HTTP_SERVER_BASE_HPP_ */

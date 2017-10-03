@@ -75,10 +75,10 @@ protected:
 	* HttpErrorAction : Error Action Template no payload maybe template
 	*
 	* @param response
-	*   std::shared_ptr<typename HttpServerT::Response> response
+	*   typename HttpServerT::RespPtr response
 	*
 	* @param request
-	*   std::shared_ptr<typename HttpServerT::Request> request
+	*   typename HttpServerT::ReqPtr request
 	*
 	* @param ec
 	*   int http error code
@@ -89,7 +89,7 @@ protected:
 	* @return
 	*   none
 	*/
-	void HttpErrorAction(std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request,
+	void HttpErrorAction(typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request,
 	                     int ec, const char* em)
 	{
 		std::string output="";
@@ -106,10 +106,10 @@ protected:
 	* HttpErrorAction : Error Action Template with payload no template
 	*
 	* @param response
-	*   std::shared_ptr<typename HttpServerT::Response> response
+	*   typename HttpServerT::RespPtr response
 	*
 	* @param request
-	*   std::shared_ptr<typename HttpServerT::Request> request
+	*   typename HttpServerT::ReqPtr request
 	*
 	* @param ec
 	*   int http error code
@@ -123,7 +123,7 @@ protected:
 	* @return
 	*   none
 	*/
-	void HttpErrorAction(std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request,
+	void HttpErrorAction(typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request,
 	                     int ec, const char* em, std::string payload)
 	{
 		*response <<  "HTTP/" << request->http_version << " " << ec << " " << em;
@@ -134,10 +134,10 @@ protected:
 	* HttpOKAction : OK Action template
 	*
 	* @param response
-	*   std::shared_ptr<typename HttpServerT::Response> response
+	*   typename HttpServerT::RespPtr response
 	*
 	* @param request
-	*   std::shared_ptr<typename HttpServerT::Request> request
+	*   typename HttpServerT::ReqPtr request
 	*
 	* @param ec
 	*   int http error code
@@ -157,7 +157,7 @@ protected:
 	* @return
 	*   none
 	*/
-	void HttpOKAction(std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request,
+	void HttpOKAction(typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request,
 	                  int ec, const char* em, const char* content_type , std::string& payload, bool add_cors)
 	{
 		*response << "HTTP/" << request->http_version << " " << ec <<  " " << em << "\r\n";
@@ -175,12 +175,12 @@ protected:
 	* JsonRequest : Check if request is json from Content-Type and Accept fields
 	*
 	* @param request
-	*   std::shared_ptr<typename HttpServerT::Request> request
+	*   typename HttpServerT::ReqPtr request
 	*
 	* @return
 	*   bool is json
 	*/
-	bool JsonRequest(std::shared_ptr<typename HttpServerT::Request> request)
+	bool JsonRequest(typename HttpServerT::ReqPtr request)
 	{
 		auto it=request->header.find("Content-Type");
 		if(it==request->header.end()) it=request->header.find("Accept");

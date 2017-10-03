@@ -68,7 +68,7 @@ public:
 		// GET help
 		server->resource["/help$"]["GET"]
 		    = server->resource["/helptext$"]["GET"]
-		=[this,stptr,scope](std::shared_ptr<typename HttpServerT::Response> response, std::shared_ptr<typename HttpServerT::Request> request) {
+		=[this,stptr,scope](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			try {
 				bool showtext = ("/helptext" == request->path_match[0]);
 				std::string output;

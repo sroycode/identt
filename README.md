@@ -104,7 +104,7 @@ token=3c512048-2ef9-43e4-8e7b-1ce72584b337 sid=2 sh ../test/test_3pid_bind.sh
 
 ## Acknowledgements
 
-This project depends on
+This project uses code from
 
 - https://github.com/Tencent/rapidjson
 - https://github.com/Amanieu/asyncplusplus
