@@ -13,7 +13,7 @@ enum ActTypeE {
 };
 
 message MPOneT {
-	string sid                                                     =  1;
+	uint64 sid                                                     =  1;
 	string country                                                 =  2;
 }
 

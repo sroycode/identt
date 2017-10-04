@@ -29,16 +29,20 @@ enum KeyTypeE {
 	I_NOINDEX                                                      = 50;
 	I_INVITETOKEN_MEDIUM_ADDRESS                                   = 51;
 	I_INVITETOKEN_TOKEN                                            = 52;
-	U_EPHEMERALPUBLICKEY_PUBLICKEY                                 = 53;
-	U_PEER_NAME                                                    = 54;
-	U_PEERPUBKEY_PEERNAME_ALG                                      = 55;
-	U_LOCALASSOC_MEDIUM_ADDRESS                                    = 56;
-	I_GLOBALASSOC_MEDIUM_ADDRESS                                   = 57;
 
+	U_EPHEMERALPUBLICKEY_PUBLICKEY                                 = 53;
+
+	U_PEER_NAME                                                    = 54;
+
+	U_PEERPUBKEY_PEERNAME_ALG                                      = 55;
+
+	U_LOCALASSOC_MEDIUM_ADDRESS                                    = 56;
+
+	I_GLOBALASSOC_MEDIUM_ADDRESS                                   = 57;
 	U_GLOBALASSOC_ORIGINSERVER_ORIGINID                            = 59;
 
-	U_TOKENAUTH_VALIDATIONSESSION_SENDATTEMPT                      = 60;
-	U_TOKENAUTH_TOKEN                                              = 61;
+	U_TOKENAUTH_VALIDATIONSESSION                                  = 60;
+
 	U_VALIDATIONSESSION_MEDIUM_ADDRESS_CLIENTSECRET                = 62;
 
 };

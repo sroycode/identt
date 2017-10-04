@@ -62,7 +62,7 @@ void identt::store::ThreePidService::GetValidated3pidAction(
 	::identt::query::SubmitTokenT* subtok = gva->mutable_subtok();
 	::identt::query::ValidatedAtT* valresult = gva->mutable_valresult();
 	// check
-	uint64_t sid = stoull(subtok->sid());
+	uint64_t sid = subtok->sid();
 	uint64_t currtime = ::identt::query::GetTime();
 	if (sid==0)
 		throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
@@ -96,7 +96,7 @@ void identt::store::ThreePidService::Bind3pidAction(
 
 	// check
 	::identt::query::SubmitTokenT* subtok = bpa->mutable_subtok();
-	uint64_t sid = stoull(subtok->sid());
+	uint64_t sid = subtok->sid();
 	uint64_t currtime = ::identt::query::GetTime();
 	if (sid==0)
 		throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);

@@ -82,6 +82,7 @@ public:
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
+					LOG(INFO) << request->path;
 					std::string err;
 					PubKeyT pubkey;
 					pubkey.set_algo( request->path_match[1] );
@@ -130,6 +131,7 @@ public:
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
+					LOG(INFO) << request->path;
 					std::string err;
 
 					PubKeyT pubkey;
@@ -179,6 +181,7 @@ public:
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
+					LOG(INFO) << request->path;
 					std::string err;
 
 					PubKeyT pubkey;
@@ -226,6 +229,7 @@ public:
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
+					LOG(INFO) << request->path;
 					std::string err;
 					identt::query::PubKeyT pubkey;
 					pubkey.set_algo( request->path_match[1] );

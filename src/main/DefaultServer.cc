@@ -33,6 +33,7 @@
 
 #include <sodium.h>
 #define STRIP_FLAG_HELP 1
+#include <glog/logging.h>
 #include <gflags/gflags.h>
 #include <iostream>
 
@@ -47,6 +48,7 @@ DEFINE_string(config, "", "Config file");
 DEFINE_bool(daemon, false, "Start as daemon");
 
 DEFINE_validator(config, &IsNonEmptyMessage);
+
 /* GFlags Settings End */
 
 #include <utils/BaseUtils.hpp>
@@ -75,6 +77,11 @@ DEFINE_validator(config, &IsNonEmptyMessage);
 int main(int argc, char *argv[])
 {
 
+	// log only to stderr changed to log also
+	if (FLAGS_logtostderr==1) {
+		FLAGS_logtostderr=0;
+		FLAGS_alsologtostderr=1;
+	}
 	if (sodium_init() < 0) {
 		throw identt::InitialException("sodium cannot initialize, exiting...");
 	}

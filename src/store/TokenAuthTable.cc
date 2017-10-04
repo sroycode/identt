@@ -41,7 +41,7 @@ identt::store::TokenAuthTable::TokenAuthTable( identt::store::TokenAuthTable::db
 	: identt::store::TokenAuthTable::TokenAuthTable(
 	trydb,
 	K_TOKENAUTH,
-	{ U_TOKENAUTH_TOKEN,U_TOKENAUTH_VALIDATIONSESSION_SENDATTEMPT },
+	{ U_TOKENAUTH_VALIDATIONSESSION },
 	{  }
 	)
 
@@ -59,12 +59,8 @@ std::string identt::store::TokenAuthTable::GetKey(identt::store::TokenAuthT* rec
 	case K_TOKENAUTH:
 		key = EncodePrimaryKey(PrimaryKey,record->id());
 		break;
-	case U_TOKENAUTH_TOKEN : {
-		key = EncodeSecondaryKey<std::string>(keytype , record->token()  );
-		break;
-	}
-	case U_TOKENAUTH_VALIDATIONSESSION_SENDATTEMPT : {
-		key = EncodeSecondaryKey<uint64_t,int32_t>(keytype , record->validation_session(),record->send_attempt_number()  );
+	case U_TOKENAUTH_VALIDATIONSESSION : {
+		key = EncodeSecondaryKey<uint64_t>(keytype , record->validation_session()  );
 		break;
 	}
 	}

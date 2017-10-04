@@ -85,6 +85,7 @@ public:
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			async::parallel_invoke([this,stptr,response,request] {
 				try {
+					LOG(INFO) << request->path;
 					std::string err;
 					bool use_json = this->JsonRequest(request);
 

@@ -40,8 +40,6 @@
 
 #include <store/StoreTrans.hpp>
 
-#include <utils/sole.hpp>
-
 /**
 * RequestTokenAction : Service Endpoint RequestToken
 *
@@ -69,7 +67,6 @@ void identt::store::ValidateService::RequestTokenAction(
 
 	// fetch existing else insert new
 
-
 	bool validation_found = valsession_table.GetOne(&valsession,::identt::store::U_VALIDATIONSESSION_MEDIUM_ADDRESS_CLIENTSECRET);
 	if (validation_found) {
 		// nothing
@@ -80,28 +77,27 @@ void identt::store::ValidateService::RequestTokenAction(
 			throw ::identt::BadDataException("Cannot Insert vsession");
 	}
 
-	unsigned int sid = (unsigned int) valsession.id() % 99999;
-
 	// get token auth if exists
 	::identt::store::TokenAuthTable tokenauth_table(stptr->maindb.Get());
 	::identt::store::TokenAuthT tokenauth;
 	tokenauth.set_validation_session( valsession.id() );
-	tokenauth.set_send_attempt_number( reqtok->send_attempt() );
-	bool tokenauth_found = tokenauth_table.GetOne(&tokenauth, ::identt::store::U_TOKENAUTH_VALIDATIONSESSION_SENDATTEMPT);
-	// generate a new token if send_attemp_number is higher
-	if (!tokenauth_found) {
-		// check sequence
-		if (tokenauth.send_attempt_number() >1) {
-			::identt::store::TokenAuthT tokenprev;
-			tokenprev.set_send_attempt_number( reqtok->send_attempt() - 1);
-			if (!tokenauth_table.GetOne(&tokenprev, ::identt::store::U_TOKENAUTH_VALIDATIONSESSION_SENDATTEMPT))
-				throw ::identt::BadDataException("Token out of Sync");
-		}
+	bool tokenauth_found = tokenauth_table.GetOne(&tokenauth, ::identt::store::U_TOKENAUTH_VALIDATIONSESSION);
+	// generate a new token if send_attempt_number is higher 
+	bool generate_token = (!tokenauth_found);
+	if (tokenauth_found) {
+		if (( reqtok->send_attempt() - tokenauth.send_attempt_number() ) >1)
+			throw ::identt::BadDataException("Token out of Sync");
+		if (( tokenauth.send_attempt_number() - reqtok->send_attempt()) ==1)
+			generate_token=true;
+	}
+	if (generate_token) {
+		tokenauth.set_send_attempt_number( reqtok->send_attempt() );
 		// set id for new record
-		tokenauth.set_id( stptr->maincounter.GetNext() );
-		auto tok = sole::uuid4();
-		tokenauth.set_token( tok.str() );
-		LOG(INFO) << "token=" <<  tokenauth.token() << " sid=" <<  sid;
+		if (!tokenauth_found)
+			tokenauth.set_id( stptr->maincounter.GetNext() );
+		uint64_t tok = currtime % 999999;
+		tokenauth.set_token( std::to_string(tok) );
+		LOG(INFO) << "token=\"" <<  tokenauth.token() << "\" sid=" <<  valsession.id();
 		// tokenauth.set_send_attempt_number( -1 );
 		if (!tokenauth_table.AddRecord(&tokenauth,&trans,false))
 			throw ::identt::BadDataException("Cannot Insert tokenauth");
@@ -117,7 +113,7 @@ void identt::store::ValidateService::RequestTokenAction(
 		payload->set_actkey ( ::identt::mail::A_AUTHTOKEN );
 		payload->set_retry( reqtok->send_attempt() );
 		::identt::mail::MPOneT* mpone = payload->mutable_mpone();
-		mpone->set_sid( std::to_string(sid) );
+		mpone->set_sid( valsession.id() );
 		mpone->set_country( reqtok->country() );
 
 		if (!paravion_table.AddRecord(&paravion,&trans,false))
@@ -130,7 +126,7 @@ void identt::store::ValidateService::RequestTokenAction(
 	}
 
 	ssid->set_success( true);
-	ssid->set_sid( std::to_string(sid) );
+	ssid->set_sid( valsession.id() );
 	if (medium=="msisdn") {
 		ssid->set_msisdn( address );
 		ssid->set_intl_fmt( "+" + address );
@@ -153,16 +149,13 @@ void identt::store::ValidateService::SubmitTokenAction(
 	std::string medium = stoka->medium();
 
 	::identt::store::TokenAuthT tokenauth;
+	tokenauth.set_validation_session( subtok->sid() );
 	::identt::store::TokenAuthTable tokenauth_table(stptr->maindb.Get());
-	// tokenauth_table.PrintAll();
-	tokenauth.set_token( subtok->token() );
-	bool found = tokenauth_table.GetOne(&tokenauth,::identt::store::U_TOKENAUTH_TOKEN);
+	bool found = tokenauth_table.GetOne(&tokenauth, ::identt::store::U_TOKENAUTH_VALIDATIONSESSION);
 	if (!found)
-		throw ::identt::query::SydentException("Token not found", M_NO_VALID_SESSION);
-
-	std::string sid = std::to_string( tokenauth.validation_session() % 99999 );
-	if (sid != subtok->sid())
-		throw ::identt::query::SydentException("Sid does not match ", M_NO_VALID_SESSION);
+		throw ::identt::query::SydentException("Sid not found", M_NO_VALID_SESSION);
+	if (tokenauth.token() != subtok->token())
+		throw ::identt::query::SydentException("Token does not match ", M_NO_VALID_SESSION);
 	::identt::store::ValidationSessionT valsession;
 	::identt::store::ValidationSessionTable valsession_table{stptr->maindb.Get()};
 
@@ -170,7 +163,6 @@ void identt::store::ValidateService::SubmitTokenAction(
 	found = valsession_table.GetOne(&valsession,::identt::store::K_VALIDATIONSESSION);
 	if (!found)
 		throw ::identt::query::SydentException("Session not found", M_NO_VALID_SESSION);
-
 
 	if (valsession.client_secret() != subtok->client_secret())
 		throw ::identt::query::SydentException("Client secret does not match the one given when requesting the token",

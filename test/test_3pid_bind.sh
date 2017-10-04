@@ -14,16 +14,16 @@ export mxid=${mxid:="@sroycode:jadoo.mobi"};
 if [ ${POSTFORM} -eq 0 ] ; then
 ${HTTPIE} POST ${TESTURL}/3pid/bind \
 	mxid:="\"${mxid}\"" \
-	sid:="\"${sid}\"" \
+	sid:=${sid} \
 	client_secret:="\"${client_secret}\""
 elif [ ${POSTFORM} -eq 1 ] ; then
 ${HTTPIE} --form POST ${TESTURL}/3pid/bind \
 	mxid="${mxid}" \
-	sid="${sid}" \
+	sid=${sid} \
 	client_secret="${client_secret}"
 elif [ ${POSTFORM} -eq 2 ] ; then
 ${HTTPIE} GET ${TESTURL}/3pid/bind \
 	mxid=="${mxid}" \
-	sid=="${sid}" \
+	sid==${sid} \
 	client_secret=="${client_secret}"
 fi
