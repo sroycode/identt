@@ -42,12 +42,9 @@
 
 #include <utils/SharedObject.hpp>
 #include <utils/SharedCounter.hpp>
-#include <utils/HelpQuery.hpp>
 #include <store/StoreLevel.hpp>
 #include <crypto/CryptoBase.hpp>
 
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 
 namespace identt {
 namespace utils {
@@ -61,23 +58,30 @@ public:
 	using ReadLockT = boost::shared_lock< LockT >;
 	using SharedString = SharedObject<std::string>;
 	using SharedDBPointer = SharedObject<dbpointer>;
+	using SharedBool = SharedObject<bool>;
 
 	using KeyRingT = std::unordered_map<std::string,std::shared_ptr<identt::crypto::CryptoBase> >;
 
 	/**
 	* public stable to be used directly , never updated after init by code
 	*/
-	HelpQuery httphelp;
 	KeyRingT keyring;
 	// string shared
-	SharedString mailhost;
+	SharedString shared_secret;
+	SharedString hostname;
 	SharedString baseurl;
+	SharedString master;
+	SharedString listen;
+	SharedString tohear;
 	// counter shared
 	SharedCounter maincounter;
 	SharedCounter logcounter;
 	// database pointers
 	SharedDBPointer maindb;
 	SharedDBPointer logdb;
+	// booleans
+	SharedBool is_master;
+	SharedBool is_ready;
 
 	/**
 	* make noncopyable
@@ -127,42 +131,8 @@ public:
 	*/
 	iopointer getIO();
 
-	/**
-	* set_master : set atomic master
-	*
-	* @param io
-	*   bool atomic master
-	*/
-	void set_master(bool r);
-
-	/**
-	* is_master : get atomic master
-	*
-	* @return
-	*   bool atomic master
-	*/
-	bool is_master();
-
-	/**
-	* set_ready : set atomic ready
-	*
-	* @param r
-	*   bool atomic ready
-	*/
-	void set_ready(bool r);
-
-	/**
-	* is_ready : get atomic ready
-	*
-	* @return
-	*   bool atomic ready
-	*/
-	bool is_ready();
-
 private:
 
-	bool ready;
-	bool master;
 	iopointer io;
 	LockT class_mutex;
 	LockT number_mutex;

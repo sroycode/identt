@@ -42,10 +42,9 @@ static bool IsNonEmptyMessage(const char *flagname, const std::string &value)
 	return status;
 }
 
-DEFINE_string(key, "", "ed25519 private key");
+DEFINE_string(shared_secret, "", "shared secret between servers");
 DEFINE_string(httphost, "localhost:9091", "host and port");
-DEFINE_string(mailhost, "", "mail host for signature");
-DEFINE_validator(key, &IsNonEmptyMessage);
+DEFINE_validator(shared_secret, &IsNonEmptyMessage);
 /* GFlags Settings End */
 
 #include "GetMail.hh"
@@ -64,7 +63,7 @@ int main(int argc, char *argv[])
 
 	/** GFlags **/
 	std::string usage("The program gets email sms with signature.  Sample usage:\n");
-	usage += std::string(argv[0]) + " -key xxxx -httpost localhost:9091 -mailhost identt.doesntexist.com" ;
+	usage += std::string(argv[0]) + " -shared_secret xxxx -httpost localhost:9091" ;
 	gflags::SetUsageMessage(usage);
 	gflags::SetVersionString(IDENTT_DEFAULT_EXE_VERSION);
 	// read command line
@@ -73,19 +72,14 @@ int main(int argc, char *argv[])
 	/** Logging **/
 	google::InitGoogleLogging(argv[0]);
 	std::string endpoint = "http://" + FLAGS_httphost + "/_identt/identity/api/v1/getmailstosend";
-	identt::crypto::Ed25519 keystore{IDENTT_CRYPTO_SCOPE_SIGNIT,FLAGS_key};
-	std::vector<identt::query::SignatureT> signatures;
 	identt::mail::MailQueryT mailq;
 
 	try {
 		mailq.set_lastid(0);
 		mailq.set_limit(10);
+		mailq.set_shared_secret(FLAGS_shared_secret);
 		std::string tmpstr;
 		::identt::query::pb2json(&mailq,tmpstr);
-		std::string mysign = keystore.GetSignature(tmpstr);
-		signatures.push_back({ FLAGS_mailhost, keystore.GetAlgo() + ":mail", mysign });
-		tmpstr.clear();
-		::identt::query::pb2signedjson(&mailq,tmpstr,signatures);
 		auto r = cpr::Post(cpr::Url{endpoint},cpr::Body{tmpstr},cpr::Header{{"Content-Type", "application/json"}});
 		std::cerr << "Status Code: " << r.status_code << std::endl;
 		std::cerr << "Text: " << r.text << std::endl;

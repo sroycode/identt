@@ -21,7 +21,6 @@ if [ `uname` = 'Linux' ] ; then
 	alias cmake=cmake3 -DBOOST_ROOT="$BOOST_ROOT"
 fi
 
-
 mkdir -p ${IDENTT_SOURCE} ${IDENTT_TEMP}
 
 #### Functions to get Sources #####
@@ -39,15 +38,18 @@ if [ ! -d ${MWORKDIR} ] ; then
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
+	cd ${MWORKDIR}
+	#patch < ${IDENTT_SOURCE}/scripts/gperftools-${MVERSION}.patch
+	cd ${IDENTT_TEMP}
 fi
 cd ${MWORKDIR}
 ./configure --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
 }
 
-# Build protobuf 3.1.0
+# Build protobuf 3.3.0
 
 function build_protobuf () {
-local MVERSION=3.1.0
+local MVERSION=3.3.0
 local MSOURCEFILE=${IDENTT_TPSRC}/protobuf-cpp-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/protobuf-${MVERSION}
 if [ -f ${IDENTT_SOURCE}/thirdparty/lib/libprotobuf.a ] ; then
@@ -67,36 +69,33 @@ cd ${MWORKDIR}
 ./configure --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
 }
 
-# Building snappy 1.1.3
+# Building snappy 1.1.7
 
 function build_snappy () {
-local MVERSION=1.1.3
+local MVERSION=1.1.7
 local MSOURCEFILE=${IDENTT_TPSRC}/snappy-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/snappy-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/lib/libsnappy.a ] ; then 
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/snappy.h ] ; then 
 	if [ $# -eq 0 ] ; then echo "snappy already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "https://github.com/google/snappy/releases/download/${MVERSION}/snappy-${MVERSION}.tar.gz"
+		wget -O ${MSOURCEFILE} "https://github.com/google/snappy/archive/1.1.7.tar.gz"
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
-	cd ${MWORKDIR}
-	if [ `uname` = "Darwin" ] ; then
-		sed -i .bkp 's/libtool/g&/' ./autogen.sh
-	fi
-	sh autogen.sh
+	mkdir -p ${MWORKDIR}/build
 fi
-cd ${MWORKDIR}
-./configure --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
+cd ${MWORKDIR}/build
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
+
 }
 
-# Building leveldb 1.19
+# Building leveldb 1.20
 
 function build_leveldb () {
-local MVERSION=1.19
+local MVERSION=1.20
 local MSOURCEFILE=${IDENTT_TPSRC}/leveldb-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/leveldb-${MVERSION}
 if [ -f ${IDENTT_SOURCE}/thirdparty/lib/libleveldb.a ] ; then echo "leveldb already installed"; return ; fi
@@ -109,17 +108,18 @@ if [ ! -d ${MWORKDIR} ] ; then
 fi
 cd ${MWORKDIR}
 PLATFORM_CXXFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include" \
-PLATFORM_LDFLAGS="-L ${IDENTT_SOURCE}/thirdparty/lib" \
+PLATFORM_LDFLAGS="-L ${IDENTT_SOURCE}/thirdparty/lib -L${IDENTT_SOURCE}/thirdparty/lib64" \
 make \
 && cp out-static/libleveldb.a ${IDENTT_SOURCE}/thirdparty/lib/ \
 && cp -r include/leveldb ${IDENTT_SOURCE}/thirdparty/include/leveldb
 }
 
-# Building rocksdb 5.2.1
+# Building rocksdb 5.8
 
 function build_rocksdb () {
 build_rocks_compression 1
-local MVERSION=5.2.1
+build_snappy 1
+local MVERSION=5.8
 local MSOURCEFILE=${IDENTT_TPSRC}/rocksdb-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/rocksdb-${MVERSION}
 if [ -f ${IDENTT_SOURCE}/thirdparty/include/rocksdb/db.h ] ; then echo "rocksdb already installed"; return ; fi
@@ -132,14 +132,14 @@ if [ ! -d ${MWORKDIR} ] ; then
 	mv rocksdb-rocksdb-${MVERSION} rocksdb-${MVERSION}
 fi
 cd ${MWORKDIR}
-CFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib" \
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
+CFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib -L${IDENTT_SOURCE}/thirdparty/lib64" \
 INSTALL_PATH=${IDENTT_SOURCE}/thirdparty/ make static_lib \
 && INSTALL_PATH=${IDENTT_SOURCE}/thirdparty/ make install
 }
 
 # Building compression libs to link rocksdb
 function build_rocks_compression () {
-mkdir -p ${IDENTT_SOURCE}/thirdparty/lib/rocksdb
 build_rocks_compression_zlib $1
 build_rocks_compression_bzip2 $1
 build_rocks_compression_lz4 $1
@@ -150,8 +150,8 @@ function build_rocks_compression_zlib () {
 local MVERSION=1.2.11
 local MSOURCEFILE=${IDENTT_TPSRC}/zlib-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/zlib-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/lib/rocksdb/libz.a ] ; then
-	if [ $# -eq 0 ] ; then echo "rocksdb/libz.a already installed"; fi
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/zlib.h ] ; then
+	if [ $# -eq 0 ] ; then echo "zlib already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
@@ -162,7 +162,7 @@ if [ ! -d ${MWORKDIR} ] ; then
 	tar -zxf ${MSOURCEFILE}
 fi
 cd ${MWORKDIR}
-CFLAGS='-fPIC' ./configure --static && make && cp libz.a ${IDENTT_SOURCE}/thirdparty/lib/rocksdb/
+CFLAGS='-fPIC' ./configure --static --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
 }
 
 # Building compression bzip2 to link rocksdb
@@ -170,8 +170,8 @@ function build_rocks_compression_bzip2 () {
 local MVERSION=1.0.6
 local MSOURCEFILE=${IDENTT_TPSRC}/bzip2-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/bzip2-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/lib/rocksdb/libbz2.a ] ; then
-	if [ $# -eq 0 ] ; then echo "rocksdb/libbz2.a already installed"; fi
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/bzlib.h ] ; then
+	if [ $# -eq 0 ] ; then echo "bz2 already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
@@ -182,27 +182,28 @@ if [ ! -d ${MWORKDIR} ] ; then
 	tar -zxf ${MSOURCEFILE}
 fi
 cd ${MWORKDIR}
-make CFLAGS='-fPIC -O2 -g -D_FILE_OFFSET_BITS=64' && cp libbz2.a ${IDENTT_SOURCE}/thirdparty/lib/rocksdb/
+make CFLAGS='-fPIC -O2 -g -D_FILE_OFFSET_BITS=64' && make install PREFIX=${IDENTT_SOURCE}/thirdparty
 }
 
-# Building compression lz4 to link rocksdb
+# Building compression lz4 
+
 function build_rocks_compression_lz4 () {
-local MVERSION=r127
+local MVERSION=1.8.0
 local MSOURCEFILE=${IDENTT_TPSRC}/lz4-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/lz4-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/lib/rocksdb/liblz4.a ] ; then
-	if [ $# -eq 0 ] ; then echo "rocksdb/liblz4.a already installed"; fi
+if [ -f ${IDENTT_SOURCE}/thirdparty/lib/liblz4.a ] ; then
+	if [ $# -eq 0 ] ; then echo "lz4 already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "https://codeload.github.com/Cyan4973/lz4/tar.gz/${MVERSION}"
+		wget -O ${MSOURCEFILE} "https://github.com/lz4/lz4/archive/v${MVERSION}.tar.gz"
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
 fi
-cd ${MWORKDIR}/lib
-make CFLAGS='-fPIC' all && cp liblz4.a ${IDENTT_SOURCE}/thirdparty/lib/rocksdb/
+cd ${MWORKDIR}
+make CFLAGS='-fPIC' && make install prefix=${IDENTT_SOURCE}/thirdparty
 }
 
 # Building Libsodium 1.0.12
@@ -254,7 +255,7 @@ function build_googletest () {
 local MVERSION=git-f1a87d7
 local MSOURCEFILE=${IDENTT_TPSRC}/googletest-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/googletest-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/googletest/nn.h ] ; then echo "googletest already installed"; return ; fi
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/gtest/gtest.h ] ; then echo "googletest already installed"; return ; fi
 if [ ! -d ${MWORKDIR} ] ; then
 	cd ${IDENTT_TEMP}
 	if [ ! -f ${MSOURCEFILE} ] ; then
@@ -272,14 +273,127 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdpa
 ..  && make && make install
 }
 
+# Building libzmq git-44f96a3
+
+function build_libzmq () {
+local MVERSION=git-44f96a3
+local MSOURCEFILE=${IDENTT_TPSRC}/libzmq-${MVERSION}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/libzmq-${MVERSION}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/zmq.h ] ; then
+	if [ $# -eq 0 ] ; then echo "libzmq already installed"; fi
+	return;
+fi
+if [ ! -d ${MWORKDIR} ] ; then
+	cd ${IDENTT_TEMP}
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		git clone https://github.com/zeromq/libzmq.git libzmq-${MVERSION}
+		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
+		tar -zcf ${MSOURCEFILE} libzmq-${MVERSION}
+	else
+		tar -zxf ${MSOURCEFILE}
+	fi
+	mkdir -p ${MWORKDIR}/build
+fi
+cd ${MWORKDIR}/build
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake \
+	-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
+	-DWITH_LIBSODIUM=On \
+	..  && make && make install
+}
+
+# Building azmq git-d3171f7
+
+function build_azmq () {
+build_libzmq 1
+local MVERSION=git-d3171f7
+local MSOURCEFILE=${IDENTT_TPSRC}/azmq-${MVERSION}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/azmq-${MVERSION}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/azmq/context.hpp ] ; then
+	if [ $# -eq 0 ] ; then echo "azmq already installed"; fi
+	return;
+fi
+if [ ! -d ${MWORKDIR} ] ; then
+	cd ${IDENTT_TEMP}
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		git clone https://github.com/zeromq/azmq.git azmq-${MVERSION}
+		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
+		tar -zcf ${MSOURCEFILE} azmq-${MVERSION}
+	else
+		tar -zxf ${MSOURCEFILE}
+	fi
+	mkdir -p ${MWORKDIR}/build
+fi
+cd ${MWORKDIR}/build
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
+}
+
+
+# Building zmqpp git-89dc262
+
+function build_zmqpp () {
+build_libzmq 1
+local MVERSION=git-89dc262
+local MSOURCEFILE=${IDENTT_TPSRC}/zmqpp-${MVERSION}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/zmqpp-${MVERSION}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/zmqpp/zmqpp.hpp ] ; then
+	if [ $# -eq 0 ] ; then echo "zmqpp already installed"; fi
+	return;
+fi
+if [ ! -d ${MWORKDIR} ] ; then
+	cd ${IDENTT_TEMP}
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		git clone https://github.com/zeromq/zmqpp.git zmqpp-${MVERSION}
+		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
+		tar -zcf ${MSOURCEFILE} zmqpp-${MVERSION}
+	else
+		tar -zxf ${MSOURCEFILE}
+	fi
+	mkdir -p ${MWORKDIR}/build
+fi
+cd ${MWORKDIR}/build
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
+}
+
+# Building czmq git-364bab5
+
+function build_czmq () {
+build_libzmq 1
+build_rocks_compression_lz4 1
+local MVERSION=git-364bab5
+local MSOURCEFILE=${IDENTT_TPSRC}/czmq-${MVERSION}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/czmq-${MVERSION}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/czmq.h ] ; then
+	if [ $# -ne 0 ] ; then echo "czmq already installed"; fi
+	return;
+fi
+if [ ! -d ${MWORKDIR} ] ; then
+	cd ${IDENTT_TEMP}
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		git clone https://github.com/zeromq/czmq.git czmq-${MVERSION}
+		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
+		tar -zcf ${MSOURCEFILE} czmq-${MVERSION}
+	else
+		tar -zxf ${MSOURCEFILE}
+	fi
+	mkdir -p ${MWORKDIR}/build
+fi
+cd ${MWORKDIR}/build
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
+}
+
 ### Control ####
 
 build_gperftools
 build_protobuf
 build_snappy
+build_rocks_compression
 #build_leveldb
 build_rocksdb
-build_rocks_compression
 build_sodium
-build_nanomsg
-build_googletest
+#build_nanomsg
+#build_googletest
+build_libzmq
+#build_czmq
+build_azmq
+#build_zmqpp

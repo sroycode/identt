@@ -39,10 +39,8 @@
 #include <memory>
 #include <exception>
 
-#define IDENTT_MAX_LAT 90.0
-#define IDENTT_MIN_LAT -90.0
-#define IDENTT_MAX_LON 180.0
-#define IDENTT_MIN_LON -180.0
+#define IDENTT_SERVICE_SCOPE_HTTP  0x0001
+#define IDENTT_SERVICE_SCOPE_HTTPS 0x0002
 
 namespace identt {
 class JdException : public std::exception {

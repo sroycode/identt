@@ -62,10 +62,11 @@ const identt::utils::ServerBase::ParamsListT identt::work::WorkServer::GetRequir
 		"logdatadir",
 		"cachesize",
 		"logcachesize",
-		"mail_host",
+		"shared_secret",
+		"hostname",
 		"hostseed_ed25519",
-		"mailkey_ed25519",
-		"base_url"
+		"base_url",
+		"master"
 	};
 }
 
@@ -78,14 +79,30 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 		std::string logdatadir = params[1];
 		std::size_t cachesize = std::stoul(params[2]);
 		std::size_t logcachesize = std::stoul(params[3]);
-		std::string mailhost = params[4];
-		std::string hostseed = params[5];
-		std::string mailkey = params[6];
+		std::string shared_secret = params[4];
+		std::string hostname = params[5];
+		std::string hostseed = params[6];
 		std::string baseurl = params[7];
+		std::string master = params[8];
+
 
 		// validations
-		if (datadir=="") throw identt::InitialException("datadir unset");
-		if (logdatadir=="") throw identt::InitialException("logdatadir unset the variable is needed");
+		if (datadir.empty()) throw identt::InitialException("datadir is needed");
+		if (IDENTT_USE_SEPARATE_LOGDB && (logdatadir.empty()))
+			throw identt::InitialException("logdatadir is needed");
+
+		// master
+
+		sharedtable->master.Set( master );
+		sharedtable->is_master.Set( master.empty() );
+
+		// shared secret 
+		if (shared_secret.empty()) throw identt::InitialException("shared_secret is needed");
+		sharedtable->shared_secret.Set( shared_secret );
+
+		// hostname
+		if (hostname.empty()) throw identt::InitialException("hostname is needed");
+		sharedtable->hostname.Set( hostname );
 
 		// db setup
 		uint64_t last_pkey=0;
@@ -106,19 +123,14 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 
 		// if resets last_lkey
 		sharedtable->logcounter.Set ( (last_lkey>0) ? last_lkey : 1 );
-
-		sharedtable->mailhost.Set( mailhost );
 		sharedtable->baseurl.Set( baseurl );
 
 		// init Ed25519:0 key
 		sharedtable->keyring[ THREEPID_DEFAULT_ALGO_WITH_ID ] =
 		    ::identt::crypto::CryptoTraits::CreateFromSeed(THREEPID_DEFAULT_ALGO,hostseed);
-		// init mail sign key Ed25510:mail
-		sharedtable->keyring[ THREEPID_EXTMAIL_ALGO_WITH_ID ] =
-		    ::identt::crypto::CryptoTraits::Create(THREEPID_DEFAULT_ALGO,IDENTT_CRYPTO_SCOPE_VERIFY,mailkey);
 
 		// final
-		sharedtable->set_ready ( true );
+		sharedtable->is_ready.Set( true );
 	} catch (identt::JdException& e) {
 		LOG(INFO) << "WorkServer init failed: " << e.what() << std::endl;
 	}

@@ -21,19 +21,22 @@ find_library(ROCKSDB_LIBRARY_MAIN NAMES librocksdb.a
 )
 
 find_library(ROCKSDB_LIBRARY_ZIP NAMES libz.a
-	HINTS ${PROJECT_SOURCE_DIR}/thirdparty/lib/rocksdb
+	HINTS
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
 )
-
-find_library(ROCKSDB_LIBRARY_BZIP NAMES libbz2.a
-	HINTS ${PROJECT_SOURCE_DIR}/thirdparty/lib/rocksdb
+find_library(ROCKSDB_LIBRARY_BZIP NAMES libbz2.a libbzip2.a
+	HINTS
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
 )
-
-find_library(ROCKSDB_LIBRARY_LZIP NAMES liblz4.a
-	HINTS ${PROJECT_SOURCE_DIR}/thirdparty/lib/rocksdb
+find_library(ROCKSDB_LIBRARY_LZ4 NAMES liblz4.a
+	HINTS
+	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
+	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
+)
+find_library(ROCKSDB_LIBRARY_SNAPPY NAMES libsnappy.a
+	HINTS
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
 )
@@ -42,6 +45,8 @@ set(ROCKSDB_LIBRARY
 	${ROCKSDB_LIBRARY_MAIN}
 	${ROCKSDB_LIBRARY_ZIP}
 	${ROCKSDB_LIBRARY_BZIP}
+	${ROCKSDB_LIBRARY_LZ4}
+	${ROCKSDB_LIBRARY_SNAPPY}
 	)
 
 set(ROCKSDB_LIBRARIES ${ROCKSDB_LIBRARY} )

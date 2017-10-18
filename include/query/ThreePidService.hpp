@@ -51,7 +51,10 @@ public:
 	*   identt::utils::SharedTable::pointer stptr
 	*
 	* @param server
-	*   HttpServerT server
+	*   std::shared_ptr<HttpServerT> server
+	*
+	* @param helpquery
+	*   ::identt::query::HelpQuery::pointer helpquery
 	*
 	* @param scope
 	*   const unsigned int scope check
@@ -63,13 +66,14 @@ public:
 	ThreePidService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
+			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
 		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
 		// Endpoint : POST _matrix/identity/api/v1/3pid/getValidated3pid
-		stptr->httphelp.add({scope,"POST _matrix/identity/api/v1/3pid/getValidated3pid", {
+		helpquery->add({scope,"POST _matrix/identity/api/v1/3pid/getValidated3pid", {
 				"A client can check whether ownership of a 3pid was validated by making a",
 				" request passing the sid and client_secret as query parameters from the requestToken call",
 				"params  : sid , client_secret"
@@ -91,7 +95,7 @@ public:
 					} else {
 						form2pb( request->content.string() , gva.mutable_subtok()); // throws on error
 					}
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 					identt::query::ValidatedAtT valresult;
 					// action
 					this->GetValidated3pidAction(stptr, &gva);
@@ -121,7 +125,7 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/3pid/getValidated3pid
-		stptr->httphelp.add({scope,"GET _matrix/identity/api/v1/3pid/getValidated3pid", {
+		helpquery->add({scope,"GET _matrix/identity/api/v1/3pid/getValidated3pid", {
 				"This is the GET version of getValidated3pid",
 				"A client can check whether ownership of a 3pid was validated by making a",
 				" request passing the sid and client_secret as query parameters from the requestToken call",
@@ -139,7 +143,7 @@ public:
 
 					identt::query::GetValidated3pidDataT gva;
 					form2pb( params , gva.mutable_subtok()); // throws on error
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->GetValidated3pidAction(stptr, &gva);
@@ -169,7 +173,7 @@ public:
 		};
 
 		// Endpoint : POST _matrix/identity/api/v1/3pid/bind
-		stptr->httphelp.add({scope,"POST _matrix/identity/api/v1/3pid/bind", {
+		helpquery->add({scope,"POST _matrix/identity/api/v1/3pid/bind", {
 				"An association between a session and a Matrix user ID can be published by  making  a request to this.",
 				"params: sid , client_secret , mxid",
 				"where mxid takes the form @name:domain.com",
@@ -197,7 +201,7 @@ public:
 					} else {
 						form2pb( request->content.string() , bpa.mutable_subtok()); // throws on error
 					}
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 					// action
 					this->Bind3pidAction(stptr, &bpa);
 					// copy the string , change this later - shreos
@@ -225,7 +229,7 @@ public:
 			});
 		};
 		// Endpoint : GET _matrix/identity/api/v1/3pid/bind
-		stptr->httphelp.add({scope,"GET _matrix/identity/api/v1/3pid/bind", {
+		helpquery->add({scope,"GET _matrix/identity/api/v1/3pid/bind", {
 				"This is the GET version of 3pid/bind",
 				"An association between a session and a Matrix user ID can be published by  making  a request to this.",
 				"params: sid , client_secret , mxid",
@@ -243,7 +247,7 @@ public:
 
 					identt::query::Bind3pidDataT bpa;
 					form2pb( params , bpa.mutable_subtok()); // throws on error
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->Bind3pidAction(stptr, &bpa);

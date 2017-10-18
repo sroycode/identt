@@ -39,5 +39,6 @@ message MailQueryT {
 	string medium                                                  =  1;
 	uint64 lastid                                                  =  2;
 	uint64 limit                                                   =  3;
+	string shared_secret                                           =  4;
 	repeated MPayloadT payload                                     =  5;
 }

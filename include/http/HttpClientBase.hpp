@@ -27,7 +27,7 @@
  *
  * @section DESCRIPTION
  *
- *  HttpClientBase.hpp :
+ *  HttpClientBase.hpp : Http Client base
  *
  */
 #ifndef _IDENTT_HTTP_CLIENTBASE_HPP_
@@ -43,7 +43,7 @@ namespace http {
 template <class socket_type>
 class ClientBase {
 public:
-	using Response = ClientResponse;
+	using Response = ClientResponse<socket_type>;
 	using RespPtr = std::shared_ptr<Response>;
 
 	RespPtr request(

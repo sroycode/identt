@@ -15,6 +15,9 @@
 - hostseed_ed25519 : seed for this instance host key
 - mail_host : mail fetch program hostname
 - mailkey_ed25519 : mail fetch program public key
+- listen : host-port this instance master listens at ( if master )
+- tohear : host-port this instance master is reachable at from slaves ( if master )
+- master : master of the instance at start ( overwritten by commandline )
 
 ## Section http
 

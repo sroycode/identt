@@ -49,7 +49,10 @@ public:
 	*   identt::utils::SharedTable::pointer stptr
 	*
 	* @param server
-	*   HttpServerT server
+	*   std::shared_ptr<HttpServerT> server
+	*
+	* @param helpquery
+	*   ::identt::query::HelpQuery::pointer helpquery
 	*
 	* @param scope
 	*   const unsigned int scope check
@@ -61,6 +64,7 @@ public:
 	InfoService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
+			::identt::query::HelpQuery::pointer helpquery,
 	    const unsigned int scope)
 		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
@@ -68,13 +72,13 @@ public:
 		// GET help
 		server->resource["/help$"]["GET"]
 		    = server->resource["/helptext$"]["GET"]
-		=[this,stptr,scope](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
+		=[this,stptr,scope,helpquery](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			try {
 				bool showtext = ("/helptext" == request->path_match[0]);
 				std::string output;
 				showtext=true;
 				std::stringstream content_stream;
-				for (auto& var: stptr->httphelp.get(scope)) {
+				for (auto& var: helpquery->get(scope)) {
 					content_stream << "\r\n\r\n" << var.route ;
 					size_t counter=0;
 					for (auto& desc: var.desc) content_stream << "\r\n -- " << desc;

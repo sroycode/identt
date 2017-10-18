@@ -52,7 +52,10 @@ public:
 	*   identt::utils::SharedTable::pointer stptr
 	*
 	* @param server
-	*   HttpServerT server
+	*   std::shared_ptr<HttpServerT> server
+	*
+	* @param helpquery
+	*   ::identt::query::HelpQuery::pointer helpquery
 	*
 	* @param scope
 	*   const unsigned int scope check
@@ -64,13 +67,14 @@ public:
 	PubKeyService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
+			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
 		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
 		// Endpoint : GET _matrix/identity/api/v1/pubkey/{pubkey:string}
-		stptr->httphelp.add({scope,
+		helpquery->add({scope,
 		"GET _matrix/identity/api/v1/pubkey/{pubkey:string}", {
 			"This is the GET version of pubkey",
 			"Required. The ID of the key. This should take the form algorithm:identifier where algorithm",
@@ -88,7 +92,7 @@ public:
 					pubkey.set_algo( request->path_match[1] );
 					pubkey.set_identifier( request->path_match[3] );
 
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->GetPubKeyAction(stptr, &pubkey);
@@ -118,7 +122,7 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/pubkey/isvalid
-		stptr->httphelp.add({scope,
+		helpquery->add({scope,
 		"GET _matrix/identity/api/v1/pubkey/isvalid?public_key=...", {
 			"This is the GET version of pubkey/isvalid",
 			"Check whether a long-term public key is valid.",
@@ -138,7 +142,7 @@ public:
 					auto params = urldecode(request->path_match[1]);
 					pubkey.set_public_key( params.at("public_key") );
 
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->GetPubKeyValidAction(stptr, &pubkey);
@@ -168,7 +172,7 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/pubkey/ephemeral/isvalid
-		stptr->httphelp.add({scope,
+		helpquery->add({scope,
 		"GET _matrix/identity/api/v1/pubkey/ephemeral/isvalid?public_key=...", {
 			"This is the GET version of pubkey/ephemeral/isvalid",
 			"Check whether a short-term public key is valid.",
@@ -188,7 +192,7 @@ public:
 					auto params = urldecode(request->path_match[1]);
 					pubkey.set_public_key( params.at("public_key") );
 
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->GetEphemeralValidAction(stptr, &pubkey);
@@ -218,7 +222,7 @@ public:
 		};
 
 		// Endpoint : POST _matrix/identity/api/v1/sign-{algo:string}
-		stptr->httphelp.add({scope,"POST _identt/identity/api/v1/sign-{algo:string}", {
+		helpquery->add({scope,"POST _identt/identity/api/v1/sign-{algo:string}", {
 				"The identity service will happily sign invitation details with a request-specified ed25519 private key for you",
 				"params  :  mxid, token, private_key, sender (optional) ",
 				"This blindly sign for client"
@@ -261,7 +265,7 @@ public:
 					else
 						pubkey.set_owner(query.sender());
 
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					std::string output;

@@ -39,7 +39,7 @@
 #include <http/ServiceBase.hpp>
 #include "NotFoundService.hpp"
 
-#include <query/ServiceList.hpp>
+#include <query/WebServiceList.hpp>
 
 identt::http::SecureWebServer::SecureWebServer(identt::utils::SharedTable::pointer stptr)
 	: identt::utils::ServerBase(stptr)
@@ -76,8 +76,8 @@ void identt::http::SecureWebServer::init(identt::utils::ServerBase::ParamsListT 
 	         );
 	is_init=true;
 	{
-		identt::http::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTPS};
-		IDENTT_SERVICELIST_SCOPE_HTTPS
+		identt::http::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP};
+		IDENTT_WEBSERVICELIST_SCOPE_HTTPS
 	}
 	server->start(sharedtable->getIO());
 }

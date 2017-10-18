@@ -50,6 +50,7 @@ class MailHandle:
 		'pidfile.path': 'mailhandle.pid',
 		'http.endpoint': 'http://localhost:9091/_identt/identity/api/v1/getmailstosend',
 		'token.length': '6',
+		'crypto.shared_secret' : 'qu++AtusT++FVHqvQdPXJlgPtxeo678gXRcGfnTLqKk'
 	}
 
 	def __init__(self):
@@ -62,8 +63,7 @@ class MailHandle:
 
 		self.server_name = self.cfg.get('general', 'server.name')
 		self.endpoint = self.cfg.get('general', 'http.endpoint')
-		seed = self.cfg.get('crypto', 'ed25519.seed')
-		self.mailkey = SydentEd25519(seed)
+		self.shared_secret = self.cfg.get('crypto', 'shared_secret')
 
 	def parse_config(self):
 		self.cfg = ConfigParser.SafeConfigParser(MailHandle.CONFIG_DEFAULTS)
@@ -79,11 +79,11 @@ class MailHandle:
 			with open(self.pidfile, 'w') as pidfile:
 				pidfile.write(str(os.getpid()) + "\n")
 
-		testme = {
-			"lastid":0,
-			"limit":10
+		json_data = {
+			'lastid':0,
+			'limit':10,
+			'shared_secret':self.shared_secret
 		}
-		json_data = self.mailkey.AddSign(self.server_name,testme)
 		try:
 			httpc = HttpClient()
 			response = httpc.post_data(self.endpoint,json_data)

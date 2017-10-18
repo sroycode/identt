@@ -31,25 +31,28 @@
  *
  */
 
-#include <sodium.h>
-#define STRIP_FLAG_HELP 1
-#include <glog/logging.h>
+// #define STRIP_FLAG_HELP 1
 #include <gflags/gflags.h>
-#include <iostream>
 
-/* GFlags Settings Start */
+#include <sodium.h>
+#include <glog/logging.h>
+#include <iostream>
+#include <functional>
+
+/* GFlags Start */
+DEFINE_bool(h, false, "Show help");
+DECLARE_bool(help);
+DECLARE_bool(helpshort);
+
 static bool IsNonEmptyMessage(const char *flagname, const std::string &value)
 {
-	bool status = ( value[0] != '\0' );
-	return status;
+	return ( value[0] != '\0' );
 }
-
 DEFINE_string(config, "", "Config file");
-DEFINE_bool(daemon, false, "Start as daemon");
-
 DEFINE_validator(config, &IsNonEmptyMessage);
-
-/* GFlags Settings End */
+DEFINE_string(master, "", "Start as slave of master");
+DEFINE_bool(daemon, false, "Start as daemon");
+/* GFlags End */
 
 #include <utils/BaseUtils.hpp>
 
@@ -77,22 +80,33 @@ DEFINE_validator(config, &IsNonEmptyMessage);
 int main(int argc, char *argv[])
 {
 
-	// log only to stderr changed to log also
-	if (FLAGS_logtostderr==1) {
-		FLAGS_logtostderr=0;
-		FLAGS_alsologtostderr=1;
-	}
+
 	if (sodium_init() < 0) {
 		throw identt::InitialException("sodium cannot initialize, exiting...");
 	}
 
 	/** GFlags **/
-	std::string usage("The program does nothing.  Sample usage:\n");
-	usage += std::string(argv[0]) + " -config my.conf" ;
+	std::string usage("Usage:\n");
+	usage += std::string(argv[0]) + " -config my.conf # starts as master\n" ;
+	usage += std::string(argv[0]) + " -config my.conf --master 127.0.0.1:9093 # starts as slave" ;
 	gflags::SetUsageMessage(usage);
 	gflags::SetVersionString(IDENTT_DEFAULT_EXE_VERSION);
+	// log only to stderr changed to log also
+	if (FLAGS_logtostderr) {
+		FLAGS_logtostderr = false;
+		FLAGS_alsologtostderr = true;
+	}
+
 	// read command line
 	gflags::ParseCommandLineFlags(&argc, &argv, true);
+/*
+	// override default help
+	if (FLAGS_help || FLAGS_h) {
+		FLAGS_help = false;
+		FLAGS_helpshort = true;
+	}
+	gflags::HandleCommandLineHelpFlags();
+*/
 
 	/** Logging **/
 	google::InitGoogleLogging(argv[0]);
@@ -115,6 +129,12 @@ int main(int argc, char *argv[])
 
 	try {
 		MyCFG = identt::utils::CfgFileOptions::create(FLAGS_config);
+		/** set master status
+		 *  if update only if config is not set or command is not blank
+		 */
+
+		if (!(MyCFG->Check(wks_section,"master") && FLAGS_master.empty()) ) 
+			MyCFG->Update(wks_section,"master",FLAGS_master);
 
 		/** Workserver Params OK */
 		for (auto& p : wks_params) p=MyCFG->Find<std::string>(wks_section,p);

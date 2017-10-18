@@ -11,7 +11,7 @@ server.name = identt.doesntexist.com
 [email]
 
 [crypto]
-ed25519.seed = 1UfbvW0r7HYk2tavQW+Iy4E8JSYpESIlTR7GxeFzqQk
+shared_secret = qu++AtusT++FVHqvQdPXJlgPtxeo678gXRcGfnTLqKk
 
 [sms]
 

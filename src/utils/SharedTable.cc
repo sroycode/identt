@@ -37,7 +37,7 @@
 * Constructor : default private
 *
 */
-identt::utils::SharedTable::SharedTable() : ready(false), master(false) {}
+identt::utils::SharedTable::SharedTable() {}
 
 
 /**
@@ -73,44 +73,3 @@ identt::utils::SharedTable::iopointer identt::utils::SharedTable::getIO()
 	ReadLockT readlock(class_mutex);
 	return io;
 }
-
-/**
-* set_master : set atomic master
-*
-*/
-void identt::utils::SharedTable::set_master(bool r)
-{
-	WriteLockT writelock(class_mutex);
-	master=r;
-}
-
-/**
-* is_master : get atomic master
-*
-*/
-bool identt::utils::SharedTable::is_master()
-{
-	ReadLockT readlock(class_mutex);
-	return master;
-}
-
-/**
-* set_ready : set atomic ready
-*
-*/
-void identt::utils::SharedTable::set_ready(bool r)
-{
-	WriteLockT writelock(class_mutex);
-	ready=r;
-}
-
-/**
-* is_ready : get atomic ready
-*
-*/
-bool identt::utils::SharedTable::is_ready()
-{
-	ReadLockT readlock(class_mutex);
-	return ready;
-}
-

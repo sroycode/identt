@@ -100,7 +100,7 @@ public:
 	{
 		auto it = SectionMap.find(MakeKey(Section,Name));
 		if (it != SectionMap.end()) {
-			return ConvertAnyToAny<std::string,T>(it->second,NoThrow);
+			return ConvertAnyToAny<T>(it->second,NoThrow);
 		}
 
 		/** else look for inherited section, duplicate is checked so inf loop not possible */
@@ -108,7 +108,7 @@ public:
 		while ( jt !=InheritMap.end()) {
 			it = SectionMap.find(MakeKey(jt->second,Name));
 			if (it != SectionMap.end()) {
-				return ConvertAnyToAny<std::string,T>(it->second,NoThrow);
+				return ConvertAnyToAny<T>(it->second,NoThrow);
 			}
 
 			/** recurse if not found */
@@ -200,24 +200,24 @@ private:
 	CfgFileOptions(const std::string InputFile);
 
 	/**
-	 * ConvertAnyToAny: Get the Corresp value in a different Type
+	 * FromString: Get the Corresp value in a different Type
 	 *
 	 * @param InData
-	 *   InputType Input Data
+	 *   std::string input Data
 	 *
 	 * @param NoThrow
 	 *   (optional) bool get default if error, default FALSE
 	 *
 	 * @return
-	 *   OutputType
+	 *   T OutType
 	 */
-	template<typename InDataT , typename OutDataT>
-	inline OutDataT ConvertAnyToAny(InDataT InData, bool NoThrow=false)
+	template<typename T>
+	inline T ConvertAnyToAny(std::string InData, bool NoThrow=false)
 	{
-		OutDataT OutData = OutDataT();
+		T OutData = T();
 
 		try {
-			OutData=boost::lexical_cast<OutDataT>(InData);
+			OutData=boost::lexical_cast<T>(InData);
 
 		} catch(std::exception& e) {
 			if(! NoThrow)

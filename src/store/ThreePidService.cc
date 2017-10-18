@@ -118,7 +118,7 @@ void identt::store::ThreePidService::Bind3pidAction(
 		throw ::identt::query::SydentException("This validation session has not yet been completed",M_SESSION_NOT_VALIDATED);
 	}
 	// work starts here
-	std::string origin_server = stptr->mailhost.Get();
+	std::string origin_server = stptr->hostname.Get();
 	::identt::store::TransactionT trans;
 	uint64_t expires = THREEPID_SESSION_VALID_LIFETIME_MS + currtime;
 	// localassoc

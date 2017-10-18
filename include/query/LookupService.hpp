@@ -52,7 +52,10 @@ public:
 	*   identt::utils::SharedTable::pointer stptr
 	*
 	* @param server
-	*   HttpServerT server
+	*   std::shared_ptr<HttpServerT> server
+	*
+	* @param helpquery
+	*   ::identt::query::HelpQuery::pointer helpquery
 	*
 	* @param scope
 	*   const unsigned int scope check
@@ -64,13 +67,14 @@ public:
 	LookupService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
+			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
 		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
 		// Endpoint : POST _matrix/identity/api/v1/lookup
-		stptr->httphelp.add({scope,"POST _matrix/identity/api/v1/lookup", {
+		helpquery->add({scope,"POST _matrix/identity/api/v1/lookup", {
 				"Look up the Matrix user ID for a 3pid.",
 				"query parameters: medium, address",
 				"medium  Required. The literal string email.",
@@ -94,7 +98,7 @@ public:
 					} else {
 						form2pb( request->content.string() , lact.mutable_query() ); // throws on error
 					}
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->LookupAction(stptr, &lact);
@@ -104,7 +108,7 @@ public:
 					::identt::query::PubKeyT pubkey;
 
 					// set owners
-					pubkey.set_owner(stptr->mailhost.Get());
+					pubkey.set_owner(stptr->hostname.Get());
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
 
@@ -135,7 +139,7 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/lookup
-		stptr->httphelp.add({scope,"GET _matrix/identity/api/v1/lookup", {
+		helpquery->add({scope,"GET _matrix/identity/api/v1/lookup", {
 				"Look up the Matrix user ID for a 3pid.",
 				"This is the GET version of lookup",
 				"query parameters: medium, address",
@@ -154,7 +158,7 @@ public:
 					identt::query::LookupDataT lact;
 					form2pb( params , lact.mutable_query()); // throws on error
 
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->LookupAction(stptr, &lact);
@@ -164,7 +168,7 @@ public:
 					::identt::query::PubKeyT pubkey;
 
 					// set owners
-					pubkey.set_owner(stptr->mailhost.Get());
+					pubkey.set_owner(stptr->hostname.Get());
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
 
@@ -194,7 +198,7 @@ public:
 		};
 
 		// Endpoint : POST _matrix/identity/api/v1/bulk_lookup
-		stptr->httphelp.add({scope,"POST _matrix/identity/api/v1/bulk_lookup", {
+		helpquery->add({scope,"POST _matrix/identity/api/v1/bulk_lookup", {
 				"Look up the Matrix user ID for a list of 3pid.",
 				"query parameters: list of {medium, address}",
 				"medium  Required. The literal string email.",
@@ -218,7 +222,7 @@ public:
 					} else {
 						throw SydentException("Only Json Supported",M_BAD_JSON);
 					}
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->BulkLookupAction(stptr, &blact);
@@ -228,7 +232,7 @@ public:
 					::identt::query::PubKeyT pubkey;
 
 					// set owners
-					pubkey.set_owner(stptr->mailhost.Get());
+					pubkey.set_owner(stptr->hostname.Get());
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
 

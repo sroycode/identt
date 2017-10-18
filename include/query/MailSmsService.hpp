@@ -51,7 +51,10 @@ public:
 	*   identt::utils::SharedTable::pointer stptr
 	*
 	* @param server
-	*   HttpServerT server
+	*   std::shared_ptr<HttpServerT> server
+	*
+	* @param helpquery
+	*   ::identt::query::HelpQuery::pointer helpquery
 	*
 	* @param scope
 	*   const unsigned int scope check
@@ -63,15 +66,15 @@ public:
 	MailSmsService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
+			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
 		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
 		// Endpoint : POST _identt/identity/api/v1/getmailstosend
-		stptr->httphelp.add({scope,"POST _identt/identity/api/v1/getmailstosend", {
-				"Only signed Json allowed ",
-				"params  :  lastid, limit, payload[] ",
+		helpquery->add({scope,"POST _identt/identity/api/v1/getmailstosend", {
+				"params  :  lastid, limit, shared_secret, payload[] ",
 				"This will fetch the mail/sms that need sending.",
 				"If request payload contains items marked done they will be marked deleted",
 				"This is to be used only by an internal program"
@@ -86,29 +89,34 @@ public:
 					std::string err;
 					bool use_json = this->JsonRequest(request);
 
-					if (!use_json)
-						throw SydentException("Bad Data , Only Json Format",M_BAD_JSON);
-
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
-
-					::identt::query::PubKeyT pubkey;
-					pubkey.set_owner( stptr->mailhost.Get() );
-					pubkey.set_algo(THREEPID_EXTMAIL_ALGO);
-					pubkey.set_identifier(THREEPID_EXTMAIL_ALGO_ID);
-					std::vector<::identt::query::SignatureT> signature;
-
 					::identt::mail::MailQueryT mailq;
-					this->VerifySign(stptr,request->content.string(), &pubkey, &mailq,signature);
+					if (use_json)
+					{
+						int stat = json2pb( request->content.string() , &mailq , err);
+						if (stat<0) throw SydentException("Bad Json Format",M_BAD_JSON);
+					} else {
+						form2pb( request->content.string() , &mailq); // throws on error
+					}
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
+
+					// check shared secret
+					if (mailq.shared_secret() != stptr->shared_secret.Get())
+						throw identt::BadDataException("Bad Shared Secret");
 
 					// action
 					this->PendingAction(stptr, &mailq);
+					mailq.clear_shared_secret();
 
 					// aftermath
 					std::string output;
-					signature.clear();
+					std::vector<::identt::query::SignatureT> signatures;
+
+					::identt::query::PubKeyT pubkey;
+					// sign 
+					pubkey.set_owner(stptr->hostname.Get());
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
-					AddSign(stptr,&mailq, &pubkey, output,signature);
+					AddSign(stptr,&mailq, &pubkey, output,signatures);
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
 				} catch (SydentException& e)
 				{

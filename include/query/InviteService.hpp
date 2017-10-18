@@ -51,7 +51,10 @@ public:
 	*   identt::utils::SharedTable::pointer stptr
 	*
 	* @param server
-	*   HttpServerT server
+	*   std::shared_ptr<HttpServerT> server
+	*
+	* @param helpquery
+	*   ::identt::query::HelpQuery::pointer helpquery
 	*
 	* @param scope
 	*   const unsigned int scope check
@@ -63,20 +66,21 @@ public:
 	InviteService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
+			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
 		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
 		// Endpoint : POST _matrix/identity/api/v1/store-invite
-		stptr->httphelp.add({scope,"POST _matrix/identity/api/v1/store-invite", {
+		helpquery->add({scope,"POST _matrix/identity/api/v1/store-invite", {
 				"An  identity  service can store pending invitations to a user’s 3pid, which will",
 				"be retrieved and can be either notified on or look up when the 3pid is associated with a Matrix user ID.",
-				"following URL‐encoded POST parameters:",
-				" ‐ medium (string, required): The literal string email.",
-				" ‐ address (string, required): The email address or msisdn of the invited user.",
-				" ‐ room_id (string, required): The Matrix room ID to which the user is  invited.",
-				" ‐ sender (string, required): The matrix user ID of the inviting user.",
+				"following URL encoded POST parameters:",
+				" medium (string, required): The literal string email.",
+				" address (string, required): The email address or msisdn of the invited user.",
+				" room_id (string, required): The Matrix room ID to which the user is  invited.",
+				" sender (string, required): The matrix user ID of the inviting user.",
 				"An arbitrary number of other parameters may also be specified."
 			}
 		});
@@ -97,7 +101,7 @@ public:
 					} else {
 						throw SydentException("Content-Type json only allowed",M_BAD_JSON);
 					}
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->StoreInviteAction(stptr,&inv);

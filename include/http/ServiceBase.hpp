@@ -33,14 +33,11 @@
 #ifndef _IDENTT_HTTP_SERVICEBASE_HPP_
 #define _IDENTT_HTTP_SERVICEBASE_HPP_
 
-#define IDENTT_SERVICE_SCOPE_HTTP  0x0001
-#define IDENTT_SERVICE_SCOPE_HTTPS 0x0002
-
-
 #include <utils/BaseUtils.hpp>
 #include <utils/SharedTable.hpp>
 #include <fstream>
 #include <iomanip>
+
 
 #define IDENTT_HTTP_CHAR_PERCENT '%'
 #define IDENTT_HTTP_CHAR_SPACE ' '
@@ -60,7 +57,6 @@ template <class HttpServerT>
 class ServiceBase {
 public:
 
-
 protected:
 	const unsigned int myscope;
 
@@ -69,7 +65,6 @@ protected:
 	*
 	*/
 	ServiceBase(const unsigned int myscope_) : myscope(myscope_) {}
-
 
 	/**
 	* HttpErrorAction : Error Action Template no payload maybe template

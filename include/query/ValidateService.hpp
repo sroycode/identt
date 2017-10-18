@@ -51,7 +51,11 @@ public:
 	*   identt::utils::SharedTable::pointer stptr
 	*
 	* @param server
-	*   HttpServerT server
+	*   std::shared_ptr<HttpServerT> server
+	*
+	* @param helpquery
+	*   ::identt::query::HelpQuery::pointer helpquery
+	*
 	*
 	* @param scope
 	*   const unsigned int scope check
@@ -63,13 +67,14 @@ public:
 	ValidateService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
+			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
 		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
 		// Endpoint : POST _matrix/identity/api/v1/validate/{service:string}/requestToken
-		stptr->httphelp.add({scope,"POST _matrix/identity/api/v1/validate/{service:string}/requestToken", {
+		helpquery->add({scope,"POST _matrix/identity/api/v1/validate/{service:string}/requestToken", {
 				"service can be email or msisdn ",
 				"params  : email , client_secret , send_attempt, next_link",
 				"params  : phone_number, country , client_secret , send_attempt, next_link",
@@ -100,7 +105,7 @@ public:
 					} else {
 						form2pb( request->content.string() , rtoka.mutable_reqtok()); // throws on error
 					}
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 					// action
 					this->RequestTokenAction(stptr, &rtoka);
 
@@ -129,7 +134,7 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/validate/{service:string}/requestToken
-		stptr->httphelp.add({scope,
+		helpquery->add({scope,
 		"GET _matrix/identity/api/v1/validate/{service:string}/requestToken?{params}", {
 			"service can be email or msisdn ",
 			"params  : email , client_secret , send_attempt, next_link",
@@ -151,7 +156,7 @@ public:
 					std::string params = request->path_match[2];
 					form2pb( params , rtoka.mutable_reqtok()); // throws on error
 
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 					// action
 					this->RequestTokenAction(stptr, &rtoka);
 
@@ -180,7 +185,7 @@ public:
 		};
 
 		// Endpoint : POST _matrix/identity/api/v1/validate/{service:string}/submitToken
-		stptr->httphelp.add({scope,"POST _matrix/identity/api/v1/validate/{service:string}/submitToken", {
+		helpquery->add({scope,"POST _matrix/identity/api/v1/validate/{service:string}/submitToken", {
 				"service can be email or msisdn ",
 				"A  user may make a POST request with the following parameters",
 				"sid: the sid for the  session,  generated  by  the  requestToken call.",
@@ -209,7 +214,7 @@ public:
 					} else {
 						form2pb( request->content.string() , stoka.mutable_subtok()); // throws on error
 					}
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					this->SubmitTokenAction(stptr, &stoka);
@@ -239,7 +244,7 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/validate/{service:string}/submitToken
-		stptr->httphelp.add({scope,
+		helpquery->add({scope,
 		"GET _matrix/identity/api/v1/validate/{service:string}/submitToken?{params}", {
 			"service can be email or msisdn ",
 			"params  : sid , client_secret , token ",
@@ -259,7 +264,7 @@ public:
 					std::string params = request->path_match[2];
 
 					form2pb( params , stoka.mutable_subtok()); // throws on error
-					if (!stptr->is_ready()) throw identt::BadDataException("System Not Ready");
+					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					ErrorT result;
