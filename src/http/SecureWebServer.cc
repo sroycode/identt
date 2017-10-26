@@ -35,10 +35,6 @@
 #include <memory>
 
 #include "SecureWebServer.hpp"
-
-#include <http/ServiceBase.hpp>
-#include "NotFoundService.hpp"
-
 #include <query/WebServiceList.hpp>
 
 identt::http::SecureWebServer::SecureWebServer(identt::utils::SharedTable::pointer stptr)

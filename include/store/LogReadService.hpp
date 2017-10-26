@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file include/query/LogReadService.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,22 +27,41 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  LogReadService.hpp : Header for email msisdn service
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#ifndef _IDENTT_STORE_LOGREAD_SERVICE_HPP_
+#define _IDENTT_STORE_LOGREAD_SERVICE_HPP_
 
-#include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
-#include <utils/SharedTable.hpp>
-#include <async++.h>
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
+#include <query/QueryBase.hpp>
+#include <store/StoreBase.hpp>
 
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+namespace identt {
+namespace store {
+
+class LogReadService : public StoreBase {
+public:
+
+	/**
+	* LogReadAction : Service Endpoint LogRead
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param query
+	*   ::identt::store::TransListT*  translist
+	*
+	* @return
+	*   none
+	*/
+	void LogReadAction(
+	    ::identt::utils::SharedTable::pointer stptr,
+	    ::identt::store::TransListT* translist);
+
+private:
+
+};
+} // namespace query
+} // namespace identt
+
+#endif // _IDENTT_STORE_LOGREAD_SERVICE_HPP_

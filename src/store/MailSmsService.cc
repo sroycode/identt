@@ -35,6 +35,7 @@
 
 #include <query/bin2ascii.h>
 #include <store/ParAvionTable.hpp>
+#include <store/MailSentTable.hpp>
 
 #include <store/StoreTrans.hpp>
 
@@ -48,6 +49,10 @@ void identt::store::MailSmsService::PendingAction(::identt::utils::SharedTable::
 	::identt::store::ParAvionT paravion;
 	::identt::store::ParAvionTable paravion_table{stptr->maindb.Get()};
 
+	// todo: copy to mailsent table
+	// ::identt::store::MailSentT mailsent;
+	// ::identt::store::MailSentTable mailsent_table{stptr->maindb.Get()};
+
 	// delete done records
 	if (mailq->payload_size()>0) {
 		::identt::store::TransactionT trans;
@@ -57,9 +62,8 @@ void identt::store::MailSmsService::PendingAction(::identt::utils::SharedTable::
 		}
 
 		// transaction , throws on fail
-		trans.set_id( stptr->logcounter.GetNext() );
-		::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
-		storetrans.Commit(&trans);
+		::identt::store::StoreTrans storetrans;
+		storetrans.Commit(stptr,&trans);
 
 		mailq->clear_payload();
 	}

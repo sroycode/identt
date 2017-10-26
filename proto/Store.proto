@@ -22,8 +22,9 @@ enum KeyTypeE {
 	K_VALIDATIONSESSION                                            = 17;
 	K_TOKENAUTH                                                    = 18;
 	K_PARAVION                                                     = 19;
-	K_LOGNODE                                                      = 20; // must be before K_MAXNODE
-	K_MAXNODE                                                      = 21;
+	K_MAILSENT                                                     = 20;
+	K_LOGNODE                                                      = 21; // must be before K_MAXNODE
+	K_MAXNODE                                                      = 22;
 
 // Indexes
 	I_NOINDEX                                                      = 50;
@@ -172,6 +173,15 @@ message TransactionT {
 	repeated TransItemT item                                       =  2;
 }
 
+message TransListT {
+	uint64   lastid                                                =  1;
+	uint64   limit                                                 =  2;
+	repeated TransactionT trans                                    =  3;
+	uint64   currid                                                =  4;
+	uint64   ts                                                    =  5;
+}
+
+
 message CryptoKeyT {
 	string pubkey                                                  =  1;
 	string seckey                                                  =  2;
@@ -182,6 +192,16 @@ message CryptoKeyT {
 message ParAvionT {
 	uint64   id                                                    =  1;
 	string   medium                                                =  2;
+	identt.mail.MPayloadT payload                                  =  5;
+
+	bool     notfound                                              = 21;
+}
+
+message MailSentT {
+	uint64   id                                                    =  1;
+	string   medium                                                =  2;
+	uint64   sent_at                                               =  3;
+	string   sent_by                                               =  4;
 	identt.mail.MPayloadT payload                                  =  5;
 
 	bool     notfound                                              = 21;

@@ -4,20 +4,18 @@
 
 - accesslog : access log for daemon identtserver
 - errorlog : error log for daemon identtserver
+- baseurl : base URL to append to callback to this instance, this may be load-balanced/proxied and ssl offloading might happen external
+- hostname : server host name
+- shared_secret : key to access _identt/ functions
+- master : master of the instance at start ( overwritten by commandline )
 
 ## Section work
 
 - datadir : location of rocksdb database
-- cachesize : rocksdb cachesize in MB
 - logdatadir : location of log database , required but ignored if IDENTT_USE_SEPARATE_LOGDB not set
+- cachesize : rocksdb cachesize in MB
 - logcachesize : log database cachesize in MB
-- base_url : base URL to append to callback to this instance
 - hostseed_ed25519 : seed for this instance host key
-- mail_host : mail fetch program hostname
-- mailkey_ed25519 : mail fetch program public key
-- listen : host-port this instance master listens at ( if master )
-- tohear : host-port this instance master is reachable at from slaves ( if master )
-- master : master of the instance at start ( overwritten by commandline )
 
 ## Section http
 

@@ -10,5 +10,5 @@ set(IDENTT_QUERY_SOURCES
 
 add_library(identt_query STATIC ${IDENTT_QUERY_SOURCES})
 target_link_libraries(identt_query
-	identt_store
+	identt_hrpc
 )

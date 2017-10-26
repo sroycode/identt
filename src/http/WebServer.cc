@@ -35,9 +35,6 @@
 #include <memory>
 
 #include "WebServer.hpp"
-
-#include <http/ServiceBase.hpp>
-#include "NotFoundService.hpp"
 #include <query/WebServiceList.hpp>
 
 identt::http::WebServer::WebServer(identt::utils::SharedTable::pointer stptr)
@@ -73,7 +70,6 @@ void identt::http::WebServer::init(identt::utils::ServerBase::ParamsListT params
 	DLOG(INFO) << "WebServer init 1 here" << std::endl;
 	bool updateflag = false;
 	{
-		identt::http::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP};
 		IDENTT_WEBSERVICELIST_SCOPE_HTTP
 	}
 	DLOG(INFO) << "WebServer init 2 here" << std::endl;

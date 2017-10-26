@@ -39,7 +39,7 @@ namespace identt {
 namespace query {
 
 template <class HttpServerT>
-class InfoService : protected identt::http::ServiceBase<HttpServerT> {
+class InfoService : protected identt::query::ServiceBase<HttpServerT> {
 public:
 
 	/**
@@ -64,33 +64,74 @@ public:
 	InfoService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
-			::identt::query::HelpQuery::pointer helpquery,
+	    ::identt::query::HelpQuery::pointer helpquery,
 	    const unsigned int scope)
-		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
+		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
-		// GET help
+
+		// Endpoint : GET help
+		helpquery->add({scope,"GET help", { "This query, Gets info about endpoints this server" } });
+
 		server->resource["/help$"]["GET"]
-		    = server->resource["/helptext$"]["GET"]
 		=[this,stptr,scope,helpquery](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
-			try {
-				bool showtext = ("/helptext" == request->path_match[0]);
-				std::string output;
-				showtext=true;
-				std::stringstream content_stream;
-				for (auto& var: helpquery->get(scope)) {
-					content_stream << "\r\n\r\n" << var.route ;
-					size_t counter=0;
-					for (auto& desc: var.desc) content_stream << "\r\n -- " << desc;
+			async::parallel_invoke([this,stptr,scope,helpquery,response,request] {
+				try {
+					LOG(INFO) << request->path;
+					std::string output;
+					std::stringstream content_stream;
+					for (auto& var: helpquery->get(scope))
+					{
+						content_stream << "\r\n\r\n" << var.route ;
+						size_t counter=0;
+						for (auto& desc: var.desc) content_stream << "\r\n -- " << desc;
+					}
+					output = content_stream.str();
+					*response << "HTTP/1.1 200 OK\r\n";
+					*response << "Content-type: text/plain\r\n";
+					*response << "Content-Length: " << output.length() << "\r\n\r\n" << output.c_str();
+					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
+				} catch (...)
+				{
+					this->HttpErrorAction(response,request,500,"INTERNAL SERVER ERROR");
 				}
-				output = content_stream.str();
-				*response << "HTTP/1.1 200 OK\r\n";
-				*response << "Content-type: text/" << (showtext ? "plain" : "html") << "\r\n";
-				*response << "Content-Length: " << output.length() << "\r\n\r\n" << output.c_str();
-			} catch (...) {
-				this->HttpErrorAction(response,request,500,"INTERNAL SERVER ERROR");
-			}
+			});
 		};
+
+
+		// Endpoint : GET info
+		helpquery->add({scope,"GET info", { "Gets info about this server" } });
+
+		server->resource["/info$"]["GET"]
+		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
+			async::parallel_invoke([this,stptr,response,request] {
+				try {
+					LOG(INFO) << request->path;
+					::identt::query::StateT sstate;
+					uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+					sstate.set_epoch( currtime );
+					sstate.set_is_ready( stptr->is_ready.Get() );
+					// get other params if ready
+					if (sstate.is_ready())
+					{
+						sstate.set_hostname( stptr->hostname.Get() );
+						sstate.set_master( stptr->master.Get() );
+						// sstate.set_maincounter( stptr->maincounter.Get() );
+						// sstate.set_logcounter( stptr->logcounter.Get() );
+						sstate.set_is_master( stptr->is_master.Get() );
+					}
+
+					// aftermath
+					std::string output;
+					pb2json(&sstate , output);
+					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
+				} catch (...)
+				{
+					this->HttpErrorAction(response,request,500,"INTERNAL SERVER ERROR");
+				}
+			});
+		};
+
 	}
 
 private:

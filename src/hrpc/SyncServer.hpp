@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file src/work/WorkServer.hpp
+ * @file src/hrpc/SyncServer.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,33 +27,32 @@
  *
  * @section DESCRIPTION
  *
- *  WorkServer.hpp :   Work Storage Server Headers
+ *  SyncServer.hpp :   Work Storage Server Headers
  *
  */
-#ifndef _IDENTT_WORK_WORKSERVER_HPP_
-#define _IDENTT_WORK_WORKSERVER_HPP_
+#ifndef _IDENTT_HRPC_SYNC_SERVER_HPP_
+#define _IDENTT_HRPC_SYNC_SERVER_HPP_
 
 #include <store/StoreBase.hpp>
 #include <utils/ServerBase.hpp>
 
 namespace identt {
-namespace work {
+namespace hrpc {
 
-class WorkServer :
+class SyncServer :
 	virtual public identt::utils::ServerBase,
-	virtual public identt::store::StoreBase,
-	virtual public std::enable_shared_from_this<WorkServer> {
+	virtual public std::enable_shared_from_this<SyncServer> {
 
 public:
-	using pointer=std::shared_ptr<WorkServer>;
+	using pointer=std::shared_ptr<SyncServer>;
 
 	/**
 	* make noncopyable
 	*/
 
-	WorkServer() = delete;
-	WorkServer(const WorkServer&) = delete;
-	WorkServer& operator=(const WorkServer&) = delete;
+	SyncServer() = delete;
+	SyncServer(const SyncServer&) = delete;
+	SyncServer& operator=(const SyncServer&) = delete;
 
 	/**
 	* create : static construction creates new first time
@@ -66,7 +65,7 @@ public:
 	*/
 	static pointer create(identt::utils::SharedTable::pointer stptr)
 	{
-		pointer p(new WorkServer(stptr));
+		pointer p(new SyncServer(stptr));
 		return p;
 	}
 
@@ -85,7 +84,7 @@ public:
 	/**
 	* destructor
 	*/
-	virtual ~WorkServer ();
+	virtual ~SyncServer ();
 
 	/**
 	 * GetSection : section required
@@ -131,10 +130,24 @@ private:
 	*   identt::utils::SharedTable::pointer stptr
 	*
 	*/
-	WorkServer(identt::utils::SharedTable::pointer stptr);
+	SyncServer(identt::utils::SharedTable::pointer stptr);
+
+	/**
+	* SyncFromMaster : sync data from master
+	*
+	* @param stptr
+	*   identt::utils::SharedTable::pointer stptr
+	*
+	* @param chunksize
+	*   size_t chunk size of request
+	*
+	* @return
+	*   none
+	*/
+	void SyncFromMaster(identt::utils::SharedTable::pointer stptr, size_t chunksize);
 
 };
-} // namespace work
+} // namespace hrpc
 } // namespace identt
-#endif /* _IDENTT_WORK_WORKSERVER_HPP_ */
+#endif /* _IDENTT_HRPC_SYNC_SERVER_HPP_ */
 

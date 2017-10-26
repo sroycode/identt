@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/utils/SharedCounter.hpp
+ * @file src/query/NotFoundService.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,53 +27,57 @@
  *
  * @section DESCRIPTION
  *
- *  SharedCounter.hpp :   Shared Counter
+ *  NotFoundService.hpp :   NotFound Server Implementation
  *
  */
-#ifndef _IDENTT_UTILS_SHARED_COUNTER_HPP_
-#define _IDENTT_UTILS_SHARED_COUNTER_HPP_
+#ifndef _IDENTT_QUERY_NOTFOUNDSERVICE_HPP_
+#define _IDENTT_QUERY_NOTFOUNDSERVICE_HPP_
 
-#include <utils/SharedObject.hpp>
+#include <query/ServiceBase.hpp>
 
 namespace identt {
-namespace utils {
-class SharedCounter : public SharedObject<uint64_t> {
+namespace query {
+
+template <class HttpServerT>
+class NotFoundService : protected identt::query::ServiceBase<HttpServerT> {
 public:
-	using LockT = SharedObject<uint64_t>::LockT;
-	using WriteLockT = SharedObject<uint64_t>::WriteLockT;
-	using ReadLockT = SharedObject<uint64_t>::ReadLockT;
 
 	/**
-	* make noncopyable and remove default
-	*/
-
-	SharedCounter(const SharedCounter&) = delete;
-	SharedCounter& operator=(const SharedCounter&) = delete;
-
-	/**
-	* Constructor : default
+	* NotFoundService : constructor
 	*
-	*/
-	SharedCounter() : SharedObject<uint64_t>(1) {}
-
-	/**
-	* destructor
-	*/
-	virtual ~SharedCounter () {}
-
-	/**
-	* GetNext : increment and get next value
+	* @param context
+	*   identt::utils::SharedTable::pointer stptr
+	*
+	* @param server
+	*   HttpServerT server
+	*
+	* @param scope
+	*   unsigned int scope check
 	*
 	* @return
-	*   uint64_t next value
+	*   none
 	*/
-	uint64_t GetNext()
+
+	NotFoundService(identt::utils::SharedTable::pointer stptr,
+		typename std::shared_ptr<HttpServerT> server,
+		unsigned int scope)
+		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
-		WriteLockT writelock(mutex_);
-		return ++t_;
+		if (!(this->myscope & scope)) return; // scope mismatch
+		server->default_resource["GET"] =
+		[this](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
+			this->HttpErrorAction(response,request,404,"NOT FOUND");
+		};
+		server->default_resource["POST"] =
+		[this](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
+			this->HttpErrorAction(response,request,404,"NOT FOUND");
+		};
 	}
 
+private:
 };
-} // namespace utils
+
+} // namespace query
 } // namespace identt
-#endif /* _IDENTT_UTILS_SHARED_COUNTER_HPP_ */
+
+#endif // _IDENTT_QUERY_NOTFOUNDSERVICE_HPP_

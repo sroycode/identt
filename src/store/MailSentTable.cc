@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file src/store/MailSentTable.cc
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,22 +27,38 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  MailSentTable.cc :   Implementation for MailSentTable  local messages sent
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#include <store/MailSentTable.hpp>
+// template class identt::store::StoreTable<identt::store::MailSentT>;
 
-#include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
-#include <utils/SharedTable.hpp>
-#include <async++.h>
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
+/**
+* Constructor
+*
+*/
+identt::store::MailSentTable::MailSentTable( identt::store::MailSentTable::dbpointer trydb )
+	: identt::store::MailSentTable::MailSentTable(
+	trydb,
+	K_MAILSENT,
+	{  },
+	{  }
+	)
 
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+{}
+/**
+* GetKey: get a secondary key
+*
+*/
+std::string identt::store::MailSentTable::GetKey(identt::store::MailSentT* record, identt::store::KeyTypeE keytype, bool pre)
+{
+
+	std::string key;
+	switch (keytype) {
+	default:
+	case K_MAILSENT:
+		key = EncodePrimaryKey(PrimaryKey,record->id());
+		break;
+	}
+	return key;
+}

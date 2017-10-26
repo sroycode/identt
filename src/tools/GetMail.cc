@@ -80,7 +80,13 @@ int main(int argc, char *argv[])
 		mailq.set_shared_secret(FLAGS_shared_secret);
 		std::string tmpstr;
 		::identt::query::pb2json(&mailq,tmpstr);
-		auto r = cpr::Post(cpr::Url{endpoint},cpr::Body{tmpstr},cpr::Header{{"Content-Type", "application/json"}});
+		auto r = cpr::Post(
+			cpr::Url{endpoint},
+			cpr::Body{tmpstr},
+			cpr::Header{
+				{"Content-Type", "application/json"},
+				{"Shared-Secret", FLAGS_shared_secret}
+		});
 		std::cerr << "Status Code: " << r.status_code << std::endl;
 		std::cerr << "Text: " << r.text << std::endl;
 

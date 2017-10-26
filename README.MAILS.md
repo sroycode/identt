@@ -6,7 +6,7 @@
 - An external program can call the endpoint _identt/identity/api/v1/getmailstosend to get what mails to send
 - The extracted data format is typically the json-equivalent of MPayloadT in proto/Mail.proto
 - Two example programs for extraction are provided , see src/tools/GetMail.cc and python/MailHandle.py
-- Briefly , the extraction program sends a request with shared_secret
+- Briefly , the extraction program sends a request with shared_secret in header
 
 ## Sorry
 

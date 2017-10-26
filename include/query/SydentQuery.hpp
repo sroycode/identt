@@ -36,11 +36,6 @@
 #include <utils/BaseUtils.hpp>
 #include <map>
 
-#define THREEPID_DEFAULT_ALGO "ed25519"
-#define THREEPID_DEFAULT_ALGO_ID "0"
-#define THREEPID_DEFAULT_ALGO_WITH_ID THREEPID_DEFAULT_ALGO ":" THREEPID_DEFAULT_ALGO_ID
-
-#define THREEPID_SESSION_VALID_LIFETIME_MS 24 * 60 * 60 * 1000
 
 #define IDENTT_SYDENT_ERROR_MIN         101
 #define M_BAD_JSON                      101

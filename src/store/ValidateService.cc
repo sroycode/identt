@@ -49,7 +49,7 @@ void identt::store::ValidateService::RequestTokenAction(
 {
 
 	// action
-	uint64_t currtime = ::identt::query::GetTime();
+	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	::identt::query::RequestTokenT* reqtok = rtoka->mutable_reqtok();
 	::identt::query::SuccessSidT* ssid = rtoka->mutable_ssid();
 	std::string medium = rtoka->medium();
@@ -97,7 +97,6 @@ void identt::store::ValidateService::RequestTokenAction(
 			tokenauth.set_id( stptr->maincounter.GetNext() );
 		uint64_t tok = currtime % 999999;
 		tokenauth.set_token( std::to_string(tok) );
-		LOG(INFO) << "token=\"" <<  tokenauth.token() << "\" sid=" <<  valsession.id();
 		// tokenauth.set_send_attempt_number( -1 );
 		if (!tokenauth_table.AddRecord(&tokenauth,&trans,false))
 			throw ::identt::BadDataException("Cannot Insert tokenauth");
@@ -120,11 +119,11 @@ void identt::store::ValidateService::RequestTokenAction(
 			throw ::identt::BadDataException("Cannot Insert paravion");
 
 		// final step , transaction throws on fail
-		trans.set_id( stptr->logcounter.GetNext() );
-		::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
-		storetrans.Commit(&trans);
+		::identt::store::StoreTrans storetrans;
+		storetrans.Commit(stptr,&trans);
 	}
 
+	LOG(INFO) << "token=\"" <<  tokenauth.token() << "\" sid=" <<  valsession.id();
 	ssid->set_success( true);
 	ssid->set_sid( valsession.id() );
 	if (medium=="msisdn") {
@@ -142,7 +141,7 @@ void identt::store::ValidateService::SubmitTokenAction(
 {
 	// action
 
-	uint64_t currtime = ::identt::query::GetTime();
+	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 	::identt::query::SubmitTokenT* subtok = stoka->mutable_subtok();
 	::identt::query::ErrorT* result = stoka->mutable_result();
@@ -183,9 +182,8 @@ void identt::store::ValidateService::SubmitTokenAction(
 	if (!valsession_table.AddRecord(&valsession,&trans,true))
 		throw ::identt::BadDataException("Cannot Insert vsession");
 	// transaction , throws on fail
-	trans.set_id( stptr->logcounter.GetNext() );
-	::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
-	storetrans.Commit(&trans);
+	::identt::store::StoreTrans storetrans;
+	storetrans.Commit(stptr,&trans);
 	// set
 	result->set_success(true);
 	result->set_error("This session is now validated");

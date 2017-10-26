@@ -35,13 +35,13 @@
 
 #include <query/QueryBase.hpp>
 #include <store/ValidateService.hpp>
+#include <hrpc/HrpcClient.hpp>
 
 namespace identt {
 namespace query {
 
 template <class HttpServerT>
-class ValidateService : public identt::http::ServiceBase<HttpServerT>,
-	identt::store::ValidateService {
+class ValidateService : public identt::query::ServiceBase<HttpServerT> {
 public:
 
 	/**
@@ -67,13 +67,14 @@ public:
 	ValidateService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
-			::identt::query::HelpQuery::pointer helpquery,
+	    ::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
-		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
+		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
 		// Endpoint : POST _matrix/identity/api/v1/validate/{service:string}/requestToken
+
 		helpquery->add({scope,"POST _matrix/identity/api/v1/validate/{service:string}/requestToken", {
 				"service can be email or msisdn ",
 				"params  : email , client_secret , send_attempt, next_link",
@@ -106,8 +107,15 @@ public:
 						form2pb( request->content.string() , rtoka.mutable_reqtok()); // throws on error
 					}
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
+
 					// action
-					this->RequestTokenAction(stptr, &rtoka);
+					if (stptr->is_master.Get()) {
+						::identt::store::ValidateService valservice;
+						valservice.RequestTokenAction(stptr, &rtoka);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"RequestToken",&rtoka);
+					}
 
 					// aftermath
 					std::string output;
@@ -134,15 +142,15 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/validate/{service:string}/requestToken
-		helpquery->add({scope,
-		"GET _matrix/identity/api/v1/validate/{service:string}/requestToken?{params}", {
-			"service can be email or msisdn ",
-			"params  : email , client_secret , send_attempt, next_link",
-			"params  : phone_number, country , client_secret , send_attempt, next_link",
-			"This is the GET version of requestToken"
-			"Note that Home Servers offer APIs that proxy this API"
-		}
-		                    });
+
+		helpquery->add({scope, "GET _matrix/identity/api/v1/validate/{service:string}/requestToken?{params}", {
+				"service can be email or msisdn ",
+				"params  : email , client_secret , send_attempt, next_link",
+				"params  : phone_number, country , client_secret , send_attempt, next_link",
+				"This is the GET version of requestToken"
+				"Note that Home Servers offer APIs that proxy this API"
+			}
+		});
 
 		server->resource["/_matrix/identity/api/v1/validate/(email|msisdn)/requestToken\\\?(.*)$"]["GET"]
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
@@ -157,8 +165,15 @@ public:
 					form2pb( params , rtoka.mutable_reqtok()); // throws on error
 
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
+
 					// action
-					this->RequestTokenAction(stptr, &rtoka);
+					if (stptr->is_master.Get()) {
+						::identt::store::ValidateService valservice;
+						valservice.RequestTokenAction(stptr, &rtoka);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"RequestToken",&rtoka);
+					}
 
 					// aftermath
 					std::string output;
@@ -185,6 +200,7 @@ public:
 		};
 
 		// Endpoint : POST _matrix/identity/api/v1/validate/{service:string}/submitToken
+
 		helpquery->add({scope,"POST _matrix/identity/api/v1/validate/{service:string}/submitToken", {
 				"service can be email or msisdn ",
 				"A  user may make a POST request with the following parameters",
@@ -217,7 +233,13 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->SubmitTokenAction(stptr, &stoka);
+					if (stptr->is_master.Get()) {
+						::identt::store::ValidateService valservice;
+						valservice.SubmitTokenAction(stptr, &stoka);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"SubmitToken",&stoka);
+					}
 
 					// aftermath
 					std::string output;
@@ -244,14 +266,14 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/validate/{service:string}/submitToken
-		helpquery->add({scope,
-		"GET _matrix/identity/api/v1/validate/{service:string}/submitToken?{params}", {
-			"service can be email or msisdn ",
-			"params  : sid , client_secret , token ",
-			"This is the GET version of submitToken"
-			"Note that Home Servers offer APIs that proxy this API"
-		}
-		                    });
+
+		helpquery->add({scope,"GET _matrix/identity/api/v1/validate/{service:string}/submitToken?{params}", {
+				"service can be email or msisdn ",
+				"params  : sid , client_secret , token ",
+				"This is the GET version of submitToken"
+				"Note that Home Servers offer APIs that proxy this API"
+			}
+		});
 
 		server->resource["/_matrix/identity/api/v1/validate/(email|msisdn)/submitToken\\\?(.*)$"]["GET"]
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
@@ -267,8 +289,13 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					ErrorT result;
-					this->SubmitTokenAction(stptr, &stoka);
+					if (stptr->is_master.Get()) {
+						::identt::store::ValidateService valservice;
+						valservice.SubmitTokenAction(stptr, &stoka);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"SubmitToken",&stoka);
+					}
 
 					// aftermath
 					std::string output;

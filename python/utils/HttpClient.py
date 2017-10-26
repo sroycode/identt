@@ -38,8 +38,12 @@ class HttpClient(object):
 	def __init__(self):
 		pass
 
-	def post_data(self, uri, post_json):
+	def post_json(self, uri, post_json):
+		response = unirest.post(uri, headers ={ "Content-Type": ["application/json"] }, params = json.dumps(post_json) )
+		return response
+
+	def post_json_with_secret(self, uri, skey, post_json):
 		print json.dumps(post_json)
-		response = unirest.post(uri, headers ={ "Content-Type": "application/json" }, params = json.dumps(post_json) )
+		response = unirest.post(uri, headers ={"Content-Type": "application/json", "Shared-Secret": skey }, params = json.dumps(post_json) )
 		return response
 

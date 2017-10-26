@@ -108,10 +108,10 @@ This project uses code from
 
 - https://github.com/Tencent/rapidjson
 - https://github.com/Amanieu/asyncplusplus
-- https://github.com/whoshuu/cpr ( tools only)
+- https://github.com/whoshuu/cpr
 - https://github.com/eidheim/Simple-Web-Server ( web server is modified from HTTP Server )
 - https://github.com/yinqiwen/pbjson (Protobuf<->Json)
-- https://github.com/r-lyeh/sole
+- https://github.com/r-lyeh/sole ( ununsed )
 
 ## Sorry
 

@@ -41,8 +41,7 @@ namespace query {
 
 template <class HttpServerT>
 class PubKeyService :
-	public identt::http::ServiceBase<HttpServerT>,
-	public identt::store::PubKeyService {
+	public identt::query::ServiceBase<HttpServerT> {
 public:
 
 	/**
@@ -67,20 +66,20 @@ public:
 	PubKeyService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
-			::identt::query::HelpQuery::pointer helpquery,
+	    ::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
-		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
+		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
 		// Endpoint : GET _matrix/identity/api/v1/pubkey/{pubkey:string}
-		helpquery->add({scope,
-		"GET _matrix/identity/api/v1/pubkey/{pubkey:string}", {
-			"This is the GET version of pubkey",
-			"Required. The ID of the key. This should take the form algorithm:identifier where algorithm",
-			"identifies the signing algorithm, and the identifier is an opaque string."
-		}
-		                    });
+
+		helpquery->add({scope,"GET _matrix/identity/api/v1/pubkey/{pubkey:string}", {
+				"This is the GET version of pubkey",
+				"Required. The ID of the key. This should take the form algorithm:identifier where algorithm",
+				"identifies the signing algorithm, and the identifier is an opaque string."
+			}
+		});
 
 		server->resource["/_matrix/identity/api/v1/pubkey/([A-z0-9]*)(%3[Aa]|:)(.*)$"]["GET"]
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
@@ -95,7 +94,8 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->GetPubKeyAction(stptr, &pubkey);
+					::identt::store::PubKeyService pkservice;
+					pkservice.GetPubKeyAction(stptr, &pubkey);
 
 					// aftermath
 					std::string output;
@@ -122,14 +122,14 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/pubkey/isvalid
-		helpquery->add({scope,
-		"GET _matrix/identity/api/v1/pubkey/isvalid?public_key=...", {
-			"This is the GET version of pubkey/isvalid",
-			"Check whether a long-term public key is valid.",
-			"Required. The unpadded base64-encoded public key to check.",
-			"Returns json with valid whether the public key is recognised and is currently valid"
-		}
-		                    });
+
+		helpquery->add({scope, "GET _matrix/identity/api/v1/pubkey/isvalid?public_key=...", {
+				"This is the GET version of pubkey/isvalid",
+				"Check whether a long-term public key is valid.",
+				"Required. The unpadded base64-encoded public key to check.",
+				"Returns json with valid whether the public key is recognised and is currently valid"
+			}
+		});
 
 		server->resource["/_matrix/identity/api/v1/pubkey/isvalid\\\?(.*)$"]["GET"]
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
@@ -145,7 +145,8 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->GetPubKeyValidAction(stptr, &pubkey);
+					::identt::store::PubKeyService pkservice;
+					pkservice.GetPubKeyValidAction(stptr, &pubkey);
 
 					// aftermath
 					std::string output;
@@ -172,14 +173,14 @@ public:
 		};
 
 		// Endpoint : GET _matrix/identity/api/v1/pubkey/ephemeral/isvalid
-		helpquery->add({scope,
-		"GET _matrix/identity/api/v1/pubkey/ephemeral/isvalid?public_key=...", {
-			"This is the GET version of pubkey/ephemeral/isvalid",
-			"Check whether a short-term public key is valid.",
-			"Required. The unpadded base64-encoded public key to check.",
-			"Returns json with valid whether the public key is recognised and is currently valid"
-		}
-		                    });
+
+		helpquery->add({scope, "GET _matrix/identity/api/v1/pubkey/ephemeral/isvalid?public_key=...", {
+				"This is the GET version of pubkey/ephemeral/isvalid",
+				"Check whether a short-term public key is valid.",
+				"Required. The unpadded base64-encoded public key to check.",
+				"Returns json with valid whether the public key is recognised and is currently valid"
+			}
+		});
 
 		server->resource["/_matrix/identity/api/v1/pubkey/ephemeral/isvalid\\\?(.*)$"]["GET"]
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
@@ -195,7 +196,8 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->GetEphemeralValidAction(stptr, &pubkey);
+					::identt::store::PubKeyService pkservice;
+					pkservice.GetEphemeralValidAction(stptr, &pubkey);
 
 					// aftermath
 					std::string output;
@@ -269,9 +271,11 @@ public:
 
 					// action
 					std::string output;
+					::identt::store::PubKeyService pkservice;
+
 					// add signature
 					::identt::query::SignedJson::SignatureListT signatures;
-					AddSign(stptr, &query , &pubkey, output, signatures);
+					pkservice.AddSign(stptr, &query , &pubkey, output, signatures);
 
 					// aftermath
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);

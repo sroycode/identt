@@ -3,6 +3,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 set(IDENTT_STORE_SOURCES
 		StoreBase.cc
 		StoreLevel.cc
+		StoreTrans.cc
 		InviteTokenTable.cc
 		EphemeralPublicKeyTable.cc
 		PeerTable.cc
@@ -12,6 +13,7 @@ set(IDENTT_STORE_SOURCES
 		ValidationSessionTable.cc
 		TokenAuthTable.cc
 		ParAvionTable.cc
+		MailSentTable.cc
 		InviteService.cc
 		LookupService.cc
 		MailSmsService.cc

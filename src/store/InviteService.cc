@@ -54,7 +54,7 @@ void identt::store::InviteService::StoreInviteAction(::identt::utils::SharedTabl
 {
 	identt::query::InviteQueryT* invqry = inv->mutable_invqry();
 	identt::query::InviteResultT* invres = inv->mutable_invres();
-	uint64_t currtime = ::identt::query::GetTime();
+	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	// globalassoc
 	::identt::store::GlobalAssocT globalassoc;
 	::identt::store::GlobalAssocTable::MapT globalassoc_map;
@@ -122,19 +122,18 @@ void identt::store::InviteService::StoreInviteAction(::identt::utils::SharedTabl
 		throw ::identt::BadDataException("Cannot Insert paravion");
 
 	// transaction , throws on fail
-	trans.set_id( stptr->logcounter.GetNext() );
-	::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
-	storetrans.Commit(&trans);
+	::identt::store::StoreTrans storetrans;
+	storetrans.Commit(stptr,&trans);
 
 	// return data
 	invres->set_token( tok.str() );
 	invres->set_public_key( stptr->keyring[ THREEPID_DEFAULT_ALGO_WITH_ID ]->GetPublicKey() );
 	// add system public key
 	auto nkey = invres->add_public_keys();
-	nkey->set_key_validity_url( stptr->baseurl.Get() + "/pubkey/isvalid" );
+	nkey->set_key_validity_url( stptr->baseurl.Get() + "/_matrix/identity/api/v1/pubkey/isvalid" );
 	nkey->set_public_key( invres->public_key() );
 	// add ephemeral key
 	nkey = invres->add_public_keys();
-	nkey->set_key_validity_url( stptr->baseurl.Get() + "/pubkey/ephemeral/isvalid" );
+	nkey->set_key_validity_url( stptr->baseurl.Get() + "_matrix/identity/api/v1/pubkey/ephemeral/isvalid" );
 	nkey->set_public_key( key->GetPublicKey() );
 }

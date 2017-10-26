@@ -35,13 +35,13 @@
 
 #include <query/QueryBase.hpp>
 #include <store/ThreePidService.hpp>
+#include <hrpc/HrpcClient.hpp>
 
 namespace identt {
 namespace query {
 
 template <class HttpServerT>
-class ThreePidService : public identt::http::ServiceBase<HttpServerT>,
-	identt::store::ThreePidService {
+class ThreePidService : public identt::query::ServiceBase<HttpServerT> {
 public:
 
 	/**
@@ -68,7 +68,7 @@ public:
 	    typename std::shared_ptr<HttpServerT> server,
 			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
-		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
+		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
@@ -97,8 +97,15 @@ public:
 					}
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 					identt::query::ValidatedAtT valresult;
+
 					// action
-					this->GetValidated3pidAction(stptr, &gva);
+					if (stptr->is_master.Get()) {
+						::identt::store::ThreePidService tservice;
+						tservice.GetValidated3pidAction(stptr, &gva);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"GetValidated3pid",&gva);
+					}
 
 					// aftermath
 					std::string output;
@@ -146,7 +153,13 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->GetValidated3pidAction(stptr, &gva);
+					if (stptr->is_master.Get()) {
+						::identt::store::ThreePidService tservice;
+						tservice.GetValidated3pidAction(stptr, &gva);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"GetValidated3pid",&gva);
+					}
 
 					// aftermath
 					std::string output;
@@ -202,13 +215,21 @@ public:
 						form2pb( request->content.string() , bpa.mutable_subtok()); // throws on error
 					}
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
+
 					// action
-					this->Bind3pidAction(stptr, &bpa);
-					// copy the string , change this later - shreos
-					std::string output = bpa.output();
+					if (stptr->is_master.Get()) {
+						::identt::store::ThreePidService tservice;
+						tservice.Bind3pidAction(stptr, &bpa);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"Bind3pid",&bpa);
+					}
 
 					// aftermath
+					// copy the string , change this later - shreos
+					std::string output = bpa.output();
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
+
 				} catch (SydentException& e)
 				{
 					int ecode = (e.ecode()>=IDENTT_SYDENT_ERROR_MIN && e.ecode()<=IDENTT_SYDENT_ERROR_MAX) ? e.ecode() : M_UNKNOWN;
@@ -250,10 +271,18 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->Bind3pidAction(stptr, &bpa);
-					std::string output = bpa.output();
+					if (stptr->is_master.Get()) {
+						::identt::store::ThreePidService tservice;
+						tservice.Bind3pidAction(stptr, &bpa);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"Bind3pid",&bpa);
+					}
 
 					// aftermath
+					// copy the string , change this later - shreos
+					std::string output = bpa.output();
+
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
 				} catch (SydentException& e)
 				{

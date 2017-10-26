@@ -5,10 +5,9 @@ set(IDENTT_LIB_DEPS
 	identt_utils
 	identt_proto
 	identt_async
-	identt_crypto
 	identt_work
 	identt_http
-	identt_store
+	identt_crypto
 )
 
 set(IDENTT_SOURCES

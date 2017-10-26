@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/utils/SharedCounter.hpp
+ * @file include/store/MailSentTable.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,53 +27,69 @@
  *
  * @section DESCRIPTION
  *
- *  SharedCounter.hpp :   Shared Counter
+ *  MailSentTable.hpp :   Headers for MailSentTable  local messages sent
  *
  */
-#ifndef _IDENTT_UTILS_SHARED_COUNTER_HPP_
-#define _IDENTT_UTILS_SHARED_COUNTER_HPP_
+#ifndef _IDENTT_STORE_MAIL_SENT_TABLE_HPP_
+#define _IDENTT_STORE_MAIL_SENT_TABLE_HPP_
 
-#include <utils/SharedObject.hpp>
+#include "StoreTable.hpp"
+
+// extern template class identt::store::StoreTable<identt::store::MailSentT>;
 
 namespace identt {
-namespace utils {
-class SharedCounter : public SharedObject<uint64_t> {
+namespace store {
+class MailSentTable : public StoreTable<MailSentT> {
 public:
-	using LockT = SharedObject<uint64_t>::LockT;
-	using WriteLockT = SharedObject<uint64_t>::WriteLockT;
-	using ReadLockT = SharedObject<uint64_t>::ReadLockT;
+	using StoreTable<MailSentT>::dbpointer;
+	using StoreTable<MailSentT>::StoreTable;
+	using StoreTable<MailSentT>::MapT;
+
+	/**
+	* Constructor
+	*
+	* @param trydb
+	*   dbpointer shared pointer to db
+	*
+	*/
+	MailSentTable(dbpointer trydb);
+
+	/**
+	* Destructor
+	*
+	*/
+	virtual ~MailSentTable() {}
 
 	/**
 	* make noncopyable and remove default
 	*/
 
-	SharedCounter(const SharedCounter&) = delete;
-	SharedCounter& operator=(const SharedCounter&) = delete;
+	MailSentTable() = delete;
+	MailSentTable(const std::string, const size_t) = delete;
+	MailSentTable(const MailSentTable&) = delete;
+	MailSentTable& operator=(const MailSentTable&) = delete;
+
+
+protected:
 
 	/**
-	* Constructor : default
+	* GetKey: get a key
 	*
-	*/
-	SharedCounter() : SharedObject<uint64_t>(1) {}
-
-	/**
-	* destructor
-	*/
-	virtual ~SharedCounter () {}
-
-	/**
-	* GetNext : increment and get next value
+	* @param record
+	*   MailSentT* record
+	*
+	* @param keytype
+	*   KeyTypeE key type for index
+	*
+	* @param pre
+	*   bool non unique keys
 	*
 	* @return
-	*   uint64_t next value
+	*   std::string key
 	*/
-	uint64_t GetNext()
-	{
-		WriteLockT writelock(mutex_);
-		return ++t_;
-	}
+	std::string GetKey(MailSentT* record, KeyTypeE keytype, bool pre) override;
 
 };
-} // namespace utils
+} // namespace store
 } // namespace identt
-#endif /* _IDENTT_UTILS_SHARED_COUNTER_HPP_ */
+#endif /* _IDENTT_STORE_MAIL_SENT_TABLE_HPP_ */

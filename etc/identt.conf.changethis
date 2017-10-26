@@ -1,28 +1,24 @@
 [system]
-accesslog = /tmp/identt_access.log 
-errorlog = /tmp/identt_error.log 
+accesslog = /tmp/logs/identt_access.log
+errorlog = /tmp/logs/identt_error.log
+
+shared_secret = please_create_a_large_string_here
+baseurl  = https://identt.doesntexist.com
+thisurl  = http://127.0.0.1:9091
+hostname = identt.doesntexist.com
 
 [work]
-datadir = /tmp/data_identt 
-logdatadir = /tmp/data_identt_logs
-cachesize=1024
-logcachesize=1024
-base_url  = https:://identt.doesntexist.com/_matrix/v1
+datadir = /tmp/data/identt
+logdatadir = /tmp/data/identt_logs
+cachesize=10
+logcachesize=10
 hostseed_ed25519 = VoS7JYmeOqWDas5Hh1qFBOtptVmmBhagXCzw6/5pEVo
-shared_secret = qu++AtusT++FVHqvQdPXJlgPtxeo678gXRcGfnTLqKk
-hostname = identt.doesntexist.com
 
 [http]
 host = 127.0.0.1
 port = 9091
 
-[https]
-enabled = 0
+[hrpc]
 host = 127.0.0.1
 port = 9092
-server_crt = ../keys/server.crt
-server_key = ../keys/server.key
-
-[hrpc]
-listen = 0.0.0.0:9093
-tohear = 127.0.0.1:9093
+hrpcurl  = http://127.0.0.1:9092

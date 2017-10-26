@@ -95,24 +95,6 @@ public:
 		return t_;
 	}
 
-	/**
-	* Oper: operate
-	*
-	* @param f
-	*   std::function<void(T)> function to operate
-	*
-	* @return
-	*   T value after open
-	*/
-	T Oper(std::function<void(T)> f)
-	{
-		WriteLockT writelock(mutex_);
-		f(t_);
-		return t_;
-	}
-
-private:
-
 	T t_;
 	LockT mutex_;
 

@@ -33,17 +33,20 @@
 #ifndef _IDENTT_QUERY_WEBSERVICELIST_HPP_
 #define _IDENTT_QUERY_WEBSERVICELIST_HPP_
 
-#include "HelpQuery.hpp"
-#include "QueryBase.hpp"
-#include "InfoService.hpp"
-#include "ValidateService.hpp"
-#include "ThreePidService.hpp"
-#include "PubKeyService.hpp"
-#include "LookupService.hpp"
-#include "InviteService.hpp"
-#include "MailSmsService.hpp"
+#include <query/NotFoundService.hpp>
+#include <query/HelpQuery.hpp>
+#include <query/QueryBase.hpp>
+#include <query/InfoService.hpp>
+#include <query/ValidateService.hpp>
+#include <query/ThreePidService.hpp>
+#include <query/PubKeyService.hpp>
+#include <query/LookupService.hpp>
+#include <query/InviteService.hpp>
+#include <query/MailSmsService.hpp>
+#include <hrpc/HrpcEndpointService.hpp>
 
 #define IDENTT_WEBSERVICELIST_SCOPE_HTTP \
+		identt::query::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP}; \
 		identt::query::HelpQuery::pointer helpquery = std::make_shared<identt::query::HelpQuery>(); \
 		identt::query::InfoService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
 		identt::query::ValidateService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
@@ -51,8 +54,10 @@
 		identt::query::PubKeyService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
 		identt::query::LookupService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
 		identt::query::InviteService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
-		identt::query::MailSmsService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP);
+		identt::query::MailSmsService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
+		identt::hrpc::HrpcEndpointService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP);
 
-#define IDENTT_WEBSERVICELIST_SCOPE_HTTPS
+#define IDENTT_WEBSERVICELIST_SCOPE_HTTPS \
+		identt::query::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP};
 
 #endif // _IDENTT_QUERY_WEBSERVICELIST_HPP_

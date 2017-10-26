@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file include/hrpc/HrpcClient.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,22 +27,57 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  HrpcClient.hpp : Header hrpc client
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#ifndef _IDENTT_QUERY_HRPC_CLIENT_HPP_
+#define _IDENTT_QUERY_HRPC_CLIENT_HPP_
 
 #include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
 #include <utils/SharedTable.hpp>
-#include <async++.h>
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
+#include <google/protobuf/message.h>
 
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+namespace identt {
+namespace hrpc {
+
+class HrpcClient {
+public:
+	/**
+	* constructor
+	*
+	*/
+	HrpcClient();
+
+	/**
+	* make noncopyable
+	*/
+	HrpcClient(const HrpcClient&) = delete;
+	HrpcClient& operator=(const HrpcClient&) = delete;
+
+	/**
+	* destructor
+	*/
+	virtual ~HrpcClient ();
+
+	/**
+	* SendToMaster : send to master and get output
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param service_name
+	*   std::string service name
+	*
+	* @param msg
+	*   google::protobuf::Message* message pointer
+	*
+	* @return
+	*   bool status true if ok
+	*/
+	bool SendToMaster(::identt::utils::SharedTable::pointer stptr, std::string service_name, google::protobuf::Message* msg);
+
+};
+} // namespace hrpc
+} // namespace identt
+#endif // _IDENTT_QUERY_HRPC_CLIENT_HPP_
+

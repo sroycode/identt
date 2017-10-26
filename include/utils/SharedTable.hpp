@@ -67,12 +67,11 @@ public:
 	*/
 	KeyRingT keyring;
 	// string shared
+	SharedString master;
 	SharedString shared_secret;
 	SharedString hostname;
 	SharedString baseurl;
-	SharedString master;
-	SharedString listen;
-	SharedString tohear;
+	SharedString thisurl;
 	// counter shared
 	SharedCounter maincounter;
 	SharedCounter logcounter;

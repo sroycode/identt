@@ -4,10 +4,22 @@ option optimize_for =  SPEED;
 
 package identt.query;
 
+message StateT {
+	string hostname                                                =  1;
+	string master                                                  =  2;
+	uint64 maincounter                                             =  3;
+	uint64 logcounter                                              =  4;
+	bool is_master                                                 =  5;
+	bool is_ready                                                  =  6;
+	uint64 epoch                                                   =  7;
+	bool not_found                                                 = 21;
+}
+
 message ErrorT {
 	string errorcode                                               =  1;
 	string error                                                   =  2;
 	bool success                                                   =  3;
+	int32 ecode                                                    =  4;
 }
 
 message RequestTokenT {
@@ -157,3 +169,4 @@ message StoreInviteDataT {
 	InviteQueryT invqry                                            =  1;
 	InviteResultT invres                                           =  2;
 }
+

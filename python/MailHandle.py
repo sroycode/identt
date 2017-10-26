@@ -81,12 +81,11 @@ class MailHandle:
 
 		json_data = {
 			'lastid':0,
-			'limit':10,
-			'shared_secret':self.shared_secret
+			'limit':10
 		}
 		try:
 			httpc = HttpClient()
-			response = httpc.post_data(self.endpoint,json_data)
+			response = httpc.post_json_with_secret(self.endpoint,self.shared_secret,json_data)
 			print response.body
 		except urllib2.HTTPError, e:
 			print e.args

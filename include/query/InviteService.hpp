@@ -34,14 +34,14 @@
 #define _IDENTT_QUERY_INVITE_SERVICE_HPP_
 
 #include <query/QueryBase.hpp>
+#include <hrpc/HrpcClient.hpp>
 #include <store/InviteService.hpp>
 
 namespace identt {
 namespace query {
 
 template <class HttpServerT>
-class InviteService : public identt::http::ServiceBase<HttpServerT>,
-	identt::store::InviteService {
+class InviteService : public identt::query::ServiceBase<HttpServerT> {
 public:
 
 	/**
@@ -68,7 +68,7 @@ public:
 	    typename std::shared_ptr<HttpServerT> server,
 			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
-		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
+		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
@@ -104,7 +104,13 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->StoreInviteAction(stptr,&inv);
+					if (stptr->is_master.Get()) {
+						identt::store::InviteService storeinvite;
+						storeinvite.StoreInviteAction(stptr,&inv);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"StoreInvite",&inv);
+					}
 
 					// aftermath
 					std::string output;

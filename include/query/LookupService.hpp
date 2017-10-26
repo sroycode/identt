@@ -41,8 +41,7 @@ namespace query {
 
 template <class HttpServerT>
 class LookupService :
-	public identt::http::ServiceBase<HttpServerT>,
-	public identt::store::LookupService {
+	public identt::query::ServiceBase<HttpServerT> {
 public:
 
 	/**
@@ -69,7 +68,7 @@ public:
 	    typename std::shared_ptr<HttpServerT> server,
 			::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
-		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
+		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
@@ -101,7 +100,8 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->LookupAction(stptr, &lact);
+					::identt::store::LookupService lservice;
+					lservice.LookupAction(stptr, &lact);
 
 					// aftermath
 					std::string output;
@@ -114,7 +114,7 @@ public:
 
 					// test data
 					std::vector<::identt::query::SignatureT> signatures;
-					AddSign(stptr, lact.mutable_result() , &pubkey, output,signatures);
+					lservice.AddSign(stptr, lact.mutable_result() , &pubkey, output,signatures);
 					if (!output.length()) output="{}";
 
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
@@ -161,7 +161,8 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->LookupAction(stptr, &lact);
+					::identt::store::LookupService lservice;
+					lservice.LookupAction(stptr, &lact);
 
 					// aftermath
 					std::string output;
@@ -174,7 +175,7 @@ public:
 
 					// test data
 					std::vector<::identt::query::SignatureT> signatures;
-					AddSign(stptr, lact.mutable_result() , &pubkey, output,signatures);
+					lservice.AddSign(stptr, lact.mutable_result() , &pubkey, output,signatures);
 
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
 				} catch (SydentException& e)
@@ -225,7 +226,8 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					this->BulkLookupAction(stptr, &blact);
+					::identt::store::LookupService lservice;
+					lservice.BulkLookupAction(stptr, &blact);
 
 					// aftermath
 					std::string output;
@@ -238,7 +240,7 @@ public:
 
 					// test data
 					std::vector<::identt::query::SignatureT> signatures;
-					AddSign(stptr, blact.mutable_result() , &pubkey, output,signatures);
+					lservice.AddSign(stptr, blact.mutable_result() , &pubkey, output,signatures);
 					if (!output.length()) output="{}";
 
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);

@@ -63,7 +63,7 @@ void identt::store::ThreePidService::GetValidated3pidAction(
 	::identt::query::ValidatedAtT* valresult = gva->mutable_valresult();
 	// check
 	uint64_t sid = subtok->sid();
-	uint64_t currtime = ::identt::query::GetTime();
+	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	if (sid==0)
 		throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
 	if (subtok->client_secret()=="")
@@ -97,7 +97,7 @@ void identt::store::ThreePidService::Bind3pidAction(
 	// check
 	::identt::query::SubmitTokenT* subtok = bpa->mutable_subtok();
 	uint64_t sid = subtok->sid();
-	uint64_t currtime = ::identt::query::GetTime();
+	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	if (sid==0)
 		throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
 	if (subtok->client_secret()=="")
@@ -246,9 +246,8 @@ void identt::store::ThreePidService::Bind3pidAction(
 	bpa->set_output( output );
 
 	// transaction , throws on fail
-	trans.set_id( stptr->logcounter.GetNext() );
-	::identt::store::StoreTrans storetrans(stptr->maindb.Get(),stptr->logdb.Get());
-	storetrans.Commit(&trans);
+	::identt::store::StoreTrans storetrans;
+	storetrans.Commit(stptr,&trans);
 
 }
 

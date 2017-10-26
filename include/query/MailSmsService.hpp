@@ -33,14 +33,16 @@
 #ifndef _IDENTT_QUERY_MAILSMS_SERVICE_HPP_
 #define _IDENTT_QUERY_MAILSMS_SERVICE_HPP_
 
+#include <query/QueryBase.hpp>
 #include <store/MailSmsService.hpp>
+#include <hrpc/HrpcClient.hpp>
 
 namespace identt {
 namespace query {
 
 template <class HttpServerT>
 class MailSmsService :
-	public identt::http::ServiceBase<HttpServerT>,
+	public identt::query::ServiceBase<HttpServerT>,
 	public identt::store::MailSmsService {
 public:
 
@@ -66,9 +68,9 @@ public:
 	MailSmsService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
-			::identt::query::HelpQuery::pointer helpquery,
+	    ::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
-		: identt::http::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
+		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
@@ -100,11 +102,21 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// check shared secret
-					if (mailq.shared_secret() != stptr->shared_secret.Get())
+					auto it=request->header.find("Shared-Secret");
+					if (it==request->header.end())
+						throw identt::BadDataException("No Header Shared Secret");
+					if (it->second != stptr->shared_secret.Get())
 						throw identt::BadDataException("Bad Shared Secret");
 
+					::identt::store::MailSmsService mservice;
 					// action
-					this->PendingAction(stptr, &mailq);
+					if (stptr->is_master.Get()) {
+						mservice.PendingAction(stptr, &mailq);
+					} else {
+						identt::hrpc::HrpcClient hclient;
+						hclient.SendToMaster(stptr,"Pending",&mailq);
+					}
+
 					mailq.clear_shared_secret();
 
 					// aftermath
@@ -112,11 +124,11 @@ public:
 					std::vector<::identt::query::SignatureT> signatures;
 
 					::identt::query::PubKeyT pubkey;
-					// sign 
+					// sign
 					pubkey.set_owner(stptr->hostname.Get());
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
-					AddSign(stptr,&mailq, &pubkey, output,signatures);
+					mservice.AddSign(stptr,&mailq, &pubkey, output,signatures);
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
 				} catch (SydentException& e)
 				{
