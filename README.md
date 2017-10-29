@@ -105,9 +105,9 @@ For example , mobile no verification looks like this ( run from build dir )
 sh ../test/test_validate_msisdn_requestToken.sh 
 sh ../test/test_validate_msisdn_submitToken.sh # fails
 sh ../test/test_tools_getmail.sh # get token and sid
-token=3c512048-2ef9-43e4-8e7b-1ce72584b337 sid=2 sh ../test/test_validate_msisdn_submitToken.sh
-token=3c512048-2ef9-43e4-8e7b-1ce72584b337 sid=2 sh ../test/test_3pid_getValidated3pid.sh 
-token=3c512048-2ef9-43e4-8e7b-1ce72584b337 sid=2 sh ../test/test_3pid_bind.sh 
+token="512048" sid=2 sh ../test/test_validate_msisdn_submitToken.sh
+token="512048" sid=2 sh ../test/test_3pid_getValidated3pid.sh 
+token="512048" sid=2 sh ../test/test_3pid_bind.sh 
 ```
 
 ## Acknowledgements
