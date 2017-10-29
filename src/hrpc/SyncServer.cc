@@ -32,7 +32,8 @@
  */
 #include "SyncServer.hpp"
 #include <hrpc/HrpcClient.hpp>
-#include <async++.h>
+#include <chrono>
+#include <thread>
 #include <functional>
 #include <store/StoreTrans.hpp>
 #include "../proto/Query.pb.h"
@@ -89,23 +90,30 @@ void identt::hrpc::SyncServer::init(identt::utils::ServerBase::ParamsListT param
 		std::size_t port = std::stoul(params[1]);
 		std::string hrpcurl = params[2];
 
-		if (!sharedtable->is_master.Get()) {
-			// see if the pointed machine is master or refers to a master
-			::identt::query::StateT sstate;
-			size_t tolcount=0;
-			::identt::hrpc::HrpcClient hclient;
-			do {
-				hclient.SendToMaster(sharedtable,"info",&sstate);
-				if (!sstate.is_master())
-					sharedtable->master.Set( sstate.master() );
-				if (++tolcount>2)
-					throw identt::InitialException("the pointed machine is not 1 hop away from master");
-			} while(!sstate.is_master());
-			LOG(INFO) << "Master is set to " << sharedtable->master.Get();
-		}
+		if (sharedtable->is_master.Get()) return;
+		// set slave loop
+		// see if the pointed machine is master or refers to a master
+		::identt::query::StateT sstate;
+		size_t tolcount=0;
+		::identt::hrpc::HrpcClient hclient;
+		do {
+			hclient.SendToMaster(sharedtable,"info",&sstate);
+			if (!sstate.is_master())
+				sharedtable->master.Set( sstate.master() );
+			if (++tolcount>2)
+				throw identt::InitialException("the pointed machine is not 1 hop away from master");
+		} while(!sstate.is_master());
+		LOG(INFO) << "Master is set to " << sharedtable->master.Get();
+
+		// sync from master till current before start
+		this->SyncFromMaster(1000,false);
+		DLOG(INFO) << "Master Sync Complete";
+		// loop this
+		async::spawn([this] { this->SyncFromMaster(100,true); });
 
 	} catch (identt::JdException& e) {
-		LOG(INFO) << "SyncServer init failed: " << e.what() << std::endl;
+		DLOG(INFO) << "SyncServer init failed: " << e.what() << std::endl;
+		throw identt::InitialException("SyncServer couldnot be initialized with master");
 	}
 	DLOG(INFO) << "SyncServer LOOP Ends" << std::endl;
 }
@@ -116,6 +124,7 @@ void identt::hrpc::SyncServer::init(identt::utils::ServerBase::ParamsListT param
 */
 void identt::hrpc::SyncServer::stop()
 {
+	ctok.cancel();
 	DLOG(INFO) << "Sync Server Stop Done" << std::endl;
 }
 
@@ -123,12 +132,30 @@ void identt::hrpc::SyncServer::stop()
 * SyncFromMaster : sync data from master
 *
 */
-void identt::hrpc::SyncServer::SyncFromMaster(identt::utils::SharedTable::pointer stptr, size_t chunksize)
+void identt::hrpc::SyncServer::SyncFromMaster(size_t chunksize, bool loop)
 {
 	// only if slave
-	if (stptr->is_master.Get()) return;
+	if (sharedtable->is_master.Get()) return;
 	::identt::hrpc::HrpcClient hclient;
 	::identt::store::TransListT data;
-	hclient.SendToMaster(stptr,"TransLog",&data);
+	::identt::store::StoreTrans storetrans;
+	::identt::store::TransactionT trans;
+	bool not_done=true;
 
+	while(not_done) {
+		async::interruption_point(this->ctok);
+		data.Clear();
+		data.set_lastid( sharedtable->logcounter.Get() );
+		data.set_limit( chunksize );
+		DLOG(INFO) << "sending: " << data.DebugString();
+		hclient.SendToMaster(sharedtable,"TransLog",&data);
+		DLOG(INFO) << "got: " << data.DebugString();
+		for (auto i=0; i<data.trans_size(); ++i) {
+			trans.Swap( data.mutable_trans(i) );
+			if (trans.id() != (sharedtable->logcounter.Get()+1)) break; // out of sync
+			storetrans.Commit(sharedtable,&trans);
+		}
+		if (data.lastid() == data.currid())  not_done=loop; // in sync
+		std::this_thread::sleep_for( std::chrono::milliseconds( (data.trans_size()>0) ? 100 : 500 ) );
+	}
 }

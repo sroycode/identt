@@ -35,6 +35,7 @@
 
 #include <store/StoreBase.hpp>
 #include <utils/ServerBase.hpp>
+#include <async++.h>
 
 namespace identt {
 namespace hrpc {
@@ -122,6 +123,7 @@ public:
 	void stop();
 
 private:
+	async::cancellation_token ctok;
 
 	/**
 	* Constructor : private default Constructor
@@ -133,18 +135,18 @@ private:
 	SyncServer(identt::utils::SharedTable::pointer stptr);
 
 	/**
-	* SyncFromMaster : sync data from master
-	*
-	* @param stptr
-	*   identt::utils::SharedTable::pointer stptr
+	* SyncFromMaster : sync data from master , if loop is false will stop after sync is complete to latest
 	*
 	* @param chunksize
 	*   size_t chunk size of request
 	*
+	* @param loop
+	*   bool run in loop after reaching sync , intended for new data
+	*
 	* @return
 	*   none
 	*/
-	void SyncFromMaster(identt::utils::SharedTable::pointer stptr, size_t chunksize);
+	void SyncFromMaster(size_t chunksize, bool loop);
 
 };
 } // namespace hrpc

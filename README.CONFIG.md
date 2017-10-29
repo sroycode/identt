@@ -19,5 +19,6 @@
 
 ## Section http
 
-- host : HTTP host 
+- host : HTTP host for internal HTTP host
 - port : HTTP port
+

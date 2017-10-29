@@ -69,14 +69,10 @@ void identt::store::MailSmsService::PendingAction(::identt::utils::SharedTable::
 	}
 
 	// fetch new
-	::identt::store::ParAvionTable::MapT records;
 	uint64_t lastid = (mailq->lastid()>0) ? mailq->lastid()+1 :0;
 	uint64_t limit = (mailq->limit()>100) ? 100 : mailq->limit();
-	bool hasrecords = paravion_table.ScanTable(&records,lastid,limit);
-	lastid=0;
-	for (auto it= records.begin() ; it!=records.end(); ++it) {
-		if (it->first > lastid) lastid= it->first;
-		it->second.mutable_payload()->Swap(mailq->add_payload());
-	}
-	mailq->set_lastid(lastid);
+	paravion_table.ScanTable(lastid,limit, [mailq](::identt::store::ParAvionT* record) {
+		if (record->id() > mailq->lastid() ) mailq->set_lastid( record->id() );
+		record->mutable_payload()->Swap(mailq->add_payload());
+	});
 }

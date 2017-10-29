@@ -53,11 +53,11 @@ void ::identt::store::StoreTrans::StoreTrans::Commit(::identt::utils::SharedTabl
 bool ::identt::store::StoreTrans::StoreTrans::CommitLog(::identt::utils::SharedTable::pointer stptr, TransactionT* trans)
 {
 	if (trans->item_size()==0) return true;
-	std::string value;
-	trans->SerializeToString(&value);
 	dbpointer logdb = stptr->logdb.Get();
 	// the logcounter is incremented just before writing
 	trans->set_id( stptr->logcounter.GetNext() );
+	std::string value;
+	trans->SerializeToString(&value);
 	usemydb::Status s = logdb->Put(usemydb::WriteOptions(),EncodePrimaryKey(K_LOGNODE,trans->id()),value);
 	return s.ok();
 }
@@ -97,16 +97,15 @@ void ::identt::store::StoreTrans::StoreTrans::ReadLog(::identt::utils::SharedTab
 
 	uint64_t counter=0;
 
-	tlist->set_lastid( 0 );
 	for (it->Seek(start); it->Valid() && it->key().starts_with(match) ; it->Next()) {
-		if (++counter==1) continue; // skips the first
 		TransactionT record;
-		if (!record.ParseFromString(it->value().ToString()))
-			throw identt::BadDataException("Keytype invalid");
+		if (!record.ParseFromString(it->value().ToString())) continue;
+		DLOG(INFO) << " ### " << tlist->lastid() << " -- " << record.id();
+		if (record.id() == tlist->lastid()) continue; // skips the first
 		if ((tlist->lastid()+1)!=record.id() ) break; // out of sequence
 		tlist->set_lastid( record.id() );
 		record.Swap(tlist->add_trans());
-		if (counter > tlist->limit() ) break; // break on exceed
+		if (++counter > tlist->limit() ) break; // break on exceed
 	}
 	tlist->set_currid( stptr->logcounter.Get() );
 	tlist->set_ts( std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() );

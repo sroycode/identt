@@ -109,6 +109,7 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 	
 	} catch (identt::JdException& e) {
 		LOG(INFO) << "WorkServer init failed: " << e.what() << std::endl;
+		std::rethrow_exception(std::current_exception());
 	}
 	DLOG(INFO) << "WorkServer LOOP Ends" << std::endl;
 }

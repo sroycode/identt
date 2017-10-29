@@ -58,7 +58,7 @@ bool ::identt::hrpc::HrpcClient::SendToMaster(
     ::identt::utils::SharedTable::pointer stptr, std::string service_name,
     google::protobuf::Message* msg)
 {
-	std::string endpoint = "http://" + stptr->master.Get() + "/_identt/master/endpoint/v1";
+	std::string endpoint = "http://" + stptr->master.Get() + "/_identt/identity/master/v1/endpoint";
 	std::string tmpstr;
 	msg->SerializeToString(&tmpstr);
 

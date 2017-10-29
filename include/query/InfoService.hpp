@@ -75,7 +75,7 @@ public:
 
 		server->resource["/help$"]["GET"]
 		=[this,stptr,scope,helpquery](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
-			async::parallel_invoke([this,stptr,scope,helpquery,response,request] {
+			IDENTT_PARALLEL_ONE([this,stptr,scope,helpquery,response,request] {
 				try {
 					LOG(INFO) << request->path;
 					std::string output;
@@ -104,7 +104,7 @@ public:
 
 		server->resource["/info$"]["GET"]
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
-			async::parallel_invoke([this,stptr,response,request] {
+			IDENTT_PARALLEL_ONE([this,stptr,response,request] {
 				try {
 					LOG(INFO) << request->path;
 					::identt::query::StateT sstate;

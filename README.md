@@ -12,6 +12,8 @@ This project seeks to take some of the pain out of setting up a matrix identity 
 and should be a drop-in replacement for sydent based on standalone rocksdb
 (or leveldb , just change the flag in CMakeLists.txt). 
 
+Supports rudimentary replication. All write queries go to master, read queries are on slave.
+
 Most of the queries closely follow https://matrix.org/docs/spec/identity_service/unstable.html
 
 In addition there are some utilities
@@ -79,11 +81,17 @@ cmake3 -DBOOST_ROOT=/opt/local/boost .. && make
 
 1. You need to have a config file , see README.CONFIG.md for details. There is a sample in etc for you to edit
 
-2. Start the server 
+2. Start the server ( default starts in master mode)
 
 
 ```
 ./identtserver --config ../etc/identt.conf
+```
+
+3. To start another server in slave mode (optional) pointing to master started at port 9091 of same machine
+
+```
+./identtserver --config ../etc/identt2.conf --master="127.0.0.1:9091"
 ```
 
 ## Testing

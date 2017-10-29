@@ -34,7 +34,7 @@
 #define _IDENTT_STORE_STORE_TABLE_HPP_
 
 #include <set>
-#include <google/protobuf/message.h>
+#include <google/protobuf/reflection.h>
 #include <google/protobuf/map.h>
 #include "StoreLevel.hpp"
 
@@ -404,8 +404,8 @@ public:
 	/**
 	* ScanTable : scan by primary key
 	*
-	* @param record map
-	*   MapT* records
+	* @param fieldname
+	*   const char* field name
 	*
 	* @param startid
 	*   size_t first id to fetch
@@ -413,10 +413,13 @@ public:
 	* @param limit
 	*   size_t records to fetch
 	*
+	* @param Func
+	*   std::function<void(T*)> function to act on each record
+	*
 	* @return
-	*   bool if found
+	*   none
 	*/
-	bool ScanTable(MapT* records, uint64_t startid, size_t limit)
+	void ScanTable(uint64_t startid, size_t limit, std::function<void(T*)> Func)
 	{
 		std::shared_ptr<usemydb::Iterator> it(getDB()->NewIterator(usemydb::ReadOptions()));
 		std::string keymatch = EncodeKeyType(PrimaryKey);
@@ -428,11 +431,11 @@ public:
 		uint64_t counter=0;
 		for (it->Seek(start); it->Valid() && it->key().starts_with(match) ; it->Next()) {
 			T record;
-			record.ParseFromString(it->value().ToString());
-			(*records)[record.id()]=record;
+			if (!record.ParseFromString(it->value().ToString()) )
+				throw identt::BadDataException("Record cannot be parsed");
+			Func(&record);
 			if (++counter==limit) break;
 		}
-		return (counter>0);
 	}
 
 protected:

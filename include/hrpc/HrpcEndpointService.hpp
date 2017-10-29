@@ -81,20 +81,19 @@ public:
 	{
 		if (!(this->myscope & scope)) return; // scope mismatch
 
-		// Endpoint : POST _identt/master/endpoint/v1
-		helpquery->add({scope,"POST _identt/master/endpoint/v1", {
+		// Endpoint : POST _identt/identity/master/v1/endpoint
+		helpquery->add({scope,"POST _identt/identity/master/v1/endpoint", {
 				"This is for master endpoints only between servers",
 				"Uses protobuf data format only hence not documented here."
 			}
 		});
 
-		server->resource["/_identt/master/endpoint/v1$"]["POST"]
+		server->resource["/_identt/identity/master/v1/endpoint$"]["POST"]
 		=[this,stptr](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
-			async::parallel_invoke([this,stptr,response,request] {
+			IDENTT_PARALLEL_ONE([this,stptr,response,request] {
 				std::string output;
 				int ecode=M_UNKNOWN;
 				try {
-					LOG(INFO) << request->path;
 					if (!this->ProtoRequest(request))
 						throw identt::BadDataException("Only Protobuf Supported");
 					if (!this->SharedSecretOK(request,stptr->shared_secret.Get()))
@@ -104,8 +103,10 @@ public:
 					if (sname.empty())
 						throw identt::BadDataException("Service-Name not defined");
 
+
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 					if (!stptr->is_master.Get()) throw identt::BadDataException("System Not Master");
+
 
 					if (sname=="info")
 					{
@@ -125,13 +126,14 @@ public:
 							sstate.set_is_master( stptr->is_master.Get() );
 						}
 						sstate.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="TransLog")
 					{
 						identt::store::TransListT data;
 						if (!data.ParseFromString( request->content.string() ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
-						identt::store::StoreTrans service; //RequestTokenAction
+						identt::store::StoreTrans service; //ReadLog
 						service.ReadLog(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
@@ -145,6 +147,7 @@ public:
 						service.RequestTokenAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="SubmitToken")
 					{
 						identt::query::SubmitTokenDataT data;
@@ -155,6 +158,7 @@ public:
 						service.SubmitTokenAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="GetValidated3pid")
 					{
 						identt::query::GetValidated3pidDataT data;
@@ -165,6 +169,7 @@ public:
 						service.GetValidated3pidAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="Bind3pid")
 					{
 						identt::query::Bind3pidDataT data;
@@ -175,6 +180,7 @@ public:
 						service.Bind3pidAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="Lookup")
 					{
 						identt::query::LookupDataT data;
@@ -185,6 +191,7 @@ public:
 						service.LookupAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="BulkLookup")
 					{
 						identt::query::BulkLookupDataT data;
@@ -195,6 +202,7 @@ public:
 						service.BulkLookupAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="GetPubKey")
 					{
 						identt::query::PubKeyT data;
@@ -205,6 +213,7 @@ public:
 						service.GetPubKeyAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="GetPubKeyValid")
 					{
 						identt::query::PubKeyT data;
@@ -215,6 +224,7 @@ public:
 						service.GetPubKeyValidAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="GetEphemeralValid")
 					{
 						identt::query::PubKeyT data;
@@ -225,6 +235,7 @@ public:
 						service.GetEphemeralValidAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="StoreInvite")
 					{
 						identt::query::StoreInviteDataT data;
@@ -235,6 +246,7 @@ public:
 						service.StoreInviteAction(stptr,&data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else if (sname=="Pending")
 					{
 						identt::mail::MailQueryT data;
@@ -245,6 +257,7 @@ public:
 						service.PendingAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						LOG(INFO) << request->path;
 					} else {
 						throw identt::BadDataException("Service Name unknown or unimplemented");
 					}

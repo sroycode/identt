@@ -114,6 +114,7 @@ void identt::store::ValidateService::RequestTokenAction(
 		::identt::mail::MPOneT* mpone = payload->mutable_mpone();
 		mpone->set_sid( valsession.id() );
 		mpone->set_country( reqtok->country() );
+		mpone->set_token( std::to_string(tok) );
 
 		if (!paravion_table.AddRecord(&paravion,&trans,false))
 			throw ::identt::BadDataException("Cannot Insert paravion");

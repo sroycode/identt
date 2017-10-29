@@ -54,7 +54,7 @@ public:
 	* Constructor : default
 	*
 	*/
-	SharedCounter() : SharedObject<uint64_t>(1) {}
+	SharedCounter() : SharedObject<uint64_t>(0) {}
 
 	/**
 	* destructor

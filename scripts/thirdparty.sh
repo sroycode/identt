@@ -92,13 +92,19 @@ PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cma
 
 }
 
+
 # Building leveldb 1.20
 
 function build_leveldb () {
+build_rocks_compression 1
+build_snappy 1
 local MVERSION=1.20
 local MSOURCEFILE=${IDENTT_TPSRC}/leveldb-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/leveldb-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/lib/libleveldb.a ] ; then echo "leveldb already installed"; return ; fi
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/leveldb/db.h ] ; then
+	if [ $# -ne 0 ] ; then echo "leveldb already installed"; fi
+	return;
+fi
 if [ ! -d ${MWORKDIR} ] ; then
 	if [ ! -f ${MSOURCEFILE} ] ; then
 		wget -O ${MSOURCEFILE} "https://github.com/google/leveldb/archive/v${MVERSION}.tar.gz"
@@ -393,7 +399,7 @@ build_rocksdb
 build_sodium
 #build_nanomsg
 #build_googletest
-build_libzmq
+#build_libzmq
 #build_czmq
-build_azmq
+#build_azmq
 #build_zmqpp
