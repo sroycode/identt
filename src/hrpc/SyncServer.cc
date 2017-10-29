@@ -108,8 +108,10 @@ void identt::hrpc::SyncServer::init(identt::utils::ServerBase::ParamsListT param
 		// sync from master till current before start
 		this->SyncFromMaster(1000,false);
 		DLOG(INFO) << "Master Sync Complete";
-		// loop this
-		async::spawn([this] { this->SyncFromMaster(100,true); });
+		// set this in async loop
+		async::spawn([this] {
+			this->SyncFromMaster(100,true);
+		});
 
 	} catch (identt::JdException& e) {
 		DLOG(INFO) << "SyncServer init failed: " << e.what() << std::endl;
@@ -124,7 +126,7 @@ void identt::hrpc::SyncServer::init(identt::utils::ServerBase::ParamsListT param
 */
 void identt::hrpc::SyncServer::stop()
 {
-	ctok.cancel();
+	to_stop.Set(true);
 	DLOG(INFO) << "Sync Server Stop Done" << std::endl;
 }
 
@@ -136,14 +138,14 @@ void identt::hrpc::SyncServer::SyncFromMaster(size_t chunksize, bool loop)
 {
 	// only if slave
 	if (sharedtable->is_master.Get()) return;
+	this->to_stop.Set(false);
+
 	::identt::hrpc::HrpcClient hclient;
 	::identt::store::TransListT data;
 	::identt::store::StoreTrans storetrans;
 	::identt::store::TransactionT trans;
-	bool not_done=true;
 
-	while(not_done) {
-		async::interruption_point(this->ctok);
+	while(!to_stop.Get()) {
 		data.Clear();
 		data.set_lastid( sharedtable->logcounter.Get() );
 		data.set_limit( chunksize );
@@ -155,7 +157,7 @@ void identt::hrpc::SyncServer::SyncFromMaster(size_t chunksize, bool loop)
 			if (trans.id() != (sharedtable->logcounter.Get()+1)) break; // out of sync
 			storetrans.Commit(sharedtable,&trans);
 		}
-		if (data.lastid() == data.currid())  not_done=loop; // in sync
-		std::this_thread::sleep_for( std::chrono::milliseconds( (data.trans_size()>0) ? 100 : 500 ) );
+		if ((data.lastid() == data.currid()) && (!loop))  return;
+		std::this_thread::sleep_for( std::chrono::milliseconds( (data.trans_size()>0) ? 50 : 500 ) );
 	}
 }

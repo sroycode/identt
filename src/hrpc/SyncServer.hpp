@@ -123,7 +123,7 @@ public:
 	void stop();
 
 private:
-	async::cancellation_token ctok;
+	::identt::utils::SharedTable::SharedBool to_stop;
 
 	/**
 	* Constructor : private default Constructor
