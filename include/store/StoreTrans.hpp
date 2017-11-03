@@ -64,10 +64,13 @@ public:
 	* @param trans
 	*   TransactionT* transaction to handle
 	*
+	* @param is_master
+	*   bool is_master
+	*
 	* @return
 	*   none
 	*/
-	void Commit(::identt::utils::SharedTable::pointer stptr, TransactionT* trans);
+	void Commit(::identt::utils::SharedTable::pointer stptr, TransactionT* trans, bool is_master);
 
 	/**
 	* CommitLog : write log ensure id is sequentially generated
@@ -78,10 +81,13 @@ public:
 	* @param trans
 	*   TransactionT* transaction to handle
 	*
+	* @param is_master
+	*   bool is_master
+	*
 	* @return
 	*   bool status
 	*/
-	bool CommitLog(::identt::utils::SharedTable::pointer stptr, TransactionT* trans);
+	bool CommitLog(::identt::utils::SharedTable::pointer stptr, TransactionT* trans, bool is_master);
 
 	/**
 	* CommitData : write data
@@ -110,6 +116,20 @@ public:
 	*   none
 	*/
 	void ReadLog(::identt::utils::SharedTable::pointer stptr, TransListT* tlist);
+
+	/**
+	* ReadOne : read a single transaction
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param trans
+	*   TransactionT* transaction  to handle
+	*
+	* @return
+	*   none
+	*/
+	void ReadOne(::identt::utils::SharedTable::pointer stptr, TransactionT* trans);
 
 private:
 

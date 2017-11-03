@@ -10,6 +10,7 @@ enum ActTypeE {
 	A_AUTHTOKEN                                                    = 11;
 	A_USERINVITE                                                   = 12;
 	A_ROOMINVITE                                                   = 13;
+	A_ONBINDNOTIFY                                                 = 14;
 };
 
 message MPOneT {
@@ -26,6 +27,11 @@ message MPTwoT {
 	string ephemeral_private_key                                   =  4;
 }
 
+message MPThreeT {
+	string mxid                                                    =  1;
+	bytes  payload                                                 =  2;
+}
+
 message MPayloadT {
 	uint64 id                                                      =  1;
 	string medium                                                  =  2;
@@ -35,6 +41,7 @@ message MPayloadT {
 	// payloads
 	MPOneT mpone                                                   = 11;
 	MPTwoT mptwo                                                   = 12;
+	MPThreeT mpthree                                               = 13;
 }
 
 message MailQueryT {

@@ -135,18 +135,31 @@ private:
 	SyncServer(identt::utils::SharedTable::pointer stptr);
 
 	/**
-	* SyncFromMaster : sync data from master , if loop is false will stop after sync is complete to latest
-	*
-	* @param chunksize
-	*   size_t chunk size of request
-	*
-	* @param loop
-	*   bool run in loop after reaching sync , intended for new data
+	* SyncFirst : sync data from master first time
 	*
 	* @return
 	*   none
 	*/
-	void SyncFromMaster(size_t chunksize, bool loop);
+	void SyncFirst();
+
+	/**
+	* SyncFromMaster : sync data from master ongoing
+	*
+	* @return
+	*   none
+	*/
+	void SyncFromMaster();
+
+	/**
+	* CompareLog : check if remote is having correct log
+	*
+	* @param address
+	*   std::string address to compare with
+	*
+	* @return
+	*   bool true if ok
+	*/
+	bool CompareLog(std::string address);
 
 };
 } // namespace hrpc

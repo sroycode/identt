@@ -30,12 +30,13 @@
  *  HrpcClient.hpp : Header hrpc client
  *
  */
-#ifndef _IDENTT_QUERY_HRPC_CLIENT_HPP_
-#define _IDENTT_QUERY_HRPC_CLIENT_HPP_
+#ifndef _IDENTT_HRPC_HRPC_CLIENT_HPP_
+#define _IDENTT_HRPC_HRPC_CLIENT_HPP_
 
 #include <utils/BaseUtils.hpp>
 #include <utils/SharedTable.hpp>
 #include <google/protobuf/message.h>
+#include "../proto/Hrpc.pb.h"
 
 namespace identt {
 namespace hrpc {
@@ -65,19 +66,47 @@ public:
 	* @param stptr
 	*   ::identt::utils::SharedTable::pointer stptr
 	*
-	* @param service_name
-	*   std::string service name
+	* @param service_id
+	*   ::identt::hrpc::MasterCmdTypeE service enum
 	*
 	* @param msg
 	*   google::protobuf::Message* message pointer
 	*
+	* @param nothrow
+	*   bool dont throw if true
+	*
 	* @return
 	*   bool status true if ok
 	*/
-	bool SendToMaster(::identt::utils::SharedTable::pointer stptr, std::string service_name, google::protobuf::Message* msg);
+	bool SendToMaster(::identt::utils::SharedTable::pointer stptr, ::identt::hrpc::MasterCmdTypeE service_id,
+	                  google::protobuf::Message* msg, bool nothrow=false);
+
+	/**
+	* SendToRemote : send to remote and get output
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param address
+	*   std::string address
+	*
+	* @param service_id
+	*   ::identt::hrpc::RemoteCmdTypeE service enum
+	*
+	* @param msg
+	*   google::protobuf::Message* message pointer
+	*
+	* @param nothrow
+	*   bool dont throw if true
+	*
+	* @return
+	*   bool status true if ok
+	*/
+	bool SendToRemote(::identt::utils::SharedTable::pointer stptr, std::string address,
+		::identt::hrpc::RemoteCmdTypeE service_id, google::protobuf::Message* msg, bool nothrow=false);
 
 };
 } // namespace hrpc
 } // namespace identt
-#endif // _IDENTT_QUERY_HRPC_CLIENT_HPP_
+#endif // _IDENTT_HRPC_HRPC_CLIENT_HPP_
 

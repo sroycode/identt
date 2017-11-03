@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file include/query/HttpClient.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,28 +27,63 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  HttpClient.hpp : Header http client
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#ifndef _IDENTT_QUERY_HTTP_CLIENT_HPP_
+#define _IDENTT_QUERY_HTTP_CLIENT_HPP_
 
 #include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
 #include <utils/SharedTable.hpp>
-#include <async++.h>
-#define IDENTT_PARALLEL_ONE async::parallel_invoke
 
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
+namespace identt {
+namespace query {
 
-#include "HttpClient.hpp"
+class HttpClient {
+public:
+	/**
+	* constructor
+	*
+	*/
+	HttpClient();
 
-#define IDENTT_POST_TO_SYNAPSE false
+	/**
+	* make noncopyable
+	*/
+	HttpClient(const HttpClient&) = delete;
+	HttpClient& operator=(const HttpClient&) = delete;
 
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+	/**
+	* destructor
+	*/
+	virtual ~HttpClient ();
+
+	/**
+	* PostJson : send json to remote and get output
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param url
+	*   std::string url
+	*
+	* @param payload
+	*   std::string& payload
+	*
+	* @param returns
+	*   std::string& returns
+	*
+	* @param nothrow
+	*   bool dont throw if true
+	*
+	* @return
+	*   bool status true if ok
+	*/
+	bool PostJson(::identt::utils::SharedTable::pointer stptr,
+	              std::string url, std::string& payload, std::string& returns, bool nothrow=false);
+
+};
+} // namespace query
+} // namespace identt
+#endif // _IDENTT_QUERY_HTTP_CLIENT_HPP_
+

@@ -40,11 +40,11 @@
 #include <random>
 #include <boost/asio.hpp>
 
-#include <utils/SharedObject.hpp>
 #include <utils/SharedCounter.hpp>
 #include <store/StoreLevel.hpp>
 #include <crypto/CryptoBase.hpp>
 
+#define IDENTT_CURRTIME_MS std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
 
 namespace identt {
 namespace utils {

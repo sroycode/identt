@@ -109,7 +109,7 @@ public:
 						storeinvite.StoreInviteAction(stptr,&inv);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"StoreInvite",&inv);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_STOREINVITE,&inv);
 					}
 
 					// aftermath

@@ -63,7 +63,7 @@ void identt::store::MailSmsService::PendingAction(::identt::utils::SharedTable::
 
 		// transaction , throws on fail
 		::identt::store::StoreTrans storetrans;
-		storetrans.Commit(stptr,&trans);
+		storetrans.Commit(stptr,&trans,true); // as master
 
 		mailq->clear_payload();
 	}

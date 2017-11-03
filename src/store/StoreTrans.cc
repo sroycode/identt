@@ -37,10 +37,10 @@
 * Commit : write both transaction and log
 *
 */
-void ::identt::store::StoreTrans::StoreTrans::Commit(::identt::utils::SharedTable::pointer stptr, TransactionT* trans)
+void ::identt::store::StoreTrans::StoreTrans::Commit(::identt::utils::SharedTable::pointer stptr, TransactionT* trans, bool is_master)
 {
 	if (trans->item_size()==0) return;
-	if (!CommitLog(stptr,trans))
+	if (!CommitLog(stptr,trans,is_master))
 		throw ::identt::BadDataException("Insert failed for log");
 	if (!CommitData(stptr,trans))
 		throw ::identt::BadDataException("Insert failed for data");
@@ -50,12 +50,13 @@ void ::identt::store::StoreTrans::StoreTrans::Commit(::identt::utils::SharedTabl
 * CommitLog : write log ensure id is sequentially generated
 *
 */
-bool ::identt::store::StoreTrans::StoreTrans::CommitLog(::identt::utils::SharedTable::pointer stptr, TransactionT* trans)
+bool ::identt::store::StoreTrans::StoreTrans::CommitLog(::identt::utils::SharedTable::pointer stptr, TransactionT* trans, bool is_master)
 {
 	if (trans->item_size()==0) return true;
 	dbpointer logdb = stptr->logdb.Get();
 	// the logcounter is incremented just before writing
 	trans->set_id( stptr->logcounter.GetNext() );
+	if (is_master) trans->set_ts( IDENTT_CURRTIME_MS );
 	std::string value;
 	trans->SerializeToString(&value);
 	usemydb::Status s = logdb->Put(usemydb::WriteOptions(),EncodePrimaryKey(K_LOGNODE,trans->id()),value);
@@ -88,6 +89,18 @@ bool ::identt::store::StoreTrans::StoreTrans::CommitData(::identt::utils::Shared
 */
 void ::identt::store::StoreTrans::StoreTrans::ReadLog(::identt::utils::SharedTable::pointer stptr, TransListT* tlist)
 {
+	auto logc = stptr->logcounter.Get();
+	if (tlist->lastid()>logc) 
+		throw ::identt::BadDataException("Remote Log Counter ahead");
+
+	// if no change return
+	if (tlist->lastid()==logc) {
+		tlist->set_ts( IDENTT_CURRTIME_MS );
+		tlist->set_currid( logc );
+		tlist->set_limit( 0 );
+		return;
+	}
+
 	dbpointer logdb = stptr->logdb.Get();
 	std::shared_ptr<usemydb::Iterator> it(logdb->NewIterator(usemydb::ReadOptions()));
 	// start from lastid and skip first, if zero will hit and skip fence
@@ -108,7 +121,23 @@ void ::identt::store::StoreTrans::StoreTrans::ReadLog(::identt::utils::SharedTab
 		if (++counter > tlist->limit() ) break; // break on exceed
 	}
 	tlist->set_currid( stptr->logcounter.Get() );
-	tlist->set_ts( std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() );
+	tlist->set_ts( IDENTT_CURRTIME_MS );
 	if (counter) tlist->set_limit( counter-1 );
+}
+
+/**
+* ReadOne : read a single transaction
+*
+*/
+void identt::store::StoreTrans::ReadOne(::identt::utils::SharedTable::pointer stptr, TransactionT* trans)
+{
+	std::string value;
+	dbpointer logdb = stptr->logdb.Get();
+	auto s = logdb->Get(usemydb::ReadOptions(), EncodePrimaryKey(K_LOGNODE,trans->id()), &value);
+	if (!s.ok()) {
+		trans->set_notfound( true );
+		return;
+	}
+	if (! trans->ParseFromString(value) ) trans->set_notfound( true );
 }
 

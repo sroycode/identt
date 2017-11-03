@@ -108,17 +108,15 @@ public:
 				try {
 					LOG(INFO) << request->path;
 					::identt::query::StateT sstate;
-					uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-					sstate.set_epoch( currtime );
+					sstate.set_ts( IDENTT_CURRTIME_MS );
 					sstate.set_is_ready( stptr->is_ready.Get() );
 					// get other params if ready
 					if (sstate.is_ready())
 					{
 						sstate.set_hostname( stptr->hostname.Get() );
-						sstate.set_master( stptr->master.Get() );
-						// sstate.set_maincounter( stptr->maincounter.Get() );
-						// sstate.set_logcounter( stptr->logcounter.Get() );
 						sstate.set_is_master( stptr->is_master.Get() );
+						if(!sstate.is_master())
+							sstate.set_master( stptr->master.Get() );
 					}
 
 					// aftermath

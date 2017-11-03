@@ -7,11 +7,10 @@ package identt.query;
 message StateT {
 	string hostname                                                =  1;
 	string master                                                  =  2;
-	uint64 maincounter                                             =  3;
-	uint64 logcounter                                              =  4;
 	bool is_master                                                 =  5;
 	bool is_ready                                                  =  6;
-	uint64 epoch                                                   =  7;
+	uint64 ts                                                      =  7;
+
 	bool not_found                                                 = 21;
 }
 

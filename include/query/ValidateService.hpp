@@ -114,7 +114,7 @@ public:
 						valservice.RequestTokenAction(stptr, &rtoka);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"RequestToken",&rtoka);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_REQUESTTOKEN,&rtoka);
 					}
 
 					// aftermath
@@ -172,7 +172,7 @@ public:
 						valservice.RequestTokenAction(stptr, &rtoka);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"RequestToken",&rtoka);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_REQUESTTOKEN,&rtoka);
 					}
 
 					// aftermath
@@ -238,7 +238,7 @@ public:
 						valservice.SubmitTokenAction(stptr, &stoka);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"SubmitToken",&stoka);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_SUBMITTOKEN,&stoka);
 					}
 
 					// aftermath
@@ -294,7 +294,7 @@ public:
 						valservice.SubmitTokenAction(stptr, &stoka);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"SubmitToken",&stoka);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_SUBMITTOKEN,&stoka);
 					}
 
 					// aftermath

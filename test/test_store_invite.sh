@@ -7,7 +7,7 @@ export SRCFIL=$(basename $(cd ${0%/*} 2>>/dev/null ; echo `pwd`/${0##*/}))
 export medium=${medium:="msisdn"};
 export address=${address:="919999999991"};
 export room_id=${room_id:="@12345"};
-export sender=${sender:="@sroycode:jadoo.mobi"};
+export sender=${sender:="@sroycode:matrix.justdis.com"};
 
 ## ---- main
 

@@ -49,7 +49,7 @@ void identt::store::ValidateService::RequestTokenAction(
 {
 
 	// action
-	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	uint64_t currtime = IDENTT_CURRTIME_MS;
 	::identt::query::RequestTokenT* reqtok = rtoka->mutable_reqtok();
 	::identt::query::SuccessSidT* ssid = rtoka->mutable_ssid();
 	std::string medium = rtoka->medium();
@@ -95,8 +95,13 @@ void identt::store::ValidateService::RequestTokenAction(
 		// set id for new record
 		if (!tokenauth_found)
 			tokenauth.set_id( stptr->maincounter.GetNext() );
-		uint64_t tok = currtime % 999999;
-		tokenauth.set_token( std::to_string(tok) );
+		std::string tok_str;
+		{
+			std::stringstream ss;
+			ss << std::setfill ('1') << std::setw (6) << (currtime % 999999);
+			tok_str = ss.str();
+		}
+		tokenauth.set_token( tok_str );
 		// tokenauth.set_send_attempt_number( -1 );
 		if (!tokenauth_table.AddRecord(&tokenauth,&trans,false))
 			throw ::identt::BadDataException("Cannot Insert tokenauth");
@@ -114,14 +119,14 @@ void identt::store::ValidateService::RequestTokenAction(
 		::identt::mail::MPOneT* mpone = payload->mutable_mpone();
 		mpone->set_sid( valsession.id() );
 		mpone->set_country( reqtok->country() );
-		mpone->set_token( std::to_string(tok) );
+		mpone->set_token( tok_str );
 
 		if (!paravion_table.AddRecord(&paravion,&trans,false))
 			throw ::identt::BadDataException("Cannot Insert paravion");
 
 		// final step , transaction throws on fail
 		::identt::store::StoreTrans storetrans;
-		storetrans.Commit(stptr,&trans);
+		storetrans.Commit(stptr,&trans,true); // as master
 	}
 
 	LOG(INFO) << "token=\"" <<  tokenauth.token() << "\" sid=" <<  valsession.id();
@@ -142,7 +147,7 @@ void identt::store::ValidateService::SubmitTokenAction(
 {
 	// action
 
-	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	uint64_t currtime = IDENTT_CURRTIME_MS;
 
 	::identt::query::SubmitTokenT* subtok = stoka->mutable_subtok();
 	::identt::query::ErrorT* result = stoka->mutable_result();
@@ -184,7 +189,7 @@ void identt::store::ValidateService::SubmitTokenAction(
 		throw ::identt::BadDataException("Cannot Insert vsession");
 	// transaction , throws on fail
 	::identt::store::StoreTrans storetrans;
-	storetrans.Commit(stptr,&trans);
+	storetrans.Commit(stptr,&trans,true); // as master
 	// set
 	result->set_success(true);
 	result->set_error("This session is now validated");

@@ -54,7 +54,7 @@ void identt::store::InviteService::StoreInviteAction(::identt::utils::SharedTabl
 {
 	identt::query::InviteQueryT* invqry = inv->mutable_invqry();
 	identt::query::InviteResultT* invres = inv->mutable_invres();
-	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	uint64_t currtime = IDENTT_CURRTIME_MS;
 	// globalassoc
 	::identt::store::GlobalAssocT globalassoc;
 	::identt::store::GlobalAssocTable::MapT globalassoc_map;
@@ -123,7 +123,7 @@ void identt::store::InviteService::StoreInviteAction(::identt::utils::SharedTabl
 
 	// transaction , throws on fail
 	::identt::store::StoreTrans storetrans;
-	storetrans.Commit(stptr,&trans);
+	storetrans.Commit(stptr,&trans,true); // as master
 
 	// return data
 	invres->set_token( tok.str() );

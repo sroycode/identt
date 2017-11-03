@@ -114,7 +114,7 @@ public:
 						mservice.PendingAction(stptr, &mailq);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"Pending",&mailq);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_PENDING,&mailq);
 					}
 
 					mailq.clear_shared_secret();

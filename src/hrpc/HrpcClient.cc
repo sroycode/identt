@@ -37,6 +37,7 @@
 #include <hrpc/HrpcClient.hpp>
 #include <google/protobuf/descriptor.h>
 #include "../proto/Query.pb.h"
+#include "../proto/Hrpc.pb.h"
 #include <cpr/cpr.h>
 
 /**
@@ -55,34 +56,78 @@
 *
 */
 bool ::identt::hrpc::HrpcClient::SendToMaster(
-    ::identt::utils::SharedTable::pointer stptr, std::string service_name,
-    google::protobuf::Message* msg)
+    ::identt::utils::SharedTable::pointer stptr, ::identt::hrpc::MasterCmdTypeE service_id,
+    google::protobuf::Message* msg, bool nothrow)
 {
-	std::string endpoint = "http://" + stptr->master.Get() + "/_identt/identity/master/v1/endpoint";
-	std::string tmpstr;
-	msg->SerializeToString(&tmpstr);
+	try {
+		if (service_id == M_NOACTION)
+			throw identt::BadDataException("Bad Service Id");
+		std::string endpoint = stptr->master.Get() + "/_identt/identity/master/v1/endpoint";
+		std::string tmpstr;
+		msg->SerializeToString(&tmpstr);
 
-	auto r = cpr::Post(
-	             cpr::Url{endpoint},
-	             cpr::Body{tmpstr},
-	cpr::Header{
-		{"Service-Name", service_name},
-		{"Content-Type", "application/proto"},
-		{"Shared-Secret", stptr->shared_secret.Get()}
-	});
-	if (r.status_code != 200)
-		throw identt::BadDataException("Bad HTTP Status");
+		auto r = cpr::Post(
+		             cpr::Url{endpoint},
+		             cpr::Body{tmpstr},
+		cpr::Header{
+			{"Service-Name", std::to_string(service_id) },
+			{"Content-Type", "application/proto"},
+			{"Shared-Secret", stptr->shared_secret.Get()}
+		});
+		if (r.status_code != 200)
+			throw identt::BadDataException("Cannot connect to master, bad HTTP Status");
 
-	if (r.header["Service-Error"].length()>0) {
-		int ecode = std::stoi(r.header["Service-Error"]);
-		if (ecode>=IDENTT_SYDENT_ERROR_MIN && ecode<=IDENTT_SYDENT_ERROR_MAX)
-			throw ::identt::query::SydentException(r.text.c_str(), ecode);
-		else
-			throw ::identt::BadDataException(r.text.c_str(), M_UNKNOWN);
-		// rethrow the error from other side
+		if (r.header["Service-Error"].length()>0) {
+			int ecode = std::stoi(r.header["Service-Error"]);
+			if (ecode>=IDENTT_SYDENT_ERROR_MIN && ecode<=IDENTT_SYDENT_ERROR_MAX)
+				throw ::identt::query::SydentException(r.text.c_str(), ecode);
+			else
+				throw ::identt::BadDataException(r.text.c_str(), M_UNKNOWN);
+			// rethrow the error from other side
+		}
+		if (!msg->ParseFromString(r.text))
+			throw identt::BadDataException("Bad Received Protobuf Data from master");
+	} catch (...) {
+		if (nothrow) return false;
+		std::rethrow_exception(std::current_exception());
 	}
-	if (!msg->ParseFromString(r.text))
-		throw identt::BadDataException("Bad Received Protobuf Data Format");
+	return true;
+}
+
+/**
+* SendToRemote : send to Remote and get output
+*
+*/
+bool ::identt::hrpc::HrpcClient::SendToRemote(::identt::utils::SharedTable::pointer stptr, std::string address,
+        ::identt::hrpc::RemoteCmdTypeE service_id, google::protobuf::Message* msg, bool nothrow)
+{
+	try {
+		if (service_id == R_NOACTION)
+			throw identt::BadDataException("Bad Service Id for remote ");
+		std::string endpoint = address + "/_identt/identity/remote/v1/endpoint";
+		std::string tmpstr;
+		msg->SerializeToString(&tmpstr);
+
+		auto r = cpr::Post(
+		             cpr::Url{endpoint},
+		             cpr::Body{tmpstr},
+		cpr::Header{
+			{"Service-Name", std::to_string(service_id) },
+			{"Content-Type", "application/proto"},
+			{"Shared-Secret", stptr->shared_secret.Get()}
+		});
+		if (r.status_code != 200)
+			throw identt::BadDataException("Bad HTTP Status for remote");
+
+		// rethrow the error from other side
+		if (r.header["Service-Error"].length()>0)
+			throw ::identt::BadDataException(r.text.c_str());
+		if (!msg->ParseFromString(r.text))
+			throw identt::BadDataException("Bad Received Protobuf Data Format from remote");
+	} catch (...) {
+		if (nothrow) return false;
+		std::rethrow_exception(std::current_exception());
+	}
 	return true;
 }
 

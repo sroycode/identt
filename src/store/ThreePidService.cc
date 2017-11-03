@@ -63,7 +63,7 @@ void identt::store::ThreePidService::GetValidated3pidAction(
 	::identt::query::ValidatedAtT* valresult = gva->mutable_valresult();
 	// check
 	uint64_t sid = subtok->sid();
-	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	uint64_t currtime = IDENTT_CURRTIME_MS;
 	if (sid==0)
 		throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
 	if (subtok->client_secret()=="")
@@ -97,7 +97,7 @@ void identt::store::ThreePidService::Bind3pidAction(
 	// check
 	::identt::query::SubmitTokenT* subtok = bpa->mutable_subtok();
 	uint64_t sid = subtok->sid();
-	uint64_t currtime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	uint64_t currtime = IDENTT_CURRTIME_MS;
 	if (sid==0)
 		throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
 	if (subtok->client_secret()=="")
@@ -245,9 +245,28 @@ void identt::store::ThreePidService::Bind3pidAction(
 	this->AddSign(stptr, tmpstr , &pubkey, output,signatures);
 	bpa->set_output( output );
 
+	// create an entry for outgoing
+	::identt::store::ParAvionTable paravion_table(stptr->maindb.Get());
+	::identt::store::ParAvionT paravion;
+	paravion.set_id( stptr->maincounter.GetNext() );
+	::identt::mail::MPayloadT* payload = paravion.mutable_payload();
+	payload->set_id( paravion.id() );
+	payload->set_medium( valsession.medium() );
+	payload->set_address( valsession.address() );
+	payload->set_actkey ( ::identt::mail::A_ONBINDNOTIFY );
+	payload->set_retry( 1 );
+	::identt::mail::MPThreeT* mpthree = payload->mutable_mpthree();
+	mpthree->set_payload( output );
+	mpthree->set_mxid( subtok->mxid() );
+
+	if (!paravion_table.AddRecord(&paravion,&trans,false))
+		throw ::identt::BadDataException("Cannot Insert paravion");
+
 	// transaction , throws on fail
 	::identt::store::StoreTrans storetrans;
-	storetrans.Commit(stptr,&trans);
+	storetrans.Commit(stptr,&trans,true); // as master
+
+	// attempt the transaction
 
 }
 

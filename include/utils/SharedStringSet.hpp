@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file include/utils/SharedStringSet.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,28 +27,59 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  SharedStringSet.hpp :   Shared Counter
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#ifndef _IDENTT_UTILS_SHARED_STRING_SET_HPP_
+#define _IDENTT_UTILS_SHARED_STRING_SET_HPP_
 
-#include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
-#include <utils/SharedTable.hpp>
-#include <async++.h>
-#define IDENTT_PARALLEL_ONE async::parallel_invoke
+#include <utils/SharedObject.hpp>
+#include <string>
+#include <set>
 
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
+namespace identt {
+namespace utils {
+class SharedStringSet : public SharedObject<std::set<std::string> > {
+public:
+	using StringSet = std::set<std::string>;
+	using LockT = SharedObject<StringSet>::LockT;
+	using WriteLockT = SharedObject<StringSet>::WriteLockT;
+	using ReadLockT = SharedObject<StringSet>::ReadLockT;
 
-#include "HttpClient.hpp"
+	/**
+	* make noncopyable and remove default
+	*/
 
-#define IDENTT_POST_TO_SYNAPSE false
+	SharedStringSet(const SharedStringSet&) = delete;
+	SharedStringSet& operator=(const SharedStringSet&) = delete;
 
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+	/**
+	* Constructor : default
+	*
+	*/
+	SharedStringSet() {}
+
+	/**
+	* destructor
+	*/
+	virtual ~SharedStringSet () {}
+
+	/**
+	* Add : add one value
+	*
+	* @param elem
+	*   std::string elem to add
+	*
+	* @return
+	*   none
+	*/
+	void Add(std::string elem)
+	{
+		WriteLockT writelock(mutex_);
+		t_.insert(elem);
+	}
+
+};
+} // namespace utils
+} // namespace identt
+#endif /* _IDENTT_UTILS_SHARED_STRING_SET_HPP_ */

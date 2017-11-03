@@ -11,5 +11,6 @@ _matrix/identity/api/v1/pubkey/ed25519:0
 _matrix/identity/api/v1/pubkey/ephemeral/isvalid
 _matrix/identity/api/v1/store-invite
 _matrix/identity/api/v1/sign-ed25519:0
+
 _identt/identity/api/v1/getmailstosend
 _identt/identity/master/v1/endpoint

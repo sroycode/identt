@@ -171,6 +171,9 @@ message TransItemT {
 message TransactionT {
 	uint64   id                                                    =  1;
 	repeated TransItemT item                                       =  2;
+	uint64   ts                                                    =  3;
+
+	bool notfound                                                  = 21;
 }
 
 message TransListT {

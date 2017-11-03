@@ -66,7 +66,7 @@ public:
 	ThreePidService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
-			::identt::query::HelpQuery::pointer helpquery,
+	    ::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
 		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{
@@ -99,12 +99,18 @@ public:
 					identt::query::ValidatedAtT valresult;
 
 					// action
-					if (stptr->is_master.Get()) {
+					if (gva.mutable_subtok()->sid()==0)
+						throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
+					if (gva.mutable_subtok()->client_secret().length()==0)
+						throw ::identt::query::SydentException("client_secret value required", M_MISSING_PARAMS);
+
+					if (stptr->is_master.Get())
+					{
 						::identt::store::ThreePidService tservice;
 						tservice.GetValidated3pidAction(stptr, &gva);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"GetValidated3pid",&gva);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_GETVALIDATED3PID,&gva);
 					}
 
 					// aftermath
@@ -153,12 +159,13 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (stptr->is_master.Get()) {
+					if (stptr->is_master.Get())
+					{
 						::identt::store::ThreePidService tservice;
 						tservice.GetValidated3pidAction(stptr, &gva);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"GetValidated3pid",&gva);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_GETVALIDATED3PID,&gva);
 					}
 
 					// aftermath
@@ -217,17 +224,37 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (stptr->is_master.Get()) {
+					if (bpa.mutable_subtok()->sid()==0)
+						throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
+					if (bpa.mutable_subtok()->client_secret().length()==0)
+						throw ::identt::query::SydentException("client_secret value required", M_MISSING_PARAMS);
+					if (bpa.mutable_subtok()->mxid().length()==0)
+						throw ::identt::query::SydentException("mxid value required", M_MISSING_PARAMS);
+
+					if (stptr->is_master.Get())
+					{
 						::identt::store::ThreePidService tservice;
 						tservice.Bind3pidAction(stptr, &bpa);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"Bind3pid",&bpa);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_BIND3PID,&bpa);
 					}
 
 					// aftermath
 					// copy the string , change this later - shreos
 					std::string output = bpa.output();
+
+					// post to synapse endpoint
+					std::vector<std::string> splitres;
+					boost::algorithm::split(splitres, bpa.mutable_subtok()->mxid() , boost::algorithm::is_any_of(":") );
+					if (splitres.size()==2) {
+        		std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
+						HttpClient hclient;
+						std::string ret;
+						bool status = hclient.PostJson(stptr,url,output,ret,true);
+						LOG(INFO) << "Posted to " << url << " for " << splitres[0] << " status " << status;
+					}
+
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
 
 				} catch (SydentException& e)
@@ -271,12 +298,13 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (stptr->is_master.Get()) {
+					if (stptr->is_master.Get())
+					{
 						::identt::store::ThreePidService tservice;
 						tservice.Bind3pidAction(stptr, &bpa);
 					} else {
 						identt::hrpc::HrpcClient hclient;
-						hclient.SendToMaster(stptr,"Bind3pid",&bpa);
+						hclient.SendToMaster(stptr,::identt::hrpc::M_BIND3PID,&bpa);
 					}
 
 					// aftermath

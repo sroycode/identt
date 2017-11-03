@@ -91,7 +91,7 @@ cmake3 -DBOOST_ROOT=/opt/local/boost .. && make
 3. To start another server in slave mode (optional) pointing to master started at port 9091 of same machine
 
 ```
-./identtserver --config ../etc/identt2.conf --master="127.0.0.1:9091"
+./identtserver --config ../etc/identt2.conf --master="http://127.0.0.1:9091"
 ```
 
 ## Testing

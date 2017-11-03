@@ -22,3 +22,8 @@
 - host : HTTP host for internal HTTP host
 - port : HTTP port
 
+## Section hrpc ( unused )
+
+- host : RPC host for internal HTTP host
+- port : RPC port
+- hrpcurl : URL to reach this service

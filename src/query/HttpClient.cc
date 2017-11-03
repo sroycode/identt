@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file src/query/HttpClient.cc
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,28 +27,49 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  HttpClient.cc : Http client implementation
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
 
-#include <utils/BaseUtils.hpp>
 #include <query/SydentQuery.hpp> // define on top
-#include <utils/SharedTable.hpp>
-#include <async++.h>
-#define IDENTT_PARALLEL_ONE async::parallel_invoke
+#include <query/HttpClient.hpp>
+#include <cpr/cpr.h>
 
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
+/**
+* constructor
+*
+*/
+::identt::query::HttpClient::HttpClient() {}
 
-#include "HttpClient.hpp"
+/**
+* destructor
+*/
+::identt::query::HttpClient::~HttpClient () {}
 
-#define IDENTT_POST_TO_SYNAPSE false
+/**
+* PostJson : send jsonto Remote and get output
+*
+*/
+bool ::identt::query::HttpClient::PostJson(::identt::utils::SharedTable::pointer stptr, std::string url,
+        std::string& payload, std::string& returns, bool nothrow)
+{
+	try {
+		auto r = cpr::Post(
+		             cpr::Url{url},
+		             cpr::Body{payload},
+		cpr::Header{
+			{"Content-Type", "application/json"},
+			{"User-Agent", "Sydent"}
+		});
 
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+		if (r.status_code != 200)
+			throw identt::BadDataException("Bad HTTP Status for remote");
+
+		returns=std::move(r.text);
+	} catch (...) {
+		if (nothrow) return false;
+		std::rethrow_exception(std::current_exception());
+	}
+	return true;
+}
+

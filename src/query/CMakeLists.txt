@@ -6,6 +6,7 @@ set(IDENTT_QUERY_SOURCES
 	ProtoJsonSigned.cc
 	ProtoForm.cc
 	SignedJson.cc
+	HttpClient.cc
 )
 
 add_library(identt_query STATIC ${IDENTT_QUERY_SOURCES})

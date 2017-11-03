@@ -34,6 +34,7 @@
 #define _IDENTT_HRPC_PROTO_SERVICE_BASE_HPP_
 
 #include <utils/BaseUtils.hpp>
+#include "../proto/Hrpc.pb.h"
 
 namespace identt {
 namespace hrpc {
@@ -85,12 +86,12 @@ protected:
 	*   typename HttpServerT::ReqPtr request
 	*
 	* @return
-	*   std::string service name
+	*   int service id
 	*/
-	std::string ServiceName(typename HttpServerT::ReqPtr request)
+	int ServiceName(typename HttpServerT::ReqPtr request)
 	{
 		auto it=request->header.find("Service-Name");
-		return (it==request->header.end()) ? "" : it->second ;
+		return (it==request->header.end()) ?  0 : std::stoi(it->second);
 	}
 
 	/**
