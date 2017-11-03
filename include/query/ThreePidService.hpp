@@ -249,9 +249,9 @@ public:
 					boost::algorithm::split(splitres, bpa.mutable_subtok()->mxid() , boost::algorithm::is_any_of(":") );
 					if (splitres.size()==2) {
         		std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
-						HttpClient hclient;
+						HttpClient mclient;
 						std::string ret;
-						bool status = hclient.PostJson(stptr,url,output,ret,true);
+						bool status = mclient.PostJson(stptr,url,output,ret,true);
 						LOG(INFO) << "Posted to " << url << " for " << splitres[0] << " status " << status;
 					}
 
@@ -298,6 +298,13 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
+					if (bpa.mutable_subtok()->sid()==0)
+						throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
+					if (bpa.mutable_subtok()->client_secret().length()==0)
+						throw ::identt::query::SydentException("client_secret value required", M_MISSING_PARAMS);
+					if (bpa.mutable_subtok()->mxid().length()==0)
+						throw ::identt::query::SydentException("mxid value required", M_MISSING_PARAMS);
+
 					if (stptr->is_master.Get())
 					{
 						::identt::store::ThreePidService tservice;
@@ -310,6 +317,17 @@ public:
 					// aftermath
 					// copy the string , change this later - shreos
 					std::string output = bpa.output();
+
+					// post to synapse endpoint
+					std::vector<std::string> splitres;
+					boost::algorithm::split(splitres, bpa.mutable_subtok()->mxid() , boost::algorithm::is_any_of(":") );
+					if (splitres.size()==2) {
+        		std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
+						HttpClient mclient;
+						std::string ret;
+						bool status = mclient.PostJson(stptr,url,output,ret,true);
+						LOG(INFO) << "Posted to " << url << " for " << splitres[0] << " status " << status;
+					}
 
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
 				} catch (SydentException& e)
