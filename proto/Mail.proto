@@ -14,7 +14,7 @@ enum ActTypeE {
 };
 
 message MPOneT {
-	uint64 sid                                                     =  1;
+	string sid                                                     =  1;
 	string country                                                 =  2;
 	string token                                                   =  3;
 	string phone_no_isd                                            =  4;

@@ -79,7 +79,7 @@ std::unordered_map<std::string,std::string> urldecode(const std::string& text);
 * @return
 *   std::string
 */
-std::string urlencode(const std::string &value);
+std::string urlencode(const std::string& value);
 
 /**
 * form2pb : Convert url-encoded form to protobuf

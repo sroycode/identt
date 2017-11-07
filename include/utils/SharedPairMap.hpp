@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/utils/SharedMap.hpp
+ * @file include/utils/SharedPairMap.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,11 +27,11 @@
  *
  * @section DESCRIPTION
  *
- *  SharedMap.hpp :   Shared Map
+ *  SharedPairMap.hpp :   Shared String Map
  *
  */
-#ifndef _IDENTT_UTILS_SHARED_MAP_HPP_
-#define _IDENTT_UTILS_SHARED_MAP_HPP_
+#ifndef _IDENTT_UTILS_SHARED_PAIR_MAP_HPP_
+#define _IDENTT_UTILS_SHARED_PAIR_MAP_HPP_
 
 #include <unordered_map>
 #include <utility>
@@ -41,10 +41,11 @@
 
 namespace identt {
 namespace utils {
-template<class KeyT,class ValueT>
-class SharedMap {
+template<class KeyT,class LeftT,class RightT>
+class SharedPairMap {
 public:
-	using MapT = std::unordered_map<KeyT,ValueT>;
+	using ValueT = std::pair<LeftT,RightT>;
+	using PairMapT = std::unordered_map<KeyT,ValueT>;
 	using LockT = boost::shared_mutex;
 	using WriteLockT = boost::unique_lock< LockT >;
 	using ReadLockT = boost::shared_lock< LockT >;
@@ -53,19 +54,19 @@ public:
 	* make noncopyable and remove default
 	*/
 
-	SharedMap(const SharedMap&) = delete;
-	SharedMap& operator=(const SharedMap&) = delete;
+	SharedPairMap(const SharedPairMap&) = delete;
+	SharedPairMap& operator=(const SharedPairMap&) = delete;
 
 	/**
 	* Constructor : default
 	*
 	*/
-	SharedMap() {}
+	SharedPairMap() {}
 
 	/**
 	* destructor
 	*/
-	virtual ~SharedMap () {}
+	virtual ~SharedPairMap () {}
 
 	/**
 	* AddOne : add one value
@@ -86,15 +87,70 @@ public:
 	}
 
 	/**
-	* AddMany : add from map by address
+	* AddLeft : add one value
 	*
-	* @param m
-	*   const Map& map to get from
+	* @param key
+	*   KeyT elem to add
+	*
+	* @param value
+	*  ValueT elem to add
 	*
 	* @return
 	*   none
 	*/
-	void AddMany(const MapT& m)
+	void AddLeft(KeyT key, LeftT value)
+	{
+		WriteLockT writelock(mutex_);
+		typename PairMapT::iterator it = t_.find(key);
+		if (it!=t_.end()) it.second.first = value;
+		else t_[key]=std::make_pair(value,RightT());
+	}
+
+	/**
+	* AddRight : add one value
+	*
+	* @param key
+	*   KeyT elem to add
+	*
+	* @param value
+	*  ValueT elem to add
+	*
+	* @return
+	*   none
+	*/
+	void AddRight(KeyT key, RightT value)
+	{
+		WriteLockT writelock(mutex_);
+		typename PairMapT::iterator it = t_.find(key);
+		if (it!=t_.end()) it.second.second = value;
+		else t_[key]=std::make_pair(LeftT(),value);
+	}
+
+	/**
+	* Swap : swap from map
+	*
+	* @param m
+	*   PairMap map to swap
+	*
+	* @return
+	*   none
+	*/
+	void Swap(PairMapT m)
+	{
+		WriteLockT writelock(mutex_);
+		t_.swap(m);
+	}
+
+	/**
+	* AddMany : add from map by address
+	*
+	* @param m
+	*   const PairMap& map to get from
+	*
+	* @return
+	*   none
+	*/
+	void AddMany(const PairMapT& m)
 	{
 		WriteLockT writelock(mutex_);
 		for (auto& p : m) {
@@ -106,12 +162,12 @@ public:
 	* AddMany : add from map by lvalue ref
 	*
 	* @param m
-	*   const Map&& map to get from
+	*   const PairMap&& map to get from
 	*
 	* @return
 	*   none
 	*/
-	void AddMany(MapT&& m)
+	void AddMany(PairMapT&& m)
 	{
 		WriteLockT writelock(mutex_);
 		for (auto& p : m) {
@@ -120,44 +176,52 @@ public:
 	}
 
 	/**
-	* GetValues : get values by address
-	*
-	* @param key
-	*   KeyT& elem to get
-	*
-	* @param value
-	*   ValueT& elem to get
-	*
-	* @return
-	*   bool true if exists
-	*/
-	bool GetValues(KeyT& key, ValueT& value)
-	{
-		ReadLockT readlock(mutex_);
-		typename MapT::const_iterator it = t_.find(key);
-		bool stat = (it!=t_.end());
-		value = stat ? it.second : ValueT();
-		return stat;
-	}
-
-	/**
-	* GetValues : get values by lvalue ref
+	* GetValues : get values
 	*
 	* @param key
 	*   KeyT&& elem to get
 	*
-	* @param value
-	*   ValueT& elem to get
+	* @param left
+	*   LeftT& elem to get
+	*
+	* @param right
+	*   RightT& elem to get
 	*
 	* @return
 	*   bool true if exists
 	*/
-	bool GetValues(KeyT&& key, ValueT& value)
+	bool GetValues(KeyT&& key, LeftT& left, RightT& right)
 	{
 		ReadLockT readlock(mutex_);
-		typename MapT::const_iterator it = t_.find(key);
+		typename PairMapT::const_iterator it = t_.find(key);
 		bool stat = (it!=t_.end());
-		value = stat ? it.second : ValueT();
+		left= stat ? it.second.first : LeftT();
+		right= stat ? it.second.second : RightT();
+		return stat;
+	}
+
+	/**
+	* GetValues : get values by address
+	*
+	* @param key
+	*   KeyT& elem to get by address
+	*
+	* @param left
+	*   LeftT& elem to get
+	*
+	* @param right
+	*   RightT& elem to get
+	*
+	* @return
+	*   bool true if exists
+	*/
+	bool GetValues(const KeyT& key, LeftT& left, RightT& right)
+	{
+		ReadLockT readlock(mutex_);
+		typename PairMapT::const_iterator it = t_.find(key);
+		bool stat = (it!=t_.end());
+		left= stat ? it.second.first : LeftT();
+		right= stat ? it.second.second : RightT();
 		return stat;
 	}
 
@@ -165,9 +229,9 @@ public:
 	* GetCopy : get a copy of the map
 	*
 	* @return
-	*   MapT map
+	*   PairMapT map
 	*/
-	MapT GetCopy()
+	PairMapT GetCopy()
 	{
 		ReadLockT readlock(mutex_);
 		return t_;
@@ -197,24 +261,12 @@ public:
 		t_.clear();
 	}
 
-	/**
-	* Swap : get by swap
-	*
-	* @return
-	*   none
-	*/
-	void Swap(MapT t)
-	{
-		WriteLockT writelock(mutex_);
-		t_.swap(t);
-	}
-
 
 protected:
-	MapT t_;
+	PairMapT t_;
 	LockT mutex_;
 
 };
 } // namespace utils
 } // namespace identt
-#endif /* _IDENTT_UTILS_SHARED_MAP_HPP_ */
+#endif /* _IDENTT_UTILS_SHARED_PAIR_MAP_HPP_ */

@@ -27,7 +27,7 @@
  *
  * @section DESCRIPTION
  *
- *  StatusCode.hpp : 
+ *  StatusCode.hpp :
  *
  */
 #ifndef _IDENTT_HTTP_STATUS_CODE_HPP_

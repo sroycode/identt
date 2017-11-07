@@ -77,7 +77,7 @@ public:
 		=[this,stptr,scope,helpquery](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
 			IDENTT_PARALLEL_ONE([this,stptr,scope,helpquery,response,request] {
 				try {
-					LOG(INFO) << request->path;
+					DLOG(INFO) << request->path;
 					std::string output;
 					std::stringstream content_stream;
 					for (auto& var: helpquery->get(scope))

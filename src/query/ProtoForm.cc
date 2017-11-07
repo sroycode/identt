@@ -98,7 +98,7 @@ std::unordered_map<std::string,std::string> identt::query::urldecode(const std::
 * urlencode : plain url-encode
 *
 */
-std::string identt::query::urlencode(const std::string &value)
+std::string identt::query::urlencode(const std::string& value)
 {
 	std::ostringstream escaped;
 	escaped.fill('0');

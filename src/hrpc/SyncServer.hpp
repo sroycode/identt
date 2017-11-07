@@ -35,7 +35,6 @@
 
 #include <store/StoreBase.hpp>
 #include <utils/ServerBase.hpp>
-#include <async++.h>
 
 namespace identt {
 namespace hrpc {
@@ -160,6 +159,14 @@ private:
 	*   bool true if ok
 	*/
 	bool CompareLog(std::string address);
+
+	/**
+	* MasterLoop : master loop
+	*
+	* @return
+	*   none
+	*/
+	void MasterLoop();
 
 };
 } // namespace hrpc

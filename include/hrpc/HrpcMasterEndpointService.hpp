@@ -113,7 +113,7 @@ public:
 						service.RequestTokenAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_SUBMITTOKEN : {
@@ -125,7 +125,7 @@ public:
 						service.SubmitTokenAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_GETVALIDATED3PID : {
@@ -137,7 +137,7 @@ public:
 						service.GetValidated3pidAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_BIND3PID : {
@@ -149,7 +149,7 @@ public:
 						service.Bind3pidAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_LOOKUP : {
@@ -161,7 +161,7 @@ public:
 						service.LookupAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_BULKLOOKUP : {
@@ -173,7 +173,7 @@ public:
 						service.BulkLookupAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_GETPUBKEY : {
@@ -185,7 +185,7 @@ public:
 						service.GetPubKeyAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_GETPUBKEYVALID : {
@@ -197,7 +197,7 @@ public:
 						service.GetPubKeyValidAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_GETEPHEMERALVALID : {
@@ -209,7 +209,7 @@ public:
 						service.GetEphemeralValidAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_STOREINVITE : {
@@ -221,7 +221,7 @@ public:
 						service.StoreInviteAction(stptr,&data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					case ::identt::hrpc::M_PENDING : {
@@ -233,11 +233,11 @@ public:
 						service.PendingAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						break;
 					}
 					default:
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path;
 						throw identt::BadDataException("Service Name unknown or unimplemented");
 						break;
 					}

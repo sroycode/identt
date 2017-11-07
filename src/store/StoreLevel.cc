@@ -122,7 +122,7 @@ void identt::store::StoreLevel::Initialize(const std::string datadir, const size
 		std::tie(usekey,id) = DecodePrimaryKey(value);
 		if (id>last_lkey) last_lkey=id;
 	} while(false);
-	
+
 	// now get the last used primary key
 	for (size_t keytype=K_LOGNODE; keytype > K_NONODE; --keytype) {
 		uint64_t id;

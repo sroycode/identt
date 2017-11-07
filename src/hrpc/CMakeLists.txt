@@ -2,6 +2,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(IDENTT_HRPC_SOURCES
 	HrpcClient.cc
+	RemoteKeeper.cc
 	SyncServer.cc
 )
 

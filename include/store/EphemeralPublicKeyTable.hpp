@@ -35,8 +35,6 @@
 
 #include "StoreTable.hpp"
 
-// extern template class identt::store::StoreTable<identt::store::EphemeralPublicKeyT>;
-
 namespace identt {
 namespace store {
 class EphemeralPublicKeyTable : public StoreTable<EphemeralPublicKeyT> {

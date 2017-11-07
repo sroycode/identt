@@ -109,13 +109,18 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (stptr->is_master.Get()) {
+					if (stptr->is_master.Get())
+					{
 						::identt::store::ValidateService valservice;
 						valservice.RequestTokenAction(stptr, &rtoka);
 					} else {
 						identt::hrpc::HrpcClient hclient;
 						hclient.SendToMaster(stptr,::identt::hrpc::M_REQUESTTOKEN,&rtoka);
 					}
+
+					// IDENTT_SEND_SMS_REQUEST_TOKEN
+
+					LOG(INFO) << "token=\"" <<  rtoka.token() << "\" sid=\"" <<  rtoka.mutable_ssid()->sid() << "\"";
 
 					// aftermath
 					std::string output;
@@ -167,13 +172,18 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (stptr->is_master.Get()) {
+					if (stptr->is_master.Get())
+					{
 						::identt::store::ValidateService valservice;
 						valservice.RequestTokenAction(stptr, &rtoka);
 					} else {
 						identt::hrpc::HrpcClient hclient;
 						hclient.SendToMaster(stptr,::identt::hrpc::M_REQUESTTOKEN,&rtoka);
 					}
+
+					// IDENTT_SEND_SMS_REQUEST_TOKEN
+
+					LOG(INFO) << "token=\"" <<  rtoka.token() << "\" sid=\"" <<  rtoka.ssid().sid() << "\"";
 
 					// aftermath
 					std::string output;
@@ -233,7 +243,8 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (stptr->is_master.Get()) {
+					if (stptr->is_master.Get())
+					{
 						::identt::store::ValidateService valservice;
 						valservice.SubmitTokenAction(stptr, &stoka);
 					} else {
@@ -289,7 +300,8 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (stptr->is_master.Get()) {
+					if (stptr->is_master.Get())
+					{
 						::identt::store::ValidateService valservice;
 						valservice.SubmitTokenAction(stptr, &stoka);
 					} else {

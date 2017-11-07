@@ -35,8 +35,6 @@
 
 #include "StoreTable.hpp"
 
-// extern template class identt::store::StoreTable<identt::store::MailSentT>;
-
 namespace identt {
 namespace store {
 class MailSentTable : public StoreTable<MailSentT> {

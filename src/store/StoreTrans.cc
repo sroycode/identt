@@ -32,6 +32,7 @@
  */
 
 #include <store/StoreTrans.hpp>
+#include <hrpc/HrpcClient.hpp>
 
 /**
 * Commit : write both transaction and log
@@ -44,6 +45,13 @@ void ::identt::store::StoreTrans::StoreTrans::Commit(::identt::utils::SharedTabl
 		throw ::identt::BadDataException("Insert failed for log");
 	if (!CommitData(stptr,trans))
 		throw ::identt::BadDataException("Insert failed for data");
+	// replicate this data on lastslave
+	auto lastslave = stptr->lastslave.Get();
+	if (is_master && stptr->is_master.Get() && (lastslave.length()>0)) {
+		identt::hrpc::HrpcClient hclient;
+		bool status = hclient.SendToRemote(stptr,lastslave,::identt::hrpc::R_BUFFTRANS,trans,true);
+		if (!status) stptr->lastslave.Set("");
+	}
 }
 
 /**
@@ -90,7 +98,7 @@ bool ::identt::store::StoreTrans::StoreTrans::CommitData(::identt::utils::Shared
 void ::identt::store::StoreTrans::StoreTrans::ReadLog(::identt::utils::SharedTable::pointer stptr, TransListT* tlist)
 {
 	auto logc = stptr->logcounter.Get();
-	if (tlist->lastid()>logc) 
+	if (tlist->lastid()>logc)
 		throw ::identt::BadDataException("Remote Log Counter ahead");
 
 	// if no change return

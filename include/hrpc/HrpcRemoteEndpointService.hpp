@@ -38,6 +38,7 @@
 #include <store/StoreTrans.hpp>
 
 #include <hrpc/RemoteKeeper.hpp>
+#include <hrpc/HrpcClient.hpp>
 
 namespace identt {
 namespace hrpc {
@@ -81,7 +82,7 @@ public:
 
 		server->resource["/_identt/identity/remote/v1/endpoint$"]["POST"]
 		=[this,stptr,rkeeper](typename HttpServerT::RespPtr response, typename HttpServerT::ReqPtr request) {
-			IDENTT_PARALLEL_ONE([this,stptr,response,request] {
+			IDENTT_PARALLEL_ONE([this,stptr,rkeeper,response,request] {
 				std::string output;
 				int ecode=M_UNKNOWN;
 				try {
@@ -97,20 +98,21 @@ public:
 					// start here
 					switch(sname)
 					{
-					case ::identt::hrpc::R_GETINFO : {
+					case ::identt::hrpc::R_REGISTER : {
+						identt::hrpc::StateT data;
+						if (!data.ParseFromString( request->content.string() ))
+							throw identt::BadDataException("Bad Protobuf Format");
 						// action
-						::identt::hrpc::StateT sstate;
-						sstate.set_ts( IDENTT_CURRTIME_MS );
-						sstate.set_is_ready( stptr->is_ready.Get() );
-						// get other params if ready
-						sstate.set_hostname( stptr->hostname.Get() );
-						sstate.set_master( stptr->master.Get() );
-						sstate.set_maincounter( stptr->maincounter.Get() );
-						sstate.set_logcounter( stptr->logcounter.Get() );
-						sstate.set_is_master( stptr->is_master.Get() );
-						sstate.set_thisurl( stptr->thisurl.Get() );
-						sstate.SerializeToString(&output);
-						LOG(INFO) << request->path;
+						// update remote in list
+						if (stptr->is_master.Get()) {
+							rkeeper->AddHost( data.thisurl(), data.logcounter(), data.ts() );
+							rkeeper->HostUpdate();
+						}
+						// aftermath
+						data.Clear();
+						rkeeper->GetHosts(&data);
+						data.SerializeToString(&output);
+						DLOG(INFO) << request->path << " " << sname;
 						break;
 					}
 					case ::identt::hrpc::R_READONE : {
@@ -122,21 +124,82 @@ public:
 						service.ReadOne(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
+						DLOG(INFO) << request->path << " " << sname;
 						break;
 					}
 					case ::identt::hrpc::R_TRANSLOG : {
-						break;
 						identt::store::TransListT data;
 						if (!data.ParseFromString( request->content.string() ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
-						identt::store::StoreTrans service; //ReadLog
-						service.ReadLog(stptr, &data);
+						// check if counter is current
+						auto logc = stptr->logcounter.Get();
+						if (data.lastid()>logc)
+							throw ::identt::BadDataException("Remote Log Counter ahead");
+						// if no change return
+						if (data.lastid()==logc) {
+							data.set_ts( IDENTT_CURRTIME_MS );
+							data.set_currid( logc );
+							data.set_limit( 0 );
+							// set the last slave as this if unset, this slave is in sync
+							// so future pushes can go to this
+							if (stptr->lastslave.Get().empty())
+								stptr->lastslave.Set(data.endpoint());
+						} else {
+							// if counter is not current
+							identt::store::StoreTrans service; //ReadLog
+							service.ReadLog(stptr, &data);
+						}
 						// aftermath
 						data.SerializeToString(&output);
+						DLOG(INFO) << request->path << " " << sname;
+						break;
+					}
+					case ::identt::hrpc::R_SETINFO : {
+						identt::hrpc::StateT data;
+						if (!data.ParseFromString( request->content.string() ))
+							throw identt::BadDataException("Bad Protobuf Format");
+						// action
+						// update remotes only if from master
+						rkeeper->SetHosts(&data);
+						// aftermath
+						data.Clear();
+						rkeeper->GetHosts(&data);
+						data.SerializeToString(&output);
+						DLOG(INFO) << request->path << " " << sname;
+						break;
+					}
+					case ::identt::hrpc::R_ADDHOST : {
+						identt::hrpc::RemoteT data;
+						if (!data.ParseFromString( request->content.string() ))
+							throw identt::BadDataException("Bad Protobuf Format");
+						// action
+						// update remotes only if from master
+						if (stptr->is_master.Get())
+							throw identt::BadDataException("Host addition is slave only");
+						rkeeper->AddHost(&data);
+						// aftermath
+						data.Clear();
+						data.SerializeToString(&output);
+						DLOG(INFO) << request->path << " " << sname;
+						break;
+					}
+					case ::identt::hrpc::R_BUFFTRANS : {
+						identt::store::TransactionT data;
+						if (!data.ParseFromString( request->content.string() ))
+							throw identt::BadDataException("Bad Protobuf Format");
+						// update only if from master
+						if (stptr->is_master.Get())
+							throw identt::BadDataException("Data addition is slave only");
+						// action
+						data.SerializeToString(&output);
+						stptr->transactions.AddOne(data.id(),output);
+						// aftermath
+						DLOG(INFO) << request->path << " " << sname;
+						break;
 					}
 					default:
-						LOG(INFO) << request->path;
+						DLOG(INFO) << request->path << " " << sname;
 						throw identt::BadDataException("Service Name unknown or unimplemented");
 						break;
 					}

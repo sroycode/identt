@@ -103,7 +103,7 @@ public:
 	*   bool status true if ok
 	*/
 	bool SendToRemote(::identt::utils::SharedTable::pointer stptr, std::string address,
-		::identt::hrpc::RemoteCmdTypeE service_id, google::protobuf::Message* msg, bool nothrow=false);
+	                  ::identt::hrpc::RemoteCmdTypeE service_id, google::protobuf::Message* msg, bool nothrow=false);
 
 };
 } // namespace hrpc

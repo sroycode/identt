@@ -33,137 +33,105 @@
 #ifndef _IDENTT_HRPC_REMOTE_KEEPER_HPP_
 #define _IDENTT_HRPC_REMOTE_KEEPER_HPP_
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <algorithm>
-#include <utils/SharedObject.hpp>
+#include <hrpc/HrpcClient.hpp>
 
 namespace identt {
 namespace hrpc {
 
 class RemoteKeeper {
 public:
-	struct PropT {
-		PropT(uint64_t l=0, uint64_t u=0) : logcounter(l), updated_at(u) {}
-		uint64_t logcounter;
-		uint64_t updated_at;
-	};
 
 	using pointer=std::shared_ptr<RemoteKeeper>;
-	using LockT = boost::shared_mutex;
-	using WriteLockT = boost::unique_lock< LockT >;
-	using ReadLockT = boost::shared_lock< LockT >;
-	using RemoteMapT = std::unordered_map<std::string, PropT>;
-	using RemoteListT = std::vector<std::string>;
-	using SharedBool = identt::utils::SharedObject<bool>;
-
-
-	SharedBool is_ready;
 
 	/**
 	* constructor
 	*
 	*/
-	RemoteKeeper() = default;
-
+	RemoteKeeper(identt::utils::SharedTable::pointer s);
 
 	/**
 	* make noncopyable
 	*/
+	RemoteKeeper() = delete;
 	RemoteKeeper(const RemoteKeeper&) = delete;
 	RemoteKeeper& operator=(const RemoteKeeper&) = delete;
 
 	/**
 	* destructor
 	*/
-	virtual ~RemoteKeeper () {}
+	virtual ~RemoteKeeper ();
 
 	/**
-	* Upsert : add new or update
+	* SetHosts : get list of hosts
 	*
-	* @param
-	*   std::string host
+	* @param state
+	*   identt::hrpc::StateT* state
 	*
-	* @param
+	* @return
+	*   none
+	*/
+	void SetHosts(identt::hrpc::StateT* state);
+
+	/**
+	* AddHost : add a single host
+	*
+	* @param rms
+	*   identt::hrpc::RemoteT* rms
+	*
+	* @return
+	*   none
+	*/
+	void AddHost(identt::hrpc::RemoteT* rms);
+
+	/**
+	* AddHost : add a single host
+	*
+	* @param name
+	*   std::string name
+	*
+	* @param logcounter
 	*   uint64_t logcounter
 	*
-	* @param
+	* @param updated_at
 	*   uint64_t updated_at
 	*
 	* @return
 	*   none
 	*/
-	void Upsert(std::string host, uint64_t logcounter, uint64_t updated_at)
-	{
-		WriteLockT lock (shared_lock);
-		rmap[host]= {logcounter,updated_at};
-	}
+	void AddHost(std::string name, uint64_t logcounter, uint64_t updated_at);
 
 	/**
-	* UpsertLogCounter : update log counter
+	* GetHosts : get params and list of hosts
 	*
-	* @param
-	*   std::string host
-	*
-	* @param
-	*   uint64_t logcounter
+	* @param state
+	*   identt::hrpc::StateT* state
 	*
 	* @return
 	*   none
 	*/
-	void UpsertLogCounter(std::string host, uint64_t logcounter)
-	{
-		WriteLockT lock (shared_lock);
-		RemoteMapT::iterator it = rmap.find(host);
-		if (it==rmap.end())
-			rmap[host]= {logcounter,0};
-		else
-			it->second.logcounter=logcounter;
-	}
+	void GetHosts(identt::hrpc::StateT* state);
 
 	/**
-	* UpsertUpdatedAt : update log counter
-	*
-	* @param
-	*   std::string host
-	*
-	* @param
-	*   uint64_t updated_at
+	* HostUpdate: update all hosts
 	*
 	* @return
 	*   none
 	*/
-	void UpsertUpdatedAt(std::string host, uint64_t updated_at)
-	{
-		WriteLockT lock (shared_lock);
-		RemoteMapT::iterator it = rmap.find(host);
-		if (it==rmap.end())
-			rmap[host]= {0,updated_at};
-		else
-			it->second.updated_at=updated_at;
-	}
+	void HostUpdate();
 
 	/**
-	* GetHosts : get list of hosts
+	* MasterUpdate: elect the master based on info received after cutoff
+	*
+	* @param state
+	*   uint64_t cutoff 
 	*
 	* @return
-	*   RemoteListT hosts list
+	*   none
 	*/
-	RemoteListT GetHosts()
-	{
-		ReadLockT lock (shared_lock);
-		RemoteListT rlist;
-		for (const auto& p : rmap) {
-			rlist.emplace_back(p.first);
-		}
-		return rlist;
-	}
+	void MasterUpdate(uint64_t cutoff);
 
 private:
-	RemoteMapT rmap;
-	LockT shared_lock;
+	identt::utils::SharedTable::pointer stptr;
 
 };
 

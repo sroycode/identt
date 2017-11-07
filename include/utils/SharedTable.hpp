@@ -35,12 +35,14 @@
 
 #include <memory>
 #include <vector>
-#include <unordered_map>
 #include <chrono>
 #include <random>
 #include <boost/asio.hpp>
 
 #include <utils/SharedCounter.hpp>
+#include <utils/SharedPairMap.hpp>
+#include <utils/SharedMap.hpp>
+
 #include <store/StoreLevel.hpp>
 #include <crypto/CryptoBase.hpp>
 
@@ -60,18 +62,31 @@ public:
 	using SharedDBPointer = SharedObject<dbpointer>;
 	using SharedBool = SharedObject<bool>;
 
+	using SharedRemote = SharedPairMap<std::string,uint64_t,uint64_t>;
+	using RemoteMapT = SharedPairMap<std::string,uint64_t,uint64_t>::PairMapT;
+
+	using SharedTrans = SharedMap<uint64_t,std::string>;
+
 	using KeyRingT = std::unordered_map<std::string,std::shared_ptr<identt::crypto::CryptoBase> >;
 
 	/**
 	* public stable to be used directly , never updated after init by code
 	*/
 	KeyRingT keyring;
+
+	// map of shared followers
+	SharedRemote remotes;
+
+	// map of shared transactions
+	SharedTrans transactions;
+
 	// string shared
 	SharedString master;
 	SharedString shared_secret;
 	SharedString hostname;
 	SharedString baseurl;
 	SharedString thisurl;
+	SharedString lastslave;
 	// counter shared
 	SharedCounter maincounter;
 	SharedCounter logcounter;

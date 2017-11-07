@@ -66,7 +66,7 @@ public:
 	LookupService(
 	    identt::utils::SharedTable::pointer stptr,
 	    typename std::shared_ptr<HttpServerT> server,
-			::identt::query::HelpQuery::pointer helpquery,
+	    ::identt::query::HelpQuery::pointer helpquery,
 	    unsigned int scope)
 		: identt::query::ServiceBase<HttpServerT>(IDENTT_SERVICE_SCOPE_HTTP | IDENTT_SERVICE_SCOPE_HTTPS)
 	{

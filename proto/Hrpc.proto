@@ -6,27 +6,27 @@ package identt.hrpc;
 
 enum MasterCmdTypeE {
 	M_NOACTION                                                     =  0;
-	M_GETINFO                                                      =  1;
-	M_READONE                                                      =  2;
-	M_TRANSLOG                                                     =  3;
-	M_REQUESTTOKEN                                                 =  4;
-	M_SUBMITTOKEN                                                  =  5;
-	M_GETVALIDATED3PID                                             =  6;
-	M_BIND3PID                                                     =  7;
-	M_LOOKUP                                                       =  8;
-	M_BULKLOOKUP                                                   =  9;
-	M_GETPUBKEY                                                    = 10;
-	M_GETPUBKEYVALID                                               = 11;
-	M_GETEPHEMERALVALID                                            = 12;
-	M_STOREINVITE                                                  = 13;
-	M_PENDING                                                      = 14;
+	M_REQUESTTOKEN                                                 =  1;
+	M_SUBMITTOKEN                                                  =  2;
+	M_GETVALIDATED3PID                                             =  3;
+	M_BIND3PID                                                     =  4;
+	M_LOOKUP                                                       =  5;
+	M_BULKLOOKUP                                                   =  6;
+	M_GETPUBKEY                                                    =  7;
+	M_GETPUBKEYVALID                                               =  8;
+	M_GETEPHEMERALVALID                                            =  9;
+	M_STOREINVITE                                                  = 10;
+	M_PENDING                                                      = 11;
 }
 
 enum RemoteCmdTypeE {
 	R_NOACTION                                                     =  0;
-	R_GETINFO                                                      =  1;
+	R_REGISTER                                                     =  1;
 	R_READONE                                                      =  2;
 	R_TRANSLOG                                                     =  3;
+	R_SETINFO                                                      =  4;
+	R_ADDHOST                                                      =  5;
+	R_BUFFTRANS                                                    =  6;
 };
 
 message RemoteT {
@@ -38,10 +38,8 @@ message RemoteT {
 message StateT {
 	string hostname                                                =  1;
 	string master                                                  =  2;
-	uint64 maincounter                                             =  3;
 	uint64 logcounter                                              =  4;
 	bool is_master                                                 =  5;
-	bool is_ready                                                  =  6;
 	uint64 ts                                                      =  7;
 	string thisurl                                                 =  8;
 	repeated RemoteT remotes                                       =  9;

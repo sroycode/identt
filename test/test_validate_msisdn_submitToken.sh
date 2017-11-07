@@ -6,7 +6,7 @@ export SRCFIL=$(basename $(cd ${0%/*} 2>>/dev/null ; echo `pwd`/${0##*/}))
 ## ---- variables
 
 export client_secret=${client_secret:="JcEZP9gXd2MYGqAXp2B9eF6KNGz8cDpj"};
-export sid=${sid:="12679"};
+export sid=${sid:="00000"};
 export token=${token:="499b11fe-2505-49d9-a872-83b7a9b9c303"};
 
 ## ---- main
@@ -14,16 +14,16 @@ export token=${token:="499b11fe-2505-49d9-a872-83b7a9b9c303"};
 if [ ${POSTFORM} -eq 0 ] ; then
 ${HTTPIE} POST ${TESTURL}/validate/msisdn/submitToken \
 	token:="\"${token}\"" \
-	sid:=${sid} \
+	sid:="\"${sid}\"" \
 	client_secret:="\"${client_secret}\""
 elif [ ${POSTFORM} -eq 1 ] ; then
 ${HTTPIE} --form POST ${TESTURL}/validate/msisdn/submitToken \
 	token="${token}" \
-	sid=${sid} \
+	sid="${sid}" \
 	client_secret="${client_secret}"
 elif [ ${POSTFORM} -eq 2 ] ; then
 ${HTTPIE} GET ${TESTURL}/validate/msisdn/submitToken \
 	token=="${token}" \
-	sid==${sid} \
+	sid=="${sid}" \
 	client_secret=="${client_secret}"
 fi

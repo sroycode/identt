@@ -100,14 +100,14 @@ int main(int argc, char *argv[])
 
 	// read command line
 	gflags::ParseCommandLineFlags(&argc, &argv, true);
-/*
-	// override default help
-	if (FLAGS_help || FLAGS_h) {
-		FLAGS_help = false;
-		FLAGS_helpshort = true;
-	}
-	gflags::HandleCommandLineHelpFlags();
-*/
+	/*
+		// override default help
+		if (FLAGS_help || FLAGS_h) {
+			FLAGS_help = false;
+			FLAGS_helpshort = true;
+		}
+		gflags::HandleCommandLineHelpFlags();
+	*/
 
 	/** Logging **/
 	google::InitGoogleLogging(argv[0]);
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 		 *  if update only if config is not set or command is not blank
 		 */
 
-		if (!(MyCFG->Check(IDENTT_DEFAULT_STRN_SYSTEM,"master") && FLAGS_master.empty()) ) 
+		if (!(MyCFG->Check(IDENTT_DEFAULT_STRN_SYSTEM,"master") && FLAGS_master.empty()) )
 			MyCFG->Update(IDENTT_DEFAULT_STRN_SYSTEM,"master",FLAGS_master);
 
 		// master
@@ -148,22 +148,22 @@ int main(int argc, char *argv[])
 		stptr->master.Set( master );
 
 		// if (!master.empty()) throw identt::InitialException("Only master mode supported yet");
-	
-		// shared secret 
+
+		// shared secret
 		auto shared_secret = MyCFG->Find<std::string>(IDENTT_DEFAULT_STRN_SYSTEM, "shared_secret");
 		if (shared_secret.empty()) throw identt::InitialException("shared_secret is needed");
 		stptr->shared_secret.Set( shared_secret );
-	
+
 		// hostname
 		auto hostname = MyCFG->Find<std::string>(IDENTT_DEFAULT_STRN_SYSTEM, "hostname");
 		if (hostname.empty()) throw identt::InitialException("hostname is needed");
 		stptr->hostname.Set( hostname );
-	
+
 		// baseurl
 		auto baseurl = MyCFG->Find<std::string>(IDENTT_DEFAULT_STRN_SYSTEM, "baseurl");
 		if (baseurl.empty()) throw identt::InitialException("baseurl is needed");
 		stptr->baseurl.Set( baseurl );
-	
+
 		// thisurl
 		auto thisurl = MyCFG->Find<std::string>(IDENTT_DEFAULT_STRN_SYSTEM, "thisurl");
 		if (thisurl.empty()) throw identt::InitialException("thisurl is needed");

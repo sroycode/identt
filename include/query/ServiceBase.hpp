@@ -163,7 +163,7 @@ protected:
 		*response << "Content-Type: " << content_type << "\r\n";
 		*response << "Content-Length: " << payload.length() << "\r\n";
 		*response << "\r\n" << payload.c_str();
-		LOG(INFO) << "OK: " << payload;
+		DLOG(INFO) << "OK: " << payload;
 	}
 
 	/**

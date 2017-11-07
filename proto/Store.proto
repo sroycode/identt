@@ -182,6 +182,7 @@ message TransListT {
 	repeated TransactionT trans                                    =  3;
 	uint64   currid                                                =  4;
 	uint64   ts                                                    =  5;
+	string   endpoint                                              =  6;
 }
 
 

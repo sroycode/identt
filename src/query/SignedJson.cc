@@ -62,11 +62,9 @@ identt::query::SignedJson::~SignedJson() {}
 	}
 	if (scope & IDENTT_CRYPTO_SCOPE_SIGNIT_VERIFY) {
 		return ::identt::crypto::CryptoTraits::Create(pubkey->algo(), pubkey->public_key(), pubkey->private_key());
-	}
-	else if (scope & IDENTT_CRYPTO_SCOPE_SIGNIT) {
+	} else if (scope & IDENTT_CRYPTO_SCOPE_SIGNIT) {
 		return ::identt::crypto::CryptoTraits::Create(pubkey->algo(), IDENTT_CRYPTO_SCOPE_SIGNIT, pubkey->private_key());
-	}
-	else if (scope & IDENTT_CRYPTO_SCOPE_VERIFY) {
+	} else if (scope & IDENTT_CRYPTO_SCOPE_VERIFY) {
 		return ::identt::crypto::CryptoTraits::Create(pubkey->algo(), IDENTT_CRYPTO_SCOPE_VERIFY, pubkey->public_key());
 	}
 	throw ::identt::query::SydentException("Invalid scope of Signing Key",M_BAD_JSON);

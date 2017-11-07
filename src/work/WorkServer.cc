@@ -106,7 +106,7 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 		// init Ed25519:0 key
 		sharedtable->keyring[ THREEPID_DEFAULT_ALGO_WITH_ID ] =
 		    ::identt::crypto::CryptoTraits::CreateFromSeed(THREEPID_DEFAULT_ALGO,hostseed);
-	
+
 	} catch (identt::JdException& e) {
 		LOG(INFO) << "WorkServer init failed: " << e.what() << std::endl;
 		std::rethrow_exception(std::current_exception());

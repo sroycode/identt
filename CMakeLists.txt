@@ -145,6 +145,13 @@ if (UNWIND_FOUND)
 	set(IDENTT_LIB_DEPS ${IDENTT_LIB_DEPS} ${UNWIND_LIBRARIES})
 endif()
 
+# Find if tbb is there ( rocksdb automatically takes )
+find_package(TBB)
+if (TBB_FOUND)
+	include_directories(${TBB_INCLUDE_DIRS})
+	set(IDENTT_LIB_DEPS ${IDENTT_LIB_DEPS} ${TBB_LIBRARIES})
+endif()
+
 # Rocksdb or leveldb
 if (IDENTT_BUILD_WITH_LEVELDB AND IDENTT_BUILD_WITH_ROCKSDB)
 	message(FATAL_ERROR "Both leveldb or rocksdb cannot be set")

@@ -99,7 +99,7 @@ public:
 					identt::query::ValidatedAtT valresult;
 
 					// action
-					if (gva.mutable_subtok()->sid()==0)
+					if (gva.mutable_subtok()->sid().length()==0)
 						throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
 					if (gva.mutable_subtok()->client_secret().length()==0)
 						throw ::identt::query::SydentException("client_secret value required", M_MISSING_PARAMS);
@@ -224,7 +224,7 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (bpa.mutable_subtok()->sid()==0)
+					if (bpa.mutable_subtok()->sid().length()==0)
 						throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
 					if (bpa.mutable_subtok()->client_secret().length()==0)
 						throw ::identt::query::SydentException("client_secret value required", M_MISSING_PARAMS);
@@ -247,8 +247,9 @@ public:
 					// post to synapse endpoint
 					std::vector<std::string> splitres;
 					boost::algorithm::split(splitres, bpa.mutable_subtok()->mxid() , boost::algorithm::is_any_of(":") );
-					if (splitres.size()==2) {
-        		std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
+					if (splitres.size()==2)
+					{
+						std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
 						HttpClient mclient;
 						std::string ret;
 						bool status = mclient.PostJson(stptr,url,output,ret,true);
@@ -298,7 +299,7 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
-					if (bpa.mutable_subtok()->sid()==0)
+					if (bpa.mutable_subtok()->sid().length()==0)
 						throw ::identt::query::SydentException("sid value required", M_MISSING_PARAMS);
 					if (bpa.mutable_subtok()->client_secret().length()==0)
 						throw ::identt::query::SydentException("client_secret value required", M_MISSING_PARAMS);
@@ -321,8 +322,9 @@ public:
 					// post to synapse endpoint
 					std::vector<std::string> splitres;
 					boost::algorithm::split(splitres, bpa.mutable_subtok()->mxid() , boost::algorithm::is_any_of(":") );
-					if (splitres.size()==2) {
-        		std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
+					if (splitres.size()==2)
+					{
+						std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
 						HttpClient mclient;
 						std::string ret;
 						bool status = mclient.PostJson(stptr,url,output,ret,true);

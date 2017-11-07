@@ -32,13 +32,13 @@ message RequestTokenT {
 
 message SuccessSidT {
 	bool success                                                   =  1;
-	uint64 sid                                                     =  2;
+	string sid                                                     =  2;
 	string msisdn                                                  =  3;
 	string intl_fmt                                                =  4;
 }
 
 message SubmitTokenT {
-	uint64 sid                                                     =  1;
+	string sid                                                     =  1;
 	string client_secret                                           =  2;
 	string token                                                   =  3;
 	string mxid                                                    =  4;
@@ -136,6 +136,7 @@ message RequestTokenDataT {
 	RequestTokenT reqtok                                           =  1;
 	SuccessSidT ssid                                               =  2;
 	string medium                                                  =  3;
+	string token                                                   =  4;
 }
 
 message SubmitTokenDataT {

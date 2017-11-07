@@ -82,7 +82,9 @@ const static std::map<int, std::string> SydentErrors = {
 const static std::map<std::string,std::string> ValidIsdCodes = {
 	{ "IN", "91" },
 	{ "US", "1" },
-	{ "GB", "44" }
+	{ "CA", "1" },
+	{ "GB", "44" },
+	{ "AE", "971" }
 };
 
 /** Sydent Exceptions */

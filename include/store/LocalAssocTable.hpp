@@ -35,8 +35,6 @@
 
 #include "StoreTable.hpp"
 
-// extern template class identt::store::StoreTable<identt::store::LocalAssocT>;
-
 namespace identt {
 namespace store {
 class LocalAssocTable : public StoreTable<LocalAssocT> {

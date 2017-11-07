@@ -40,15 +40,15 @@
 */
 void identt::store::LogReadService::LogReadAction(
     ::identt::utils::SharedTable::pointer stptr,
-	   ::identt::store::TransListT* translist)
+    ::identt::store::TransListT* translist)
 {
 	// ::identt::store::TransT translist;
 	::identt::store::TransListTable translist_table{stptr->maindb.Get()};
 	bool translist_found = translist_table.GetOne(
-	                             &translist,&translist_map,
-	                             ::identt::store::I_GLOBALASSOC_MEDIUM_ADDRESS,
-	                             0,1
-	                         );
+	                           &translist,&translist_map,
+	                           ::identt::store::I_GLOBALASSOC_MEDIUM_ADDRESS,
+	                           0,1
+	                       );
 }
 
 /**

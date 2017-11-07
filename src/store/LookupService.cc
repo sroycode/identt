@@ -81,7 +81,7 @@ void identt::store::LookupService::LookupAction(
     ::identt::utils::SharedTable::pointer stptr,
     ::identt::query::LookupDataT* lact)
 {
-		this->LookupAction(stptr,lact->mutable_query(),lact->mutable_result());
+	this->LookupAction(stptr,lact->mutable_query(),lact->mutable_result());
 }
 
 /**
@@ -92,8 +92,8 @@ void identt::store::LookupService::BulkLookupAction(
     ::identt::utils::SharedTable::pointer stptr,
     ::identt::query::BulkLookupDataT* blact)
 {
-    ::identt::query::BulkLookupQueryT* query = blact->mutable_query();
-    ::identt::query::BulkLookupResultT* result = blact->mutable_result();
+	::identt::query::BulkLookupQueryT* query = blact->mutable_query();
+	::identt::query::BulkLookupResultT* result = blact->mutable_result();
 	// globalassobc
 	for (auto i=0; i<query->threepids_size(); ++i) {
 		::identt::query::LookupResultT one_result;

@@ -35,12 +35,16 @@
 
 #include <utils/BaseUtils.hpp>
 #include <utils/SharedTable.hpp>
+#include <unordered_map>
+#include <cpr/cpr.h>
 
 namespace identt {
 namespace query {
 
 class HttpClient {
 public:
+
+	using GetParamsT=std::unordered_map<std::string,std::string>;
 	/**
 	* constructor
 	*
@@ -57,6 +61,30 @@ public:
 	* destructor
 	*/
 	virtual ~HttpClient ();
+
+	/**
+	* GetDefault : send json to remote and get output
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param url
+	*   std::string url
+	*
+	* @param myparams
+	*   cpr::Parameters parameters
+	*
+	* @param returns
+	*   std::string& returns
+	*
+	* @param nothrow
+	*   bool dont throw if true
+	*
+	* @return
+	*   bool status true if ok
+	*/
+	bool GetDefault(::identt::utils::SharedTable::pointer stptr,
+	                std::string url, cpr::Parameters myparams, std::string& returns, bool nothrow=false);
 
 	/**
 	* PostJson : send json to remote and get output

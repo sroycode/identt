@@ -35,8 +35,6 @@
 
 #include "StoreTable.hpp"
 
-// extern template class identt::store::StoreTable<identt::store::ValidationSessionT>;
-
 namespace identt {
 namespace store {
 class ValidationSessionTable : public StoreTable<ValidationSessionT> {

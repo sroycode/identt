@@ -303,7 +303,7 @@ private:
 	::identt::crypto::CryptoTraits::pointer GetSigner(
 	    ::identt::utils::SharedTable::pointer stptr,
 	    const ::identt::query::PubKeyT* pubkey,
-			const unsigned int scope
+	    const unsigned int scope
 	);
 
 };

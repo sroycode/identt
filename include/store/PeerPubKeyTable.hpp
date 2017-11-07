@@ -35,8 +35,6 @@
 
 #include "StoreTable.hpp"
 
-// extern template class identt::store::StoreTable<identt::store::PeerPubKeyT>;
-
 namespace identt {
 namespace store {
 class PeerPubKeyTable : public StoreTable<PeerPubKeyT> {

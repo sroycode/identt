@@ -35,8 +35,6 @@
 
 #include "StoreTable.hpp"
 
-// extern template class identt::store::StoreTable<identt::store::InviteTokenT>;
-
 namespace identt {
 namespace store {
 class InviteTokenTable : public StoreTable<InviteTokenT> {

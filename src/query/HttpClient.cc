@@ -47,6 +47,32 @@
 ::identt::query::HttpClient::~HttpClient () {}
 
 /**
+* GetDefault : send jsonto Remote and get output
+*
+*/
+bool ::identt::query::HttpClient::GetDefault(::identt::utils::SharedTable::pointer stptr, std::string url,
+        cpr::Parameters myparams, std::string& returns, bool nothrow)
+{
+	try {
+		auto r = cpr::Get(
+		             cpr::Url{url},
+		             myparams,
+		cpr::Header{
+			{"User-Agent", "Sydent"}
+		});
+
+		if (r.status_code != 200)
+			throw identt::BadDataException("Bad HTTP Status for remote");
+
+		returns=std::move(r.text);
+	} catch (...) {
+		if (nothrow) return false;
+		std::rethrow_exception(std::current_exception());
+	}
+	return true;
+}
+
+/**
 * PostJson : send jsonto Remote and get output
 *
 */

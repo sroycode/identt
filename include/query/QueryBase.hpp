@@ -37,7 +37,8 @@
 #include <query/SydentQuery.hpp> // define on top
 #include <utils/SharedTable.hpp>
 #include <async++.h>
-#define IDENTT_PARALLEL_ONE async::parallel_invoke
+// #define IDENTT_PARALLEL_ONE async::parallel_invoke
+#define IDENTT_PARALLEL_ONE async::spawn
 
 #include <functional>
 #include <boost/algorithm/string.hpp>

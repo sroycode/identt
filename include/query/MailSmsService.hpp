@@ -110,7 +110,8 @@ public:
 
 					::identt::store::MailSmsService mservice;
 					// action
-					if (stptr->is_master.Get()) {
+					if (stptr->is_master.Get())
+					{
 						mservice.PendingAction(stptr, &mailq);
 					} else {
 						identt::hrpc::HrpcClient hclient;

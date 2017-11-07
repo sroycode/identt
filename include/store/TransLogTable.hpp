@@ -35,8 +35,6 @@
 
 #include "StoreTable.hpp"
 
-// extern template class identt::store::StoreTable<identt::store::TransLogT>;
-
 namespace identt {
 namespace store {
 class TransLogTable : public StoreTable<TransLogT> {

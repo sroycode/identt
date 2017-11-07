@@ -107,6 +107,8 @@ bool ::identt::hrpc::HrpcClient::SendToRemote(::identt::utils::SharedTable::poin
 		std::string endpoint = address + "/_identt/identity/remote/v1/endpoint";
 		std::string tmpstr;
 		msg->SerializeToString(&tmpstr);
+		DLOG(INFO) << service_id;
+		DLOG(INFO) << msg->DebugString();
 
 		auto r = cpr::Post(
 		             cpr::Url{endpoint},
@@ -122,8 +124,9 @@ bool ::identt::hrpc::HrpcClient::SendToRemote(::identt::utils::SharedTable::poin
 		// rethrow the error from other side
 		if (r.header["Service-Error"].length()>0)
 			throw ::identt::BadDataException(r.text.c_str());
-		if (!msg->ParseFromString(r.text))
+		if (!msg->ParseFromString(r.text)) {
 			throw identt::BadDataException("Bad Received Protobuf Data Format from remote");
+		}
 	} catch (...) {
 		if (nothrow) return false;
 		std::rethrow_exception(std::current_exception());

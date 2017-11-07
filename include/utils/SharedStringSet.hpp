@@ -75,8 +75,32 @@ public:
 	*/
 	void Add(std::string elem)
 	{
-		WriteLockT writelock(mutex_);
+		WriteLockT lock(mutex_);
 		t_.insert(elem);
+	}
+
+	/**
+	* GetSize: get size of set
+	*
+	* @return
+	*   size_t size
+	*/
+	size_t GetSize()
+	{
+		ReadLockT lock(mutex_);
+		return t_.size();
+	}
+
+	/**
+	* Reset: clear the set
+	*
+	* @return
+	*   none
+	*/
+	void Reset()
+	{
+		WriteLockT lock(mutex_);
+		t_.clear();
 	}
 
 };
