@@ -217,6 +217,7 @@ rapidjson::Value* parse_msg(const google::protobuf::Message *msg, rapidjson::Val
 	}
 	return root;
 }
+int parse_json_array(const rapidjson::Value* json, google::protobuf::Message* msg, std::string& err);
 int parse_json(const rapidjson::Value* json, google::protobuf::Message* msg, std::string& err);
 int json2field(const rapidjson::Value* json, google::protobuf::Message* msg,
                const google::protobuf::FieldDescriptor *field, std::string& err)
@@ -354,6 +355,9 @@ int json2field(const rapidjson::Value* json, google::protobuf::Message* msg,
 
 int parse_json(const rapidjson::Value* json, google::protobuf::Message* msg, std::string& err)
 {
+	if (NULL != json && json->GetType() == rapidjson::kArrayType) {
+		return parse_json_array(json, msg, err);
+	}
 	if (NULL == json || json->GetType() != rapidjson::kObjectType) {
 		return IDENTT_ERR_INVALID_ARG;
 	}
@@ -512,3 +516,51 @@ std::string identt::query::err2json(const std::string errorcode,const std::strin
 	});
 }
 
+/**
+* parse_json_array : parse Json Array to feed protobuf object
+*
+*/
+int parse_json_array(const rapidjson::Value* json, google::protobuf::Message* msg, std::string& err)
+{
+	if (json->GetType() != rapidjson::kArrayType) {
+		RETURN_ERR(IDENTT_ERR_INVALID_JSON, "Not array");
+	}
+	const google::protobuf::Descriptor *d = msg->GetDescriptor();
+	const google::protobuf::Reflection *ref = msg->GetReflection();
+	if (!d || !ref) {
+		RETURN_ERR(IDENTT_ERR_INVALID_PB, "invalid pb object");
+	}
+
+	if (json->Size() > d->field_count()) {
+		RETURN_ERR(IDENTT_ERR_INVALID_JSON, "Bad array exceeds pb object size");
+	}
+
+
+	size_t fieldcount=0;
+	for (rapidjson::Value::ConstValueIterator itr = json->Begin(); itr != json->End(); ++itr) {
+		const google::protobuf::FieldDescriptor *field = d->field(fieldcount);
+		++fieldcount; // avoid xx++ syntax , my idio
+		if (!field)
+			continue; // TODO: we should not fail here, instead write this value into an unknown field
+		if (itr->GetType() == rapidjson::kNullType) {
+			ref->ClearField(msg, field);
+			continue;
+		}
+		if (field->is_repeated()) {
+			if (itr->GetType() != rapidjson::kArrayType)
+				RETURN_ERR(IDENTT_ERR_INVALID_JSON, "Not array");
+			for (rapidjson::Value::ConstValueIterator ait = itr->Begin(); ait != itr->End(); ++ait) {
+				int ret = json2field(ait, msg, field, err);
+				if (ret != 0) {
+					return ret;
+				}
+			}
+		} else {
+			int ret = json2field(itr, msg, field, err);
+			if (ret != 0) {
+				return ret;
+			}
+		}
+	}
+	return 0;
+}

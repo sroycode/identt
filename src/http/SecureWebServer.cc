@@ -37,8 +37,8 @@
 #include "SecureWebServer.hpp"
 #include <query/WebServiceList.hpp>
 
-identt::http::SecureWebServer::SecureWebServer(identt::utils::SharedTable::pointer stptr)
-	: identt::utils::ServerBase(stptr)
+identt::http::SecureWebServer::SecureWebServer(boost::asio::io_service& io_service, identt::utils::SharedTable::pointer stptr)
+	: identt::utils::ServerBase(stptr),io_service(io_service_),is_init(false)
 {
 	DLOG(INFO) << "SecureWebServer Created" << std::endl;
 }
@@ -64,7 +64,7 @@ void identt::http::SecureWebServer::init(identt::utils::ServerBase::ParamsListT 
 		throw identt::ConfigException("SecureWebServer: params and required size mismatch");
 	DLOG(INFO) << "SecureWebServer Started" << std::endl;
 
-	server = std::make_shared<HttpServerT>(
+	server = std::make_shared<HttpServerT>(io_service,
 	             params[0], // host
 	             std::stoul(params[1]), // port
 	             params[2], // server_crt
@@ -72,14 +72,13 @@ void identt::http::SecureWebServer::init(identt::utils::ServerBase::ParamsListT 
 	         );
 	is_init=true;
 	{
-		identt::http::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP};
 		IDENTT_WEBSERVICELIST_SCOPE_HTTPS
 	}
-	server->start(sharedtable->getIO());
+	server->start();
 }
 
 void identt::http::SecureWebServer::stop()
 {
-	server->stop();
+	if (is_init) server->stop();
 	DLOG(INFO) << "SecureWebServer Stopped" << std::endl;
 }

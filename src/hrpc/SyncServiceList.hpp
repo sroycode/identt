@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/utils/SharedCounter.hpp
+ * @file src/hrpc/SyncServiceList.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,54 +27,24 @@
  *
  * @section DESCRIPTION
  *
- *  SharedCounter.hpp :   Shared Counter
+ *  SyncServiceList.hpp :   Set up Service List
  *
  */
-#ifndef _IDENTT_UTILS_SHARED_COUNTER_HPP_
-#define _IDENTT_UTILS_SHARED_COUNTER_HPP_
+#ifndef _IDENTT_HRPC_SYNC_SERVICE_LIST_HPP_
+#define _IDENTT_HRPC_SYNC_SERVICE_LIST_HPP_
 
-#include <utils/SharedObject.hpp>
+#include <query/NotFoundService.hpp>
+#include <query/QueryBase.hpp>
+#include <hrpc/HrpcMasterEndpointService.hpp>
+#include <hrpc/HrpcRemoteEndpointService.hpp>
 
-namespace identt {
-namespace utils {
-class SharedCounter : public SharedObject<uint64_t> {
-public:
-	using LockT = SharedObject<uint64_t>::LockT;
-	using WriteLockT = SharedObject<uint64_t>::WriteLockT;
-	using ReadLockT = SharedObject<uint64_t>::ReadLockT;
+#define IDENTT_SYNCSERVICELIST_SCOPE_HTTP \
+		identt::query::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP}; \
+		identt::hrpc::RemoteKeeper::pointer rkeeper = std::make_shared<identt::hrpc::RemoteKeeper>(sharedtable); \
+		identt::hrpc::HrpcMasterEndpointService<HttpServerT>(sharedtable,server,rkeeper,IDENTT_SERVICE_SCOPE_HTTP); \
+		identt::hrpc::HrpcRemoteEndpointService<HttpServerT>(sharedtable,server,rkeeper,IDENTT_SERVICE_SCOPE_HTTP);
 
-	/**
-	* make noncopyable and remove default
-	*/
+#define IDENTT_SYNCSERVICELIST_SCOPE_HTTPS \
+		identt::query::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP};
 
-	SharedCounter(const SharedCounter&) = delete;
-	SharedCounter& operator=(const SharedCounter&) = delete;
-
-	/**
-	* Constructor : default
-	*
-	*/
-	SharedCounter() : SharedObject<uint64_t>(0) {}
-
-	/**
-	* destructor
-	*/
-	virtual ~SharedCounter () {}
-
-	/**
-	* GetNext : increment and get next value
-	*
-	* @return
-	*   uint64_t next value
-	*/
-	uint64_t GetNext()
-	{
-		WriteLockT writelock(mutex_);
-		++t_;
-		return t_;
-	}
-
-};
-} // namespace utils
-} // namespace identt
-#endif /* _IDENTT_UTILS_SHARED_COUNTER_HPP_ */
+#endif // _IDENTT_HRPC_SYNC_SERVICE_LIST_HPP_

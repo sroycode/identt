@@ -48,7 +48,6 @@ namespace http {
 template <class socket_type>
 class HttpServerBase {
 public:
-	using iopointer = std::shared_ptr<boost::asio::io_service>;
 	using Content = ServerContent;
 	using Request = ServerRequest;
 	using Response = ServerResponse<socket_type>;
@@ -68,9 +67,8 @@ public:
 private:
 	std::vector<std::pair<std::string, std::vector<std::pair<REGEX_NS::regex, RespReqF > > > > opt_resource;
 public:
-	void start(iopointer io_service_)
+	void start()
 	{
-		io_service=io_service_;
 		//Copy the resources to opt_resource for more efficient request processing
 		opt_resource.clear();
 		for(auto& res: resource) {
@@ -90,15 +88,14 @@ public:
 				it->second.emplace_back(REGEX_NS::regex(res.first), res_method.second);
 			}
 		}
-		if(io_service->stopped())
-			io_service->reset();
+		if (io_service.stopped()) io_service.reset();
 		boost::asio::ip::tcp::endpoint endpoint;
 		if(config.address.size()>0)
 			endpoint=boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(config.address), config.port);
 		else
 			endpoint=boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config.port);
 		if(!acceptor)
-			acceptor=std::unique_ptr<boost::asio::ip::tcp::acceptor>(new boost::asio::ip::tcp::acceptor(*io_service));
+			acceptor=std::unique_ptr<boost::asio::ip::tcp::acceptor>(new boost::asio::ip::tcp::acceptor(io_service));
 		acceptor->open(endpoint.protocol());
 		acceptor->set_option(boost::asio::socket_base::reuse_address(config.reuse_address));
 		acceptor->bind(endpoint);
@@ -118,18 +115,27 @@ public:
 		});
 	}
 protected:
-	iopointer io_service;
+	boost::asio::io_service& io_service;
 	std::unique_ptr<boost::asio::ip::tcp::acceptor> acceptor;
 	long timeout_request;
 	long timeout_content;
-	HttpServerBase(std::string address, unsigned short port, long timeout_request, long timeout_send_or_receive) :
-		config(address, port), timeout_request(timeout_request), timeout_content(timeout_send_or_receive) {}
+
+	HttpServerBase(boost::asio::io_service& io_service_,
+	               std::string address,
+	               unsigned short port,
+	               long timeout_request,
+	               long timeout_send_or_receive) :
+		io_service(io_service_),
+		config(address, port),
+		timeout_request(timeout_request),
+		timeout_content(timeout_send_or_receive) {}
+
 	virtual void accept()=0;
 	std::shared_ptr<boost::asio::deadline_timer> get_timeout_timer(const std::shared_ptr<socket_type> &socket, long seconds)
 	{
 		if(seconds==0)
 			return nullptr;
-		auto timer=std::make_shared<boost::asio::deadline_timer>(*io_service);
+		auto timer=std::make_shared<boost::asio::deadline_timer>(io_service);
 		timer->expires_from_now(boost::posix_time::seconds(seconds));
 		timer->async_wait([socket](const boost::system::error_code& ec) {
 			if(!ec) {

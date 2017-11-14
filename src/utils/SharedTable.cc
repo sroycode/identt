@@ -27,49 +27,20 @@
  *
  * @section DESCRIPTION
  *
- *  SharedTable.cc :   Shared Objects implementation
+ *  SharedTable.cc :   shared table impl
  *
  */
 
 #include <utils/SharedTable.hpp>
 
 /**
+* destructor
+*/
+identt::utils::ShareTable::~SharedTable ();
+
+/**
 * Constructor : default private
 *
 */
-identt::utils::SharedTable::SharedTable() {}
+identt::utils::ShareTable::SharedTable() {}
 
-
-/**
-* share : return instance
-*
-*/
-identt::utils::SharedTable::pointer identt::utils::SharedTable::share()
-{
-	return shared_from_this();
-}
-
-/**
-* destructor
-*/
-identt::utils::SharedTable::~SharedTable () {}
-
-/**
-* setIO : set shared io pointer
-*
-*/
-void identt::utils::SharedTable::setIO(identt::utils::SharedTable::iopointer io_)
-{
-	WriteLockT writelock(class_mutex);
-	io=io_;
-}
-
-/**
-* getIO : get shared io pointer
-*
-*/
-identt::utils::SharedTable::iopointer identt::utils::SharedTable::getIO()
-{
-	ReadLockT readlock(class_mutex);
-	return io;
-}

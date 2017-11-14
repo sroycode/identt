@@ -36,6 +36,11 @@
 #include <query/QueryBase.hpp>
 #include <store/LookupService.hpp>
 
+// #include <rapidjson/rapidjson.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/pointer.h>
+
 namespace identt {
 namespace query {
 
@@ -223,11 +228,14 @@ public:
 					} else {
 						throw SydentException("Only Json Supported",M_BAD_JSON);
 					}
+					DLOG(INFO) << blact.DebugString();
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
 					::identt::store::LookupService lservice;
 					lservice.BulkLookupAction(stptr, &blact);
+					std::string instring;
+					this->BulkLookupJson(blact.mutable_result(),instring);
 
 					// aftermath
 					std::string output;
@@ -238,9 +246,11 @@ public:
 					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
 					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
 
+
 					// test data
+
 					std::vector<::identt::query::SignatureT> signatures;
-					lservice.AddSign(stptr, blact.mutable_result() , &pubkey, output,signatures);
+					lservice.AddSign(stptr, instring , &pubkey, output,signatures);
 					if (!output.length()) output="{}";
 
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
@@ -267,6 +277,40 @@ public:
 	}
 
 private:
+	/**
+	* BulkLookupJson : convert proto to json for bulk lookup
+	*
+	* @param bulkres
+	*   identt::query::BulkLookupResultT* bulk res
+	*
+	* @param output
+	*   std::string& output
+	*
+	* @return
+	*   none
+	*/
+	void BulkLookupJson(identt::query::BulkLookupResultT* bulkres, std::string& output)
+	{
+		rapidjson::Document d;
+		rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
+		rapidjson::Pointer("/threepids").Create(d , allocator );
+		rapidjson::Value* threepids = rapidjson::Pointer("/threepids").Get(d);
+		if (!threepids->IsArray()) threepids->SetArray();
+
+		for (auto& res : bulkres->threepids() ) {
+			rapidjson::Value entry(rapidjson::kArrayType);
+			entry
+			.PushBack( rapidjson::StringRef( res.medium().c_str() ) , allocator )
+			.PushBack( rapidjson::StringRef( res.address().c_str() ) , allocator )
+			.PushBack( rapidjson::StringRef( res.mxid().c_str() ) , allocator );
+			threepids->PushBack(entry,allocator);
+		}
+		rapidjson::StringBuffer buffer;
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+		d.Accept(writer);
+		output.clear();
+		output.append(buffer.GetString(), buffer.GetSize());
+	}
 
 };
 } // namespace query

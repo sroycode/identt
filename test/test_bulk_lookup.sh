@@ -7,13 +7,11 @@ export SRCFIL=$(basename $(cd ${0%/*} 2>>/dev/null ; echo `pwd`/${0##*/}))
 
 export threepids=\
 '['\
-'{"medium":"msisdn","address":"919999999999"}'\
-',{"medium":"msisdn","address":"919999999998"}'\
-',{"medium":"msisdn","address":"919999999997"}'\
-',{"medium":"msisdn","address":"919999999996"}'\
+'["msisdn","919999999999"]'\
+',["msisdn","919999999998"]'\
+',["msisdn","919999999997"]'\
+',["msisdn","919999999996"]'\
 ']'
-
-echo $threepids
 
 ## ---- main
 

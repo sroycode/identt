@@ -34,6 +34,7 @@
 #define _IDENTT_HTTP_SERVER_CONTENT_HPP_
 
 #include <sstream>
+#include <boost/asio.hpp>
 
 namespace identt {
 namespace http {

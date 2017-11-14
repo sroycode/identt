@@ -161,7 +161,7 @@ void identt::hrpc::RemoteKeeper::MasterUpdate(uint64_t cutoff)
 				break;
 			} else {
 				LOG(INFO) << "New Master is not ready: " << newmaster;
-				std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+				std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 			}
 		} while(++retries<10);
 	}

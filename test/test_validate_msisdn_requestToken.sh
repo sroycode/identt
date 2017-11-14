@@ -5,7 +5,7 @@ export SRCFIL=$(basename $(cd ${0%/*} 2>>/dev/null ; echo `pwd`/${0##*/}))
 
 ## ---- variables
 
-export phone_number=${phone_number:="9999999999"};
+export phone_number=${phone_number:="919999999999"};
 export country=${country:="IN"};
 export client_secret=${client_secret:="JcEZP9gXd2MYGqAXp2B9eF6KNGz8cDpj"};
 export next_link=${next_link:="http://google.com"};

@@ -43,8 +43,6 @@
 #include <query/LookupService.hpp>
 #include <query/InviteService.hpp>
 #include <query/MailSmsService.hpp>
-#include <hrpc/HrpcMasterEndpointService.hpp>
-#include <hrpc/HrpcRemoteEndpointService.hpp>
 
 #define IDENTT_WEBSERVICELIST_SCOPE_HTTP \
 		identt::query::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP}; \
@@ -55,10 +53,7 @@
 		identt::query::PubKeyService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
 		identt::query::LookupService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
 		identt::query::InviteService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
-		identt::query::MailSmsService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
-		identt::hrpc::RemoteKeeper::pointer rkeeper = std::make_shared<identt::hrpc::RemoteKeeper>(sharedtable); \
-		identt::hrpc::HrpcMasterEndpointService<HttpServerT>(sharedtable,server,rkeeper,IDENTT_SERVICE_SCOPE_HTTP); \
-		identt::hrpc::HrpcRemoteEndpointService<HttpServerT>(sharedtable,server,rkeeper,IDENTT_SERVICE_SCOPE_HTTP);
+		identt::query::MailSmsService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP);
 
 #define IDENTT_WEBSERVICELIST_SCOPE_HTTPS \
 		identt::query::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP};

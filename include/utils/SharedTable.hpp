@@ -27,7 +27,7 @@
  *
  * @section DESCRIPTION
  *
- *  SharedTable.hpp :   Shared pointer to sharedtable object called pricetable
+ *  SharedTable.hpp :   Shared pointer to sharedtable object
  *
  */
 #ifndef _IDENTT_UTILS_SHAREDTABLE_HPP_
@@ -37,7 +37,6 @@
 #include <vector>
 #include <chrono>
 #include <random>
-#include <boost/asio.hpp>
 
 #include <utils/SharedCounter.hpp>
 #include <utils/SharedPairMap.hpp>
@@ -54,7 +53,6 @@ class SharedTable : public std::enable_shared_from_this<SharedTable> {
 public:
 	using pointer=std::shared_ptr<SharedTable>;
 	using dbpointer=identt::store::StoreLevel::dbpointer;
-	using iopointer = std::shared_ptr<boost::asio::io_service>;
 	using LockT = boost::shared_mutex;
 	using WriteLockT = boost::unique_lock< LockT >;
 	using ReadLockT = boost::shared_lock< LockT >;
@@ -66,7 +64,6 @@ public:
 	using RemoteMapT = SharedPairMap<std::string,uint64_t,uint64_t>::PairMapT;
 
 	using SharedTrans = SharedMap<uint64_t,std::string>;
-
 	using KeyRingT = std::unordered_map<std::string,std::shared_ptr<identt::crypto::CryptoBase> >;
 
 	/**
@@ -122,32 +119,17 @@ public:
 	* @return
 	*   pointer
 	*/
-	pointer share();
+	pointer share() {
+		return shared_from_this();
+	}
 
 	/**
 	* destructor
 	*/
-	virtual ~SharedTable ();
-
-	/**
-	* setIO : set shared io pointer
-	*
-	* @param io
-	*   iopointer shared io pointer
-	*/
-	void setIO(iopointer io_);
-
-	/**
-	* getIO : get shared io pointer
-	*
-	* @return
-	*   iopointer shared io pointer
-	*/
-	iopointer getIO();
+	virtual ~SharedTable () {}
 
 private:
 
-	iopointer io;
 	LockT class_mutex;
 	LockT number_mutex;
 
@@ -157,7 +139,7 @@ private:
 	* @return
 	*   none
 	*/
-	SharedTable();
+	SharedTable() {}
 
 };
 } // namespace utils

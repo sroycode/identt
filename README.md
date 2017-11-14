@@ -5,6 +5,7 @@ Matrix Identity Server
 ## Code is WIP
 
 This code is work in progress and is to change frequently.
+Major change: server-to-server port is now separate from matrix port
 
 ## What is it
 
@@ -24,6 +25,9 @@ In addition there are some utilities
 
 One main difference is handling of mails and sms to users is handled by an external program. 
 See README.MAILS.md for details
+
+For replication , the service listens to two ports , you can expose the main port to public, the second port is for
+communication between servers.
 
 ## Creating Development Environment
 
@@ -68,7 +72,7 @@ cmake -DCMAKE_BUILD_TYPE=Debug .. && make
 cmake .. && make
 ```
 
-On Linux with cmake3 and custom Boost ( See README.LINUX.md )
+On Centos with cmake3 and custom Boost ( See README.LINUX.md )
 
 ```
 # Debug
@@ -77,21 +81,27 @@ cmake3 -DCMAKE_BUILD_TYPE=Debug -DBOOST_ROOT=/opt/local/boost .. && make
 cmake3 -DBOOST_ROOT=/opt/local/boost .. && make
 ```
 
+Note the number of concurrent connections is limited by number of active threads, you can adjust it
+by setting `LIBASYNC_NUM_THREADS` as an environment variable before compiling.
+
+```
+export LIBASYNC_NUM_THREADS=30
+```
+
 ## Running
 
 1. You need to have a config file , see README.CONFIG.md for details. There is a sample in etc for you to edit
 
-2. Start the server ( default starts in master mode)
-
+2. Start the server ( default starts in master mode) . Default config listens 9091 for matrix + 9092 for intermachine
 
 ```
 ./identtserver --config ../etc/identt.conf
 ```
 
-3. To start another server in slave mode (optional) pointing to master started at port 9091 of same machine
+3. To start another server in slave mode (optional) pointing to master intermachine port started at port 9092 of same machine
 
 ```
-./identtserver --config ../etc/identt2.conf --master="http://127.0.0.1:9091"
+./identtserver --config ../etc/identt2.conf --master="http://127.0.0.1:9092"
 ```
 
 ## Testing
@@ -99,15 +109,15 @@ cmake3 -DBOOST_ROOT=/opt/local/boost .. && make
 Look at the folder test for expected query.
 The test/test_ scripts are for testing, you will need httpie.
 
-For example , mobile no verification looks like this ( run from build dir )
+For example , mobile no verification looks like this ( run from build dir , for simplicity cut-pasted variables from log)
 
 ```
 sh ../test/test_validate_msisdn_requestToken.sh 
 sh ../test/test_validate_msisdn_submitToken.sh # fails
 sh ../test/test_tools_getmail.sh # get token and sid
-token="512048" sid=2 sh ../test/test_validate_msisdn_submitToken.sh
-token="512048" sid=2 sh ../test/test_3pid_getValidated3pid.sh 
-token="512048" sid=2 sh ../test/test_3pid_bind.sh 
+phone_number="919999999999" token="512048" sid="1112" sh ../test/test_validate_msisdn_submitToken.sh
+phone_number="919999999999" token="512048" sid="1112" sh ../test/test_3pid_getValidated3pid.sh 
+phone_number="919999999999" token="512048" sid="1112" sh ../test/test_3pid_bind.sh 
 ```
 
 ## Acknowledgements
@@ -117,9 +127,9 @@ This project uses code from
 - https://github.com/Tencent/rapidjson
 - https://github.com/Amanieu/asyncplusplus
 - https://github.com/whoshuu/cpr
+
 - https://github.com/eidheim/Simple-Web-Server ( web server is modified from HTTP Server )
 - https://github.com/yinqiwen/pbjson (Protobuf<->Json)
-- https://github.com/r-lyeh/sole ( ununsed )
 
 ## Sorry
 

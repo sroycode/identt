@@ -35,6 +35,8 @@
 
 #include <store/StoreBase.hpp>
 #include <utils/ServerBase.hpp>
+#include "http/HttpServer.hpp"
+
 
 namespace identt {
 namespace hrpc {
@@ -45,6 +47,7 @@ class SyncServer :
 
 public:
 	using pointer=std::shared_ptr<SyncServer>;
+	using HttpServerT=identt::http::HttpServer<identt::http::HTTP>;
 
 	/**
 	* make noncopyable
@@ -54,18 +57,22 @@ public:
 	SyncServer(const SyncServer&) = delete;
 	SyncServer& operator=(const SyncServer&) = delete;
 
+
 	/**
 	* create : static construction creates new first time
 	*
+	* @param io_service_
+	*   boost::asio::io_service& io service pointer
+	*
 	* @param stptr
-	*   identt::utils::SharedTable::pointer stptr
+	*   identt::utils::SharedTable::pointer sharedtable pointer
 	*
 	* @return
 	*   none
 	*/
-	static pointer create(identt::utils::SharedTable::pointer stptr)
+	static pointer create(boost::asio::io_service& io_service_, identt::utils::SharedTable::pointer stptr)
 	{
-		pointer p(new SyncServer(stptr));
+		pointer p(new SyncServer(io_service_,stptr));
 		return p;
 	}
 
@@ -121,17 +128,25 @@ public:
 	*/
 	void stop();
 
+protected:
+	std::shared_ptr<HttpServerT> server;
+	boost::asio::io_service& io_service;
+
 private:
-	::identt::utils::SharedTable::SharedBool to_stop;
+	bool is_init;
+	::identt::utils::SharedTable::SharedBool to_stop_sync;
 
 	/**
-	* Constructor : private default Constructor
+	* Constructor : private used Constructor
+	*
+	* @param io_service_
+	*   boost::asio::io_service& io service pointer
 	*
 	* @param stptr
-	*   identt::utils::SharedTable::pointer stptr
+	*   identt::utils::SharedTable::pointer sharedtable pointer
 	*
 	*/
-	SyncServer(identt::utils::SharedTable::pointer stptr);
+	SyncServer(boost::asio::io_service& io_service_, identt::utils::SharedTable::pointer stptr);
 
 	/**
 	* SyncFirst : sync data from master first time

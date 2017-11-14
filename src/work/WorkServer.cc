@@ -35,9 +35,6 @@
 #include <crypto/CryptoTraits.hpp>
 #include <query/bin2ascii.h>
 
-#ifndef IDENTT_USE_SEPARATE_LOGDB
-#define IDENTT_USE_SEPARATE_LOGDB 0
-#endif
 
 identt::work::WorkServer::WorkServer(identt::utils::SharedTable::pointer stptr)
 	: identt::utils::ServerBase(stptr)
@@ -57,31 +54,31 @@ const std::string identt::work::WorkServer::GetSection()
 
 const identt::utils::ServerBase::ParamsListT identt::work::WorkServer::GetRequire()
 {
-	return {
-		"datadir",
-		"logdatadir",
-		"cachesize",
-		"logcachesize",
-		"hostseed_ed25519"
-	};
+#ifdef IDENTT_USE_SEPARATE_LOGDB
+	return {"datadir","cachesize","hostseed_ed25519","logdatadir","logcachesize" };
+#else
+	return {"datadir","cachesize","hostseed_ed25519" };
+#endif
 }
 
 
 void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT params)
 {
 
+	if (params.size() != this->GetRequire().size() )
+		throw identt::ConfigException("WorkServer: params and required size mismatch");
+
 	try {
 		std::string datadir = params[0];
-		std::string logdatadir = params[1];
-		std::size_t cachesize = std::stoul(params[2]);
-		std::size_t logcachesize = std::stoul(params[3]);
-		std::string hostseed = params[4];
-
-
-		// validations
+		std::size_t cachesize = std::stoul(params[1]);
+		std::string hostseed = params[2];
 		if (datadir.empty()) throw identt::InitialException("datadir is needed");
-		if (IDENTT_USE_SEPARATE_LOGDB && (logdatadir.empty()))
-			throw identt::InitialException("logdatadir is needed");
+
+#ifdef IDENTT_USE_SEPARATE_LOGDB
+		std::string logdatadir = params[3];
+		std::size_t logcachesize = std::stoul(params[4]);
+		if (logdatadir.empty()) throw identt::InitialException("logdatadir is needed");
+#endif
 
 		// db setup
 		uint64_t last_pkey=0;
@@ -92,13 +89,13 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 		sharedtable->maindb.Set( s.getDB() );
 
 		// logdb
-		if (IDENTT_USE_SEPARATE_LOGDB) {
+#ifdef IDENTT_USE_SEPARATE_LOGDB
 			identt::store::StoreLevel p{NULL};
 			p.Initialize(logdatadir,logcachesize,last_pkey,last_lkey);
 			sharedtable->logdb.Set( p.getDB() );
-		} else {
+#else
 			sharedtable->logdb.Set( s.getDB() );
-		}
+#endif
 
 		// if resets last_lkey
 		sharedtable->logcounter.Set ( (last_lkey>0) ? last_lkey : 1 );
@@ -108,7 +105,7 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 		    ::identt::crypto::CryptoTraits::CreateFromSeed(THREEPID_DEFAULT_ALGO,hostseed);
 
 	} catch (identt::JdException& e) {
-		LOG(INFO) << "WorkServer init failed: " << e.what() << std::endl;
+		DLOG(INFO) << "WorkServer init failed: " << e.what() << std::endl;
 		std::rethrow_exception(std::current_exception());
 	}
 	DLOG(INFO) << "WorkServer LOOP Ends" << std::endl;

@@ -7,7 +7,8 @@ export SRCFIL=$(basename $(cd ${0%/*} 2>>/dev/null ; echo `pwd`/${0##*/}))
 
 export client_secret=${client_secret:="JcEZP9gXd2MYGqAXp2B9eF6KNGz8cDpj"};
 export sid=${sid:="00000"};
-export mxid=${mxid:="@sroycode:matrix.justdis.com"};
+export phone_number=${phone_number:="919999999999"};
+export mxid=${mxid:="@${phone_number}:matrix.justdis.com"};
 
 ## ---- main
 

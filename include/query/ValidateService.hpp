@@ -37,6 +37,10 @@
 #include <store/ValidateService.hpp>
 #include <hrpc/HrpcClient.hpp>
 
+#ifndef IDENTT_SEND_SMS_REQUEST_TOKEN
+#define IDENTT_SEND_SMS_REQUEST_TOKEN
+#endif
+
 namespace identt {
 namespace query {
 
@@ -108,6 +112,7 @@ public:
 					}
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
+					DLOG(INFO) << rtoka.DebugString();
 					// action
 					if (stptr->is_master.Get())
 					{
@@ -118,9 +123,12 @@ public:
 						hclient.SendToMaster(stptr,::identt::hrpc::M_REQUESTTOKEN,&rtoka);
 					}
 
-					// IDENTT_SEND_SMS_REQUEST_TOKEN
+					 IDENTT_SEND_SMS_REQUEST_TOKEN
 
-					LOG(INFO) << "token=\"" <<  rtoka.token() << "\" sid=\"" <<  rtoka.mutable_ssid()->sid() << "\"";
+					LOG(INFO)
+						<< "phone_number=\"" << rtoka.mutable_reqtok()->phone_number() << "\""
+						<< " token=\"" <<  rtoka.token() 
+						<< "\" sid=\"" <<  rtoka.mutable_ssid()->sid() << "\"";
 
 					// aftermath
 					std::string output;
@@ -171,6 +179,8 @@ public:
 
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
+					DLOG(INFO) << rtoka.DebugString();
+
 					// action
 					if (stptr->is_master.Get())
 					{
@@ -181,7 +191,7 @@ public:
 						hclient.SendToMaster(stptr,::identt::hrpc::M_REQUESTTOKEN,&rtoka);
 					}
 
-					// IDENTT_SEND_SMS_REQUEST_TOKEN
+					 IDENTT_SEND_SMS_REQUEST_TOKEN
 
 					LOG(INFO) << "token=\"" <<  rtoka.token() << "\" sid=\"" <<  rtoka.ssid().sid() << "\"";
 

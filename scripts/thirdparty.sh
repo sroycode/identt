@@ -231,24 +231,22 @@ CFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib
 ./configure --enable-static=yes --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
 }
 
-# Building nanomsg git-5eb7320
+# Building nanomsg 1.1.2
 
 function build_nanomsg () {
-local MVERSION=git-5eb7320
+local MVERSION=1.1.2
 local MSOURCEFILE=${IDENTT_TPSRC}/nanomsg-${MVERSION}.tar.gz
 local MWORKDIR=${IDENTT_TEMP}/nanomsg-${MVERSION}
 if [ -f ${IDENTT_SOURCE}/thirdparty/include/nanomsg/nn.h ] ; then echo "nanomsg already installed"; return ; fi
 if [ ! -d ${MWORKDIR} ] ; then
 	cd ${IDENTT_TEMP}
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/nanomsg/nanomsg.git nanomsg-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} nanomsg-${MVERSION}
-	else
-		tar -zxf ${MSOURCEFILE}
+		wget -O ${MSOURCEFILE} "https://github.com/nanomsg/nanomsg/archive/${MVERSION}.tar.gz"
 	fi
-	mkdir -p ${MWORKDIR}/build
+	cd ${IDENTT_TEMP}
+	tar -zxf ${MSOURCEFILE}
 fi
+mkdir -p ${MWORKDIR}/build
 cd ${MWORKDIR}/build
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \

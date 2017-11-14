@@ -37,8 +37,8 @@
 #include "WebServer.hpp"
 #include <query/WebServiceList.hpp>
 
-identt::http::WebServer::WebServer(identt::utils::SharedTable::pointer stptr)
-	: identt::utils::ServerBase(stptr)
+identt::http::WebServer::WebServer(boost::asio::io_service& io_service, identt::utils::SharedTable::pointer stptr)
+	: identt::utils::ServerBase(stptr), io_service(io_service), is_init(false)
 {
 	DLOG(INFO) << "WebServer Created" << std::endl;
 }
@@ -62,22 +62,21 @@ void identt::http::WebServer::init(identt::utils::ServerBase::ParamsListT params
 {
 	if (params.size() != this->GetRequire().size() )
 		throw identt::ConfigException("WebServer: params and required size mismatch");
-	server = std::make_shared<HttpServerT>(
+	server = std::make_shared<HttpServerT>(io_service,
 	             params[0], // host
 	             std::stoul(params[1]) // port
 	         );
 	is_init=true;
 	DLOG(INFO) << "WebServer init 1 here" << std::endl;
-	bool updateflag = false;
 	{
 		IDENTT_WEBSERVICELIST_SCOPE_HTTP
 	}
 	DLOG(INFO) << "WebServer init 2 here" << std::endl;
-	server->start(sharedtable->getIO());
+	server->start();
 }
 
 void identt::http::WebServer::stop()
 {
-	server->stop();
+	if (is_init) server->stop();
 	DLOG(INFO) << "WebServer Stopped" << std::endl;
 }

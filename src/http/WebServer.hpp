@@ -58,15 +58,18 @@ public:
 	/**
 	* create : static construction creates new first time
 	*
+	* @param io_service_
+	*   boost::asio::io_service& io service pointer
+	*
 	* @param stptr
 	*   identt::utils::SharedTable::pointer sharedtable pointer
 	*
 	* @return
 	*   none
 	*/
-	static pointer create(identt::utils::SharedTable::pointer stptr)
+	static pointer create(boost::asio::io_service& io_service_, identt::utils::SharedTable::pointer stptr)
 	{
-		pointer p(new WebServer(stptr));
+		pointer p(new WebServer(io_service_,stptr));
 		return p;
 	}
 
@@ -123,17 +126,22 @@ public:
 
 protected:
 	std::shared_ptr<HttpServerT> server;
+	boost::asio::io_service& io_service;
 
 private:
+	bool is_init;
 
 	/**
 	* Constructor : private used Constructor
+	*
+	* @param io_service_
+	*   boost::asio::io_service& io service pointer
 	*
 	* @param stptr
 	*   identt::utils::SharedTable::pointer sharedtable pointer
 	*
 	*/
-	WebServer(identt::utils::SharedTable::pointer stptr);
+	WebServer(boost::asio::io_service& io_service_, identt::utils::SharedTable::pointer stptr);
 
 };
 } // namespace http

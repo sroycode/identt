@@ -245,10 +245,12 @@ void identt::store::ValidateService::PopulateAddress(::identt::query::RequestTok
 		// check if isd code is there in phone no and matches country
 		if (phone_number.substr(0,1)=="+") phone_number = phone_number.substr(1);
 		else if (phone_number.substr(0,2)=="00") phone_number = phone_number.substr(2);
+#ifdef IDENTT_STORE_ADD_ISD
 		else {
 			address=it->second + phone_number;
 			return; // phone no has no country code so we added it
 		}
+#endif
 		// the else and else if need validation ?
 		if (phone_number.substr(0,it->second.length())!=it->second)
 			throw ::identt::query::SydentException("Number has different country code", M_INVALID_PHONE_NUMBER);
