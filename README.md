@@ -38,8 +38,7 @@ You need to install these tools using standard utils.
 - autoconf automake etc ( for thirdparty tools )
 - icu4c
 - glog and gflags.
-- openssl 1.0.0+ ( for https)
-- libcurl 7.0+ ( for tools)
+- libcurl 7.0+ 
 - httpie for testing
 
 The ones below can be compiled from source if you need,there is a helper `scripts/thirdparty.sh`
