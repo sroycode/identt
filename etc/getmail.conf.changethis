@@ -1,0 +1,13 @@
+[system]
+accesslog = /tmp/logs/identt_mail_access.log
+errorlog = /tmp/logs/identt_mail_error.log
+httphost = http://localhost:9091
+shared_secret = please_copy_the_the_shared_secret_from_identt_conf_here
+
+
+[sms_server]
+IN = http://localhost:9051/sendsms_india
+US = http://localhost:9051/sendsms_usa
+
+[sms_template]
+authtoken = {token} is your One Time Password; Please enter the code to complete the verification process.

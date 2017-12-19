@@ -67,9 +67,16 @@ void identt::store::ValidateService::RequestTokenAction(
 
 	// fetch existing else insert new
 
+	bool validation_expired=false;
 	bool validation_found = valsession_table.GetOne(&valsession,::identt::store::U_VALIDATIONSESSION_MEDIUM_ADDRESS_CLIENTSECRET);
 	if (validation_found) {
-		// nothing
+		// expired session rekindle
+		if (currtime - valsession.mtime() > THREEPID_SESSION_VALID_LIFETIME_MS) {
+			validation_expired=true;
+			valsession.set_mtime( currtime );
+			if (!valsession_table.AddRecord(&valsession,&trans,false))
+				throw ::identt::BadDataException("Cannot Insert vsession");
+		}
 	} else {
 		valsession.set_id( stptr->maincounter.GetNext() );
 		valsession.set_mtime( currtime );
@@ -82,14 +89,9 @@ void identt::store::ValidateService::RequestTokenAction(
 	::identt::store::TokenAuthT tokenauth;
 	tokenauth.set_validation_session( valsession.id() );
 	bool tokenauth_found = tokenauth_table.GetOne(&tokenauth, ::identt::store::U_TOKENAUTH_VALIDATIONSESSION);
-	// generate a new token if send_attempt_number is higher
-	bool generate_token = (!tokenauth_found);
-	if (tokenauth_found) {
-		if (( reqtok->send_attempt() - tokenauth.send_attempt_number() ) >1)
-			throw ::identt::BadDataException("Token out of Sync");
-		if (( tokenauth.send_attempt_number() - reqtok->send_attempt()) ==1)
-			generate_token=true;
-	}
+	// generate token if no tokenauth , validation expired or send_attempt higher
+	bool generate_token = ( (!tokenauth_found) || validation_expired || (reqtok->send_attempt() > tokenauth.send_attempt_number()) );
+
 	if (generate_token) {
 		tokenauth.set_send_attempt_number( reqtok->send_attempt() );
 		// set id for new record

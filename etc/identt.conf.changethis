@@ -1,7 +1,6 @@
 [system]
 accesslog = /tmp/logs/identt_access.log
 errorlog = /tmp/logs/identt_error.log
-
 shared_secret = please_create_a_large_string_here
 baseurl  = https://identt.doesntexist.com
 hostname = identt.doesntexist.com

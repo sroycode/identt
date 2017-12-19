@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file src/store/AccessKeyTable.cc
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,31 +27,42 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  AccessKeyTable.cc :   Implementation for AccessKeyTable  access key
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#include <store/AccessKeyTable.hpp>
+// template class identt::store::StoreTable<identt::store::AccessKeyT>;
 
-#include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
+/**
+* Constructor
+*
+*/
+identt::store::AccessKeyTable::AccessKeyTable( identt::store::AccessKeyTable::dbpointer trydb )
+	: identt::store::AccessKeyTable::AccessKeyTable(
+	trydb,
+	K_ACCESSKEY,
+	{ U_ACCESSKEY_MEDIUM_ADDRESS },
+	{  }
+	)
 
-#include <utils/SharedTable.hpp>
+{}
+/**
+* GetKey: get a secondary key
+*
+*/
+std::string identt::store::AccessKeyTable::GetKey(identt::store::AccessKeyT* record, identt::store::KeyTypeE keytype, bool pre)
+{
 
-#include <async++.h>
-// #define IDENTT_PARALLEL_ONE async::parallel_invoke
-#define IDENTT_PARALLEL_ONE async::spawn
-
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
-
-#include "HttpClient.hpp"
-
-#define IDENTT_POST_TO_SYNAPSE true
-
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+	std::string key;
+	switch (keytype) {
+	default:
+	case K_ACCESSKEY:
+		key = EncodePrimaryKey(PrimaryKey,record->id());
+		break;
+	case U_ACCESSKEY_MEDIUM_ADDRESS : {
+		key = EncodeSecondaryKey<std::string,std::string>(keytype , record->medium(),record->address()  );
+		break;
+	}
+	}
+	return key;
+}

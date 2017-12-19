@@ -41,6 +41,7 @@
 #include <store/PubKeyService.hpp>
 #include <store/ThreePidService.hpp>
 #include <store/ValidateService.hpp>
+#include <store/BlobDataService.hpp>
 #include <store/StoreTrans.hpp>
 
 #include <hrpc/RemoteKeeper.hpp>
@@ -231,6 +232,42 @@ public:
 						// action
 						identt::store::MailSmsService service; //PendingAction
 						service.PendingAction(stptr, &data);
+						// aftermath
+						data.SerializeToString(&output);
+						DLOG(INFO) << request->path;
+						break;
+					}
+					case ::identt::hrpc::M_GETACCESSKEY : {
+						identt::query::GetAccessDataT data;
+						if (!data.ParseFromString( request->content.string() ))
+							throw identt::BadDataException("Bad Protobuf Format");
+						// action
+						identt::store::BlobDataService service; // GetAccessKeyAction
+						service.GetAccessKeyAction(stptr, &data);
+						// aftermath
+						data.SerializeToString(&output);
+						DLOG(INFO) << request->path;
+						break;
+					}
+					case ::identt::hrpc::M_SETBLOBDATA : {
+						identt::query::SetBlobDataT data;
+						if (!data.ParseFromString( request->content.string() ))
+							throw identt::BadDataException("Bad Protobuf Format");
+						// action
+						identt::store::BlobDataService service; // GetBlobDataAction
+						service.SetBlobDataAction(stptr, &data);
+						// aftermath
+						data.SerializeToString(&output);
+						DLOG(INFO) << request->path;
+						break;
+					}
+					case ::identt::hrpc::M_GETBLOBDATA : {
+						identt::query::GetBlobDataT data;
+						if (!data.ParseFromString( request->content.string() ))
+							throw identt::BadDataException("Bad Protobuf Format");
+						// action
+						identt::store::BlobDataService service; // GetBlobDataAction
+						service.GetBlobDataAction(stptr, &data);
 						// aftermath
 						data.SerializeToString(&output);
 						DLOG(INFO) << request->path;

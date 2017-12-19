@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file src/store/BlobStoreTable.cc
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,31 +27,42 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  BlobStoreTable.cc :   Implementation for BlobStoreTable  blob store
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#include <store/BlobStoreTable.hpp>
+// template class identt::store::StoreTable<identt::store::BlobStoreT>;
 
-#include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
+/**
+* Constructor
+*
+*/
+identt::store::BlobStoreTable::BlobStoreTable( identt::store::BlobStoreTable::dbpointer trydb )
+	: identt::store::BlobStoreTable::BlobStoreTable(
+	trydb,
+	K_BLOBSTORE,
+	{ U_BLOBSTORE_KEYID_TAG },
+	{  }
+	)
 
-#include <utils/SharedTable.hpp>
+{}
+/**
+* GetKey: get a secondary key
+*
+*/
+std::string identt::store::BlobStoreTable::GetKey(identt::store::BlobStoreT* record, identt::store::KeyTypeE keytype, bool pre)
+{
 
-#include <async++.h>
-// #define IDENTT_PARALLEL_ONE async::parallel_invoke
-#define IDENTT_PARALLEL_ONE async::spawn
-
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
-
-#include "HttpClient.hpp"
-
-#define IDENTT_POST_TO_SYNAPSE true
-
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+	std::string key;
+	switch (keytype) {
+	default:
+	case K_BLOBSTORE:
+		key = EncodePrimaryKey(PrimaryKey,record->id());
+		break;
+	case U_BLOBSTORE_KEYID_TAG : {
+		key = EncodeSecondaryKey<uint64_t,std::string>(keytype , record->keyid(),record->tag()  );
+		break;
+	}
+	}
+	return key;
+}

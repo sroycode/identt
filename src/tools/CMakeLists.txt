@@ -23,26 +23,21 @@ set(IDENTT_GETMAIL_LIB_DEPS
 	${GFLAGS_LIBRARIES}
 	${Boost_LIBRARIES}
 	${PROTOBUF_LIBRARIES}
-	${Sodium_LIBRARIES}
 	${CURL_LIBRARIES}
 )
 
 add_executable(identt_getmail
 	GetMail.cc
-	../crypto/CryptoBase.cc
-	../crypto/Ed25519.cc
-	../query/JsonElem.cc
+	../utils/CfgFileOptions.cc
 	../query/ProtoJson.cc
-	../query/ProtoJsonSigned.cc
-	../query/ProtoForm.cc
-	../query/SignedJson.cc
+	../query/JsonElem.cc
 )
 target_link_libraries(identt_getmail
 	${IDENTT_GETMAIL_LIB_DEPS}
-	identt_proto
-	identt_crypto
+	identt_proto_mail
 	identt_cpr
 )
+
 set(TOOL_TARGETS ${TOOL_TARGETS} identt_getmail)
 
 # identt_dumpdb

@@ -117,6 +117,18 @@ public:
 				if (status && x.id()>0) std::cout << "case K_LOGNODE:" << std::endl << x.DebugString() << std::endl;
 				break;
 			}
+			case K_ACCESSKEY:	{
+				AccessKeyT x;
+				bool status = x.ParseFromString(it->value().ToString());
+				if (status && x.id()>0) std::cout << "case K_ACCESSKEY:" << std::endl << x.DebugString() << std::endl;
+				break;
+			}
+			case K_BLOBSTORE:	{
+				BlobStoreT x;
+				bool status = x.ParseFromString(it->value().ToString());
+				if (status && x.id()>0) std::cout << "case K_BLOBSTORE:" << std::endl << x.DebugString() << std::endl;
+				break;
+			}
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file include/store/AccessKeyTable.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,31 +27,67 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  AccessKeyTable.hpp :   Headers for AccessKeyTable  access key
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#ifndef _IDENTT_STORE_ACCESS_KEY_TABLE_HPP_
+#define _IDENTT_STORE_ACCESS_KEY_TABLE_HPP_
 
-#include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
+#include "StoreTable.hpp"
 
-#include <utils/SharedTable.hpp>
+namespace identt {
+namespace store {
+class AccessKeyTable : public StoreTable<AccessKeyT> {
+public:
+	using StoreTable<AccessKeyT>::dbpointer;
+	using StoreTable<AccessKeyT>::StoreTable;
+	using StoreTable<AccessKeyT>::MapT;
 
-#include <async++.h>
-// #define IDENTT_PARALLEL_ONE async::parallel_invoke
-#define IDENTT_PARALLEL_ONE async::spawn
+	/**
+	* Constructor
+	*
+	* @param trydb
+	*   dbpointer shared pointer to db
+	*
+	*/
+	AccessKeyTable(dbpointer trydb);
 
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
+	/**
+	* Destructor
+	*
+	*/
+	virtual ~AccessKeyTable() {}
 
-#include "HttpClient.hpp"
+	/**
+	* make noncopyable and remove default
+	*/
 
-#define IDENTT_POST_TO_SYNAPSE true
+	AccessKeyTable() = delete;
+	AccessKeyTable(const std::string, const size_t) = delete;
+	AccessKeyTable(const AccessKeyTable&) = delete;
+	AccessKeyTable& operator=(const AccessKeyTable&) = delete;
 
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+
+protected:
+
+	/**
+	* GetKey: get a key
+	*
+	* @param record
+	*   AccessKeyT* record
+	*
+	* @param keytype
+	*   KeyTypeE key type for index
+	*
+	* @param pre
+	*   bool non unique keys
+	*
+	* @return
+	*   std::string key
+	*/
+	std::string GetKey(AccessKeyT* record, KeyTypeE keytype, bool pre) override;
+
+};
+} // namespace store
+} // namespace identt
+#endif /* _IDENTT_STORE_ACCESS_KEY_TABLE_HPP_ */

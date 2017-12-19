@@ -21,10 +21,15 @@ enum KeyTypeE {
 	K_GLOBALASSOC                                                  = 16;
 	K_VALIDATIONSESSION                                            = 17;
 	K_TOKENAUTH                                                    = 18;
+
+// JD specific
 	K_PARAVION                                                     = 19;
 	K_MAILSENT                                                     = 20;
-	K_LOGNODE                                                      = 21; // must be before K_MAXNODE
-	K_MAXNODE                                                      = 22;
+	K_ACCESSKEY                                                    = 21;
+	K_BLOBSTORE                                                    = 22;
+
+	K_LOGNODE                                                      = 23; // must be before K_MAXNODE
+	K_MAXNODE                                                      = 24;
 
 // Indexes
 	I_NOINDEX                                                      = 50;
@@ -45,6 +50,10 @@ enum KeyTypeE {
 	U_TOKENAUTH_VALIDATIONSESSION                                  = 60;
 
 	U_VALIDATIONSESSION_MEDIUM_ADDRESS_CLIENTSECRET                = 62;
+
+	U_ACCESSKEY_MEDIUM_ADDRESS                                     = 63;
+
+	U_BLOBSTORE_KEYID_TAG                                          = 64;
 
 };
 
@@ -160,6 +169,8 @@ message MyCollectT {
 	repeated GlobalAssocT globalassoc                              =  6;
 	repeated ValidationSessionT validationsession                  =  7;
 	repeated TokenAuthT tokenauth                                  =  8;
+	repeated AccessKeyT accesskey                                  =  9;
+	repeated BlobStoreT blobstore                                  = 10;
 }
 
 message TransItemT {
@@ -210,3 +221,24 @@ message MailSentT {
 
 	bool     notfound                                              = 21;
 }
+
+message AccessKeyT {
+	uint64 id                                                      =  1;
+	string medium                                                  =  2;
+	string address                                                 =  3;
+	string accesskey                                               =  4;
+
+	bool notfound                                                  = 21;
+}
+
+message BlobStoreT {
+	uint64 id                                                      =  1;
+	uint64 keyid                                                   =  2;
+
+	string tag                                                     =  4;
+	bytes  jsondata                                                =  5;
+	bytes  textdata                                                =  6;
+
+	bool notfound                                                  = 21;
+}
+

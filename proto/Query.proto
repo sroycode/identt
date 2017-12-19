@@ -170,3 +170,28 @@ message StoreInviteDataT {
 	InviteResultT invres                                           =  2;
 }
 
+// for accesskey, blobstore
+message AccessBlobT  {
+	string accesskey                                               =  1;
+	string tag                                                     =  2;
+
+	bytes jsondata                                                 =  3;
+	bytes textdata                                                 =  4;
+
+	uint64 ts                                                      =  5;
+
+	bool accessdenied                                              =  6;
+}
+
+message GetAccessDataT {
+	SubmitTokenT subtok                                            =  1;
+	AccessBlobT accessblob                                         =  2;
+}
+
+message GetBlobDataT {
+	AccessBlobT accessblob                                         =  1;
+}
+
+message SetBlobDataT {
+	AccessBlobT accessblob                                         =  1;
+}

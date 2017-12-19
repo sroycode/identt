@@ -14,12 +14,16 @@ set(IDENTT_STORE_SOURCES
 		TokenAuthTable.cc
 		ParAvionTable.cc
 		MailSentTable.cc
+		AccessKeyTable.cc
+		BlobStoreTable.cc
+
 		InviteService.cc
 		LookupService.cc
 		MailSmsService.cc
 		PubKeyService.cc
 		ThreePidService.cc
 		ValidateService.cc
+		BlobDataService.cc
    )
 
 add_library(identt_store STATIC ${IDENTT_STORE_SOURCES})

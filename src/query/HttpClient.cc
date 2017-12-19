@@ -54,12 +54,7 @@ bool ::identt::query::HttpClient::GetDefault(::identt::utils::SharedTable::point
         cpr::Parameters myparams, std::string& returns, bool nothrow)
 {
 	try {
-		auto r = cpr::Get(
-		             cpr::Url{url},
-		             myparams,
-		cpr::Header{
-			{"User-Agent", "Sydent"}
-		});
+		auto r = cpr::Get( cpr::Url{url}, myparams, cpr::Header{ {"User-Agent", "Sydent"} }, cpr::Timeout{3000});
 
 		if (r.status_code != 200)
 			throw identt::BadDataException("Bad HTTP Status for remote");
@@ -86,7 +81,7 @@ bool ::identt::query::HttpClient::PostJson(::identt::utils::SharedTable::pointer
 		cpr::Header{
 			{"Content-Type", "application/json"},
 			{"User-Agent", "Sydent"}
-		});
+		}, cpr::Timeout{3000});
 
 		if (r.status_code != 200)
 			throw identt::BadDataException("Bad HTTP Status for remote");

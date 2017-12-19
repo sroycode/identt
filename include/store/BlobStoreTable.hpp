@@ -1,6 +1,6 @@
 /**
  * @project identt
- * @file include/query/QueryBase.hpp
+ * @file include/store/BlobStoreTable.hpp
  * @author  S Roychowdhury <sroycode AT gmail DOT com>
  * @version 1.0.0
  *
@@ -27,31 +27,67 @@
  *
  * @section DESCRIPTION
  *
- *  QueryBase.hpp :  query base includes
+ *  BlobStoreTable.hpp :   Headers for BlobStoreTable  blob store
  *
  */
-#ifndef _IDENTT_QUERY_QUERYBASE_HPP_
-#define _IDENTT_QUERY_QUERYBASE_HPP_
+#ifndef _IDENTT_STORE_BLOB_STORE_TABLE_HPP_
+#define _IDENTT_STORE_BLOB_STORE_TABLE_HPP_
 
-#include <utils/BaseUtils.hpp>
-#include <query/SydentQuery.hpp> // define on top
+#include "StoreTable.hpp"
 
-#include <utils/SharedTable.hpp>
+namespace identt {
+namespace store {
+class BlobStoreTable : public StoreTable<BlobStoreT> {
+public:
+	using StoreTable<BlobStoreT>::dbpointer;
+	using StoreTable<BlobStoreT>::StoreTable;
+	using StoreTable<BlobStoreT>::MapT;
 
-#include <async++.h>
-// #define IDENTT_PARALLEL_ONE async::parallel_invoke
-#define IDENTT_PARALLEL_ONE async::spawn
+	/**
+	* Constructor
+	*
+	* @param trydb
+	*   dbpointer shared pointer to db
+	*
+	*/
+	BlobStoreTable(dbpointer trydb);
 
-#include <functional>
-#include <boost/algorithm/string.hpp>
-#include "../proto/Query.pb.h"
-#include "../proto/Store.pb.h"
-#include "ServiceBase.hpp"
-#include "ProtoForm.hpp"
-#include "ProtoJson.hpp"
+	/**
+	* Destructor
+	*
+	*/
+	virtual ~BlobStoreTable() {}
 
-#include "HttpClient.hpp"
+	/**
+	* make noncopyable and remove default
+	*/
 
-#define IDENTT_POST_TO_SYNAPSE true
+	BlobStoreTable() = delete;
+	BlobStoreTable(const std::string, const size_t) = delete;
+	BlobStoreTable(const BlobStoreTable&) = delete;
+	BlobStoreTable& operator=(const BlobStoreTable&) = delete;
 
-#endif /* _IDENTT_QUERY_QUERYBASE_HPP_ */
+
+protected:
+
+	/**
+	* GetKey: get a key
+	*
+	* @param record
+	*   BlobStoreT* record
+	*
+	* @param keytype
+	*   KeyTypeE key type for index
+	*
+	* @param pre
+	*   bool non unique keys
+	*
+	* @return
+	*   std::string key
+	*/
+	std::string GetKey(BlobStoreT* record, KeyTypeE keytype, bool pre) override;
+
+};
+} // namespace store
+} // namespace identt
+#endif /* _IDENTT_STORE_BLOB_STORE_TABLE_HPP_ */

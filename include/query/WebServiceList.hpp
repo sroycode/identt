@@ -43,6 +43,7 @@
 #include <query/LookupService.hpp>
 #include <query/InviteService.hpp>
 #include <query/MailSmsService.hpp>
+#include <query/BlobDataService.hpp>
 
 #define IDENTT_WEBSERVICELIST_SCOPE_HTTP \
 		identt::query::NotFoundService<HttpServerT> {sharedtable,server,IDENTT_SERVICE_SCOPE_HTTP}; \
@@ -53,6 +54,7 @@
 		identt::query::PubKeyService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
 		identt::query::LookupService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
 		identt::query::InviteService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
+		identt::query::BlobDataService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP); \
 		identt::query::MailSmsService<HttpServerT>(sharedtable,server,helpquery,IDENTT_SERVICE_SCOPE_HTTP);
 
 #define IDENTT_WEBSERVICELIST_SCOPE_HTTPS \

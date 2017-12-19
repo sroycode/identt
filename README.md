@@ -16,15 +16,15 @@ and should be a drop-in replacement for sydent based on standalone rocksdb
 Supports rudimentary replication. All write queries go to master, read queries are on slave.
 
 Most of the queries closely follow https://matrix.org/docs/spec/identity_service/unstable.html
+One main difference is handling of mails and sms to users is handled by an external program. 
+There are some additional endpoints to store arbitrary data with accesskey.
+See README.EXTRA.md for details
 
-In addition there are some utilities
+In addition there are some utilities 
 
 - identt_keygen is a keypair generator currently only for ed_25519 signing key
 - identt_dumpdb is a db dumper ( dont use in production)
 - identt_getmail is a dummy program to extract mail/sms to send 
-
-One main difference is handling of mails and sms to users is handled by an external program. 
-See README.MAILS.md for details
 
 For replication , the service listens to two ports , you can expose the main port to public, the second port is for
 communication between servers.

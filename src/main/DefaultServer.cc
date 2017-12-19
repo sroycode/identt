@@ -78,7 +78,8 @@ int main(int argc, char *argv[])
 
 
 	if (sodium_init() < 0) {
-		throw identt::InitialException("sodium cannot initialize, exiting...");
+		std::cerr << "sodium cannot initialize, exiting..." << std::endl;
+		exit(1);
 	}
 
 	/** GFlags **/

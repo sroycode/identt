@@ -60,7 +60,6 @@
 #define RAPIDJSON_ASSERT(x)   if(!(x)) throw identt::BadJsonException();
 #include <rapidjson/document.h>
 
-
 #include <query/JsonElem.hpp>
 
 namespace identt {

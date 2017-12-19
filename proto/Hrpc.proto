@@ -17,6 +17,9 @@ enum MasterCmdTypeE {
 	M_GETEPHEMERALVALID                                            =  9;
 	M_STOREINVITE                                                  = 10;
 	M_PENDING                                                      = 11;
+	M_GETACCESSKEY                                                 = 12;
+	M_SETBLOBDATA                                                  = 13;
+	M_GETBLOBDATA                                                  = 14;
 }
 
 enum RemoteCmdTypeE {

@@ -76,7 +76,8 @@ public:
 
 		// Endpoint : POST _identt/identity/api/v1/getmailstosend
 		helpquery->add({scope,"POST _identt/identity/api/v1/getmailstosend", {
-				"params  :  lastid, limit, shared_secret, payload[] ",
+				"params  :  lastid, limit, payload[] ",
+				"Needs shared secret in header.",
 				"This will fetch the mail/sms that need sending.",
 				"If request payload contains items marked done they will be marked deleted",
 				"This is to be used only by an internal program"
@@ -107,6 +108,7 @@ public:
 						throw identt::BadDataException("No Header Shared Secret");
 					if (it->second != stptr->shared_secret.Get())
 						throw identt::BadDataException("Bad Shared Secret");
+					mailq.set_shared_secret(it->second);
 
 					::identt::store::MailSmsService mservice;
 					// action
@@ -122,14 +124,8 @@ public:
 
 					// aftermath
 					std::string output;
-					std::vector<::identt::query::SignatureT> signatures;
+					pb2json(&mailq , output);
 
-					::identt::query::PubKeyT pubkey;
-					// sign
-					pubkey.set_owner(stptr->hostname.Get());
-					pubkey.set_algo(THREEPID_DEFAULT_ALGO);
-					pubkey.set_identifier(THREEPID_DEFAULT_ALGO_ID);
-					mservice.AddSign(stptr,&mailq, &pubkey, output,signatures);
 					this->HttpOKAction(response,request,200,"OK","application/json",output,true);
 				} catch (SydentException& e)
 				{
