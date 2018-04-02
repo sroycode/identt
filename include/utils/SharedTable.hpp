@@ -93,6 +93,9 @@ public:
 	// booleans
 	SharedBool is_master;
 	SharedBool is_ready;
+	SharedBool lookup_requires_key;
+	SharedBool invite_requires_key;
+	SharedBool dont_send_sms;
 
 	/**
 	* make noncopyable

@@ -74,10 +74,11 @@ void identt::store::ValidateService::RequestTokenAction(
 		if (currtime - valsession.mtime() > THREEPID_SESSION_VALID_LIFETIME_MS) {
 			validation_expired=true;
 			valsession.set_mtime( currtime );
-			if (!valsession_table.AddRecord(&valsession,&trans,false))
+			if (!valsession_table.AddRecord(&valsession,&trans,true))
 				throw ::identt::BadDataException("Cannot Insert vsession");
 		}
-	} else {
+	}
+	else {
 		valsession.set_id( stptr->maincounter.GetNext() );
 		valsession.set_mtime( currtime );
 		if (!valsession_table.AddRecord(&valsession,&trans,false))
@@ -97,15 +98,19 @@ void identt::store::ValidateService::RequestTokenAction(
 		// set id for new record
 		if (!tokenauth_found)
 			tokenauth.set_id( stptr->maincounter.GetNext() );
-		std::string tok_str;
-		{
+
+		std::string tok_str = tokenauth.token() ;
+
+		// if new or validation_expired make new token
+		if ( (!tokenauth_found) || validation_expired ) {
 			std::stringstream ss;
 			ss << std::setfill ('1') << std::setw (6) << (currtime % 999999);
 			tok_str = ss.str();
 		}
 		tokenauth.set_token( tok_str );
+
 		// tokenauth.set_send_attempt_number( -1 );
-		if (!tokenauth_table.AddRecord(&tokenauth,&trans,false))
+		if (!tokenauth_table.AddRecord(&tokenauth,&trans,tokenauth_found)) // tokenauth_found is false if new
 			throw ::identt::BadDataException("Cannot Insert tokenauth");
 
 		// create an entry for outgoing
@@ -204,7 +209,7 @@ void identt::store::ValidateService::SubmitTokenAction(
 *
 */
 void identt::store::ValidateService::PopulateAddress(::identt::query::RequestTokenT* reqtok,
-	const std::string& medium, std::string& address)
+        const std::string& medium, std::string& address)
 {
 	if (medium=="email") {
 		address=reqtok->email();
@@ -212,31 +217,32 @@ void identt::store::ValidateService::PopulateAddress(::identt::query::RequestTok
 		if (address.length()<5)
 			throw ::identt::query::SydentException("Invalid Email", M_INVALID_EMAIL);
 		return;
-	} else if (medium=="msisdn") {
+	}
+	else if (medium=="msisdn") {
 		std::string country = reqtok->country();
 		std::string phone_number = address=reqtok->phone_number();
 		if (phone_number.length()<5)
 			throw ::identt::query::SydentException("Invalid Phone No", M_INVALID_PHONE_NUMBER);
-/**
-		// if no country code try detecting it from phone no
-		if (country.length()==0) {
-			// normalize for isd containing nos
-			if (phone_number.substr(0,1)=="+") phone_number = phone_number.substr(1);
-			else if (phone_number.substr(0,2)=="00") phone_number = phone_number.substr(2);
-			else throw ::identt::query::SydentException("cannot detect country code", M_INVALID_PHONE_NUMBER);
+		/**
+				// if no country code try detecting it from phone no
+				if (country.length()==0) {
+					// normalize for isd containing nos
+					if (phone_number.substr(0,1)=="+") phone_number = phone_number.substr(1);
+					else if (phone_number.substr(0,2)=="00") phone_number = phone_number.substr(2);
+					else throw ::identt::query::SydentException("cannot detect country code", M_INVALID_PHONE_NUMBER);
 
-			// check if in our list
-			// dont know if this is a good idea, usa canada share id codes
-			for (const auto& p : identt::query::ValidIsdCodes ) {
-				if (phone_number.substr(0,p.second.length())==p.second) {
-					reqtok->set_country(p.first);
-					address=phone_number;
-					return;
+					// check if in our list
+					// dont know if this is a good idea, usa canada share id codes
+					for (const auto& p : identt::query::ValidIsdCodes ) {
+						if (phone_number.substr(0,p.second.length())==p.second) {
+							reqtok->set_country(p.first);
+							address=phone_number;
+							return;
+						}
+					}
+					throw ::identt::query::SydentException("cannot detect country code", M_INVALID_PHONE_NUMBER);
 				}
-			}
-			throw ::identt::query::SydentException("cannot detect country code", M_INVALID_PHONE_NUMBER);
-		}
-*/
+		*/
 		if (country.length()!=2)
 			throw ::identt::query::SydentException("Only 2 letter country code supported", M_INVALID_PHONE_NUMBER);
 		// now country code

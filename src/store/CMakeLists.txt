@@ -24,6 +24,7 @@ set(IDENTT_STORE_SOURCES
 		ThreePidService.cc
 		ValidateService.cc
 		BlobDataService.cc
+		AccessKeyService.cc
    )
 
 add_library(identt_store STATIC ${IDENTT_STORE_SOURCES})

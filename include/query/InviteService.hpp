@@ -36,6 +36,7 @@
 #include <query/QueryBase.hpp>
 #include <hrpc/HrpcClient.hpp>
 #include <store/InviteService.hpp>
+#include <store/AccessKeyService.hpp>
 
 namespace identt {
 namespace query {
@@ -81,6 +82,7 @@ public:
 				" address (string, required): The email address or msisdn of the invited user.",
 				" room_id (string, required): The Matrix room ID to which the user is  invited.",
 				" sender (string, required): The matrix user ID of the inviting user.",
+				" accesskey (string, required): if invite_requires_accesskey is set."
 				"An arbitrary number of other parameters may also be specified."
 			}
 		});
@@ -104,6 +106,20 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
+
+					// if accesskey is shared_secret it is server request, else check
+					if (stptr->invite_requires_key.Get()) {
+						bool is_server_query = false;
+						auto it=request->header.find("Shared-Secret");
+						if (it!=request->header.end()) {
+							is_server_query = (it->second == stptr->shared_secret.Get());
+						}
+						if (!is_server_query ) {
+							::identt::store::AccessKeyService aservice;
+							aservice.VerifyAccessKeyAction(stptr, inv.mutable_invqry()->accesskey());
+						}
+					}
+
 					if (stptr->is_master.Get())
 					{
 						identt::store::InviteService storeinvite;

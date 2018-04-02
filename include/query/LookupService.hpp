@@ -34,6 +34,7 @@
 #define _IDENTT_QUERY_LOOKUP_SERVICE_HPP_
 
 #include <query/QueryBase.hpp>
+#include <store/AccessKeyService.hpp>
 #include <store/LookupService.hpp>
 
 // #include <rapidjson/rapidjson.h>
@@ -82,7 +83,8 @@ public:
 				"Look up the Matrix user ID for a 3pid.",
 				"query parameters: medium, address",
 				"medium  Required. The literal string email.",
-				"address  Required. The email address being looked up."
+				"address  Required. The email address being looked up.",
+				"accesskey Required if lookup_requires_accesskey is set."
 			}
 		});
 
@@ -105,6 +107,20 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
+
+					// if accesskey is shared_secret it is server request, else check
+					if (stptr->lookup_requires_key.Get()) {
+						bool is_server_query = false;
+						auto it=request->header.find("Shared-Secret");
+						if (it!=request->header.end()) {
+							is_server_query = (it->second == stptr->shared_secret.Get());
+						}
+						if (!is_server_query ) {
+							::identt::store::AccessKeyService aservice;
+							aservice.VerifyAccessKeyAction(stptr, lact.mutable_query()->accesskey());
+						}
+					}
+
 					::identt::store::LookupService lservice;
 					lservice.LookupAction(stptr, &lact);
 
@@ -149,7 +165,8 @@ public:
 				"This is the GET version of lookup",
 				"query parameters: medium, address",
 				"medium  Required. The literal string email.",
-				"address  Required. The email address being looked up."
+				"address  Required. The email address being looked up.",
+				"accesskey Required if lookup_requires_accesskey is set."
 			}
 		});
 
@@ -166,6 +183,20 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
+
+					// if accesskey is shared_secret it is server request, else check
+					if (stptr->lookup_requires_key.Get()) {
+						bool is_server_query = false;
+						auto it=request->header.find("Shared-Secret");
+						if (it!=request->header.end()) {
+							is_server_query = (it->second == stptr->shared_secret.Get());
+						}
+						if (!is_server_query ) {
+							::identt::store::AccessKeyService aservice;
+							aservice.VerifyAccessKeyAction(stptr, lact.mutable_query()->accesskey());
+						}
+					}
+
 					::identt::store::LookupService lservice;
 					lservice.LookupAction(stptr, &lact);
 
@@ -208,7 +239,8 @@ public:
 				"Look up the Matrix user ID for a list of 3pid.",
 				"query parameters: list of {medium, address}",
 				"medium  Required. The literal string email.",
-				"address  Required. The email address being looked up."
+				"address  Required. The email address being looked up.",
+				"accesskey Required if lookup_requires_accesskey is set."
 			}
 		});
 
@@ -232,6 +264,20 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// action
+
+					// if accesskey is shared_secret it is server request, else check
+					if (stptr->lookup_requires_key.Get()) {
+						bool is_server_query = false;
+						auto it=request->header.find("Shared-Secret");
+						if (it!=request->header.end()) {
+							is_server_query = (it->second == stptr->shared_secret.Get());
+						}
+						if (!is_server_query ) {
+							::identt::store::AccessKeyService aservice;
+							aservice.VerifyAccessKeyAction(stptr, blact.mutable_query()->accesskey());
+						}
+					}
+
 					::identt::store::LookupService lservice;
 					lservice.BulkLookupAction(stptr, &blact);
 					std::string instring;

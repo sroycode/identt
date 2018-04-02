@@ -57,6 +57,7 @@ message PubKeyT {
 message LookupQueryT {
 	string medium                                                  =  1;
 	string address                                                 =  2;
+	string accesskey                                               =  3;
 }
 
 message LookupResultT {
@@ -70,6 +71,7 @@ message LookupResultT {
 
 message BulkLookupQueryT {
 	repeated LookupQueryT threepids                                =  1;
+	string accesskey                                               =  3;
 }
 
 message BulkLookupResultT {
@@ -111,6 +113,7 @@ message InviteQueryT {
 	string address                                                 =  2;
 	string room_id                                                 =  3;
 	string sender                                                  =  4;
+	string accesskey                                               =  5;
 }
 
 message PubKeyRetT {

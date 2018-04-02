@@ -7,6 +7,9 @@
 - baseurl : base URL to append to callback to this instance, this may be load-balanced/proxied and ssl offloading might happen external
 - hostname : server host name
 - shared_secret : key to access _identt/ functions
+- lookup_requires_key : if set to >0 lookup function needs accesskey
+- invite_requires_key : if set to >0 invite function needs accesskey
+- dont_send_sms : if >0 sms is not sent 
 
 ## Section work
 

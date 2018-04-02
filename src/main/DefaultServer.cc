@@ -153,6 +153,18 @@ int main(int argc, char *argv[])
 		if (baseurl.empty()) throw identt::InitialException("baseurl is needed");
 		stptr->baseurl.Set( baseurl );
 
+		// lookup_requires_key
+		int lookup_requires_key = MyCFG->Find<int>(IDENTT_DEFAULT_STRN_SYSTEM, "lookup_requires_key", true); // no throw
+		stptr->lookup_requires_key.Set( lookup_requires_key>0 );
+
+		// invite_requires_key
+		int invite_requires_key = MyCFG->Find<int>(IDENTT_DEFAULT_STRN_SYSTEM, "invite_requires_key", true); // no throw
+		stptr->invite_requires_key.Set( invite_requires_key>0 );
+
+		// dont_send_sms
+		int dont_send_sms = MyCFG->Find<int>(IDENTT_DEFAULT_STRN_SYSTEM, "dont_send_sms", true); // no throw
+		stptr->dont_send_sms.Set( dont_send_sms>0 );
+
 
 		/** Workserver Params OK */
 		for (auto& p : wks_params) p=MyCFG->Find<std::string>(wks_section,p);
