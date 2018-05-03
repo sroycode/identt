@@ -47,6 +47,7 @@
 #define THREEPID_DEFAULT_ALGO_WITH_ID THREEPID_DEFAULT_ALGO ":" THREEPID_DEFAULT_ALGO_ID
 #define THREEPID_SESSION_VALID_LIFETIME_MS 3 * 24 * 60 * 60 * 1000
 
+#define BULK_LOOKUP_CHUNK_SIZE 100
 namespace identt {
 class JdException : public std::exception {
 protected:

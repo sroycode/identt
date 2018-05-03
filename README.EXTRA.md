@@ -30,11 +30,14 @@
 
 - Query requires accesskey if lookup_requires_key is set in config 
 - Server to server queries then need to set Shared-Secret in header ( not documented in help section)
+- If lookup_uses_local is greater than zero in config localassoc is used for lookups
 
 ## EndPoint _matrix/identity/api/v1/bulk_lookup (changed)
 
 - Query requires accesskey if lookup_requires_key is set in config 
 - Server to server queries then need to set Shared-Secret in header ( not documented in help section)
+- if bulk_parallel_lookups is greater than 0 then parallel lookups are done for data
+- If lookup_uses_local is greater than zero in config localassoc is used for lookups
 
 ## EndPoint _matrix/identity/api/v1/store-invite (changed)
 

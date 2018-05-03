@@ -31,19 +31,56 @@
  *
  */
 
+#include <async++.h>
+
 #include <store/LookupService.hpp>
 
 #include <query/bin2ascii.h>
-#include <query/SignedJson.hpp> // includes QueryBase
 
 #include <store/GlobalAssocTable.hpp>
-#include <store/TokenAuthTable.hpp>
+#include <store/LocalAssocTable.hpp>
 
 /**
-* LookupAction : Service Endpoint Lookup private
+* LookupAction : Service Endpoint Lookup
 *
 */
 void identt::store::LookupService::LookupAction(
+    ::identt::utils::SharedTable::pointer stptr,
+    ::identt::query::LookupDataT* lact)
+{
+	bool lookup_uses_local = stptr->lookup_uses_local.Get();
+	if (lookup_uses_local)
+		this->LookupLocal(stptr,lact->mutable_query(),lact->mutable_result());
+	else
+		this->LookupGlobal(stptr,lact->mutable_query(),lact->mutable_result());
+}
+
+/**
+* BulkLookupAction : Service Endpoint Lookup
+*
+*/
+void identt::store::LookupService::BulkLookupAction(
+    ::identt::utils::SharedTable::pointer stptr,
+    ::identt::query::BulkLookupDataT* blact)
+{
+	::identt::query::BulkLookupQueryT* query = blact->mutable_query();
+	::identt::query::BulkLookupResultT* result = blact->mutable_result();
+
+	bool lookup_uses_local = stptr->lookup_uses_local.Get();
+
+	// globalassoc
+	size_t s_size = query->threepids_size();
+	if (lookup_uses_local)
+		this->BulkLookupLocal(stptr,blact,0,s_size-1);
+	else
+		this->BulkLookupGlobal(stptr,blact,0,s_size-1);
+}
+
+/**
+* LookupGlobal : Service Endpoint Lookup private
+*
+*/
+void identt::store::LookupService::LookupGlobal(
     ::identt::utils::SharedTable::pointer stptr,
     ::identt::query::LookupQueryT* query,
     ::identt::query::LookupResultT* result)
@@ -74,32 +111,128 @@ void identt::store::LookupService::LookupAction(
 }
 
 /**
-* LookupAction : Service Endpoint Lookup
+* BulkLookupGlobal : Bulk Lookup Implementation
 *
 */
-void identt::store::LookupService::LookupAction(
-    ::identt::utils::SharedTable::pointer stptr,
-    ::identt::query::LookupDataT* lact)
+void identt::store::LookupService::BulkLookupGlobal(
+    ::identt::utils::SharedTable::pointer stptr, ::identt::query::BulkLookupDataT* blact, size_t start, size_t end)
 {
-	this->LookupAction(stptr,lact->mutable_query(),lact->mutable_result());
+	// globalassoc
+	::identt::store::GlobalAssocTable globalassoc_table{stptr->maindb.Get()};
+
+	::identt::store::GlobalAssocT globalassoc;
+	::identt::store::GlobalAssocTable::MapT globalassoc_map;
+
+	::identt::query::BulkLookupQueryT* query = blact->mutable_query();
+	::identt::query::BulkLookupResultT* result = blact->mutable_result();
+
+	size_t total = query->threepids_size();
+
+	if (start >= total || end >= total || start > end ) return;
+
+	for (auto i=start; i<=end; ++i) {
+		globalassoc.Clear();
+		globalassoc.set_medium( query->mutable_threepids(i)->medium() );
+		globalassoc.set_address( query->mutable_threepids(i)->address() );
+		bool globalassoc_found = globalassoc_table.GetMany(
+		                             &globalassoc,&globalassoc_map,
+		                             ::identt::store::I_GLOBALASSOC_MEDIUM_ADDRESS,
+		                             0,1
+		                         );
+	}
+
+	for (auto it= globalassoc_map.begin(); it!=globalassoc_map.end(); ++it) {
+		it->second.Swap(&globalassoc);
+		::identt::query::LookupResultT one_result;
+		one_result.set_address( globalassoc.address() );
+		one_result.set_medium( globalassoc.medium() );
+		one_result.set_mxid( globalassoc.mxid() );
+		one_result.set_not_after( globalassoc.not_after() );
+		one_result.set_not_before( globalassoc.not_before() );
+		one_result.set_ts( globalassoc.ts() );
+		if (one_result.mutable_mxid()->length()>0) {
+			std::lock_guard<std::mutex> lock(read_mutex);
+			one_result.Swap(result->add_threepids());
+		}
+	}
 }
 
 /**
-* BulkLookupAction : Service Endpoint Lookup
+* LookupLocal : Lookup from LocalAssoc private
 *
 */
-void identt::store::LookupService::BulkLookupAction(
+void identt::store::LookupService::LookupLocal(
     ::identt::utils::SharedTable::pointer stptr,
-    ::identt::query::BulkLookupDataT* blact)
+    ::identt::query::LookupQueryT* query,
+    ::identt::query::LookupResultT* result)
 {
+	// uint64_t expires = THREEPID_SESSION_VALID_LIFETIME_MS + currtime;
+	// localassoc
+	std::string data;
+	std::string medium_address = stptr->dbcache->EncodeSecondaryKey<std::string,std::string>(
+	                                 ::identt::store::U_LOCALASSOC_MEDIUM_ADDRESS,
+	                                 query->medium(),query->address() );
+
+	bool stat = stptr->dbcache->GetAssoc(medium_address,data);
+	if (!stat) return;
+	::identt::store::LocalAssocT localassoc;
+	stat = localassoc.ParseFromString(data);
+	if (!stat) return;
+
+	result->set_address( localassoc.address() );
+	result->set_medium( localassoc.medium() );
+	result->set_mxid( localassoc.mxid() );
+	result->set_not_after( localassoc.not_after() );
+	result->set_not_before( localassoc.not_before() );
+	result->set_ts( localassoc.ts() );
+}
+
+/**
+* BulkLookupLocal : Bulk Lookup Implementation with LocalAssoc
+*
+*/
+void identt::store::LookupService::BulkLookupLocal(
+    ::identt::utils::SharedTable::pointer stptr, ::identt::query::BulkLookupDataT* blact, size_t start, size_t end)
+{
+	// localassoc
+	::identt::store::LocalAssocTable localassoc_table{stptr->maindb.Get()};
+
+	::identt::store::LocalAssocT localassoc;
+	::identt::store::LocalAssocTable::MapT localassoc_map;
+
 	::identt::query::BulkLookupQueryT* query = blact->mutable_query();
 	::identt::query::BulkLookupResultT* result = blact->mutable_result();
-	// globalassobc
-	for (auto i=0; i<query->threepids_size(); ++i) {
+
+	size_t total = query->threepids_size();
+
+	if (start >= total || end >= total || start > end ) return;
+
+	for (auto i=start; i<=end; ++i) {
+		std::string data;
+		std::string medium_address = stptr->dbcache->EncodeSecondaryKey<std::string,std::string>(
+		                                 ::identt::store::U_LOCALASSOC_MEDIUM_ADDRESS,
+		                                 query->mutable_threepids(i)->medium(),
+		                                 query->mutable_threepids(i)->address() );
+		if ( ! stptr->dbcache->GetAssoc(medium_address,data) ) continue;
+		localassoc.Clear();
+		if ( localassoc.ParseFromString(data) ) {
+			localassoc_map[localassoc.id()]=localassoc;
+		}
+	}
+
+	for (auto it= localassoc_map.begin(); it!=localassoc_map.end(); ++it) {
+		it->second.Swap(&localassoc);
 		::identt::query::LookupResultT one_result;
-		this->LookupAction(stptr,query->mutable_threepids(i),&one_result);
-		if (one_result.mutable_mxid()->length()>0)
+		one_result.set_address( localassoc.address() );
+		one_result.set_medium( localassoc.medium() );
+		one_result.set_mxid( localassoc.mxid() );
+		one_result.set_not_after( localassoc.not_after() );
+		one_result.set_not_before( localassoc.not_before() );
+		one_result.set_ts( localassoc.ts() );
+		if (one_result.mutable_mxid()->length()>0) {
+			std::lock_guard<std::mutex> lock(read_mutex);
 			one_result.Swap(result->add_threepids());
+		}
 	}
 }
 

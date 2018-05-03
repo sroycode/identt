@@ -165,6 +165,10 @@ int main(int argc, char *argv[])
 		int dont_send_sms = MyCFG->Find<int>(IDENTT_DEFAULT_STRN_SYSTEM, "dont_send_sms", true); // no throw
 		stptr->dont_send_sms.Set( dont_send_sms>0 );
 
+		// lookup_uses_local
+		size_t lookup_uses_local = MyCFG->Find<size_t>(IDENTT_DEFAULT_STRN_SYSTEM, "lookup_uses_local", true); // no throw
+		stptr->lookup_uses_local.Set( lookup_uses_local >0 );
+
 
 		/** Workserver Params OK */
 		for (auto& p : wks_params) p=MyCFG->Find<std::string>(wks_section,p);

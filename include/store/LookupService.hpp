@@ -33,8 +33,9 @@
 #ifndef _IDENTT_STORE_LOOKUP_SERVICE_HPP_
 #define _IDENTT_STORE_LOOKUP_SERVICE_HPP_
 
-#include <query/SignedJson.hpp> // includes QueryBase
+#include <query/SignedJson.hpp>
 #include <store/StoreBase.hpp>
+#include <mutex>
 
 namespace identt {
 namespace store {
@@ -75,26 +76,88 @@ public:
 	    ::identt::query::BulkLookupDataT* blact);
 
 private:
+	/** mutex to handle parallel reads */
+	std::mutex read_mutex;
+
 	/**
-	* LookupAction : Service Endpoint Lookup
+	* LookupGlobal : Service Lookup implementation with GlobalAssoc
 	*
 	* @param stptr
 	*   ::identt::utils::SharedTable::pointer stptr
 	*
 	* @param query
-	*   ::identt::query::LookupQueryT*  query
-	*
-	* @param result
-	*   ::identt::query::LookupResult* result
+	*   ::identt::query::BulkLookupDataT*  blact
 	*
 	* @return
 	*   none
 	*/
-	void LookupAction(
+	void LookupGlobal(
 	    ::identt::utils::SharedTable::pointer stptr,
 	    ::identt::query::LookupQueryT* query,
 	    ::identt::query::LookupResultT* result);
 
+	/**
+	* BulkLookupGlobal : Bulk Lookup Implementation with GlobalAssoc
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param query
+	*   ::identt::query::BulkLookupDataT*  blact
+	*
+	* @param start
+	*   size_t start of lookup
+	*
+	* @param end
+	*   size_t end of lookup
+	*
+	* @return
+	*   none
+	*/
+	void BulkLookupGlobal(
+	    ::identt::utils::SharedTable::pointer stptr,
+	    ::identt::query::BulkLookupDataT* blact,
+	    size_t start, size_t end);
+
+	/**
+	* LookupLocal : Service Lookup implementation with LocalAssoc
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param query
+	*   ::identt::query::BulkLookupDataT*  blact
+	*
+	* @return
+	*   none
+	*/
+	void LookupLocal(
+	    ::identt::utils::SharedTable::pointer stptr,
+	    ::identt::query::LookupQueryT* query,
+	    ::identt::query::LookupResultT* result);
+
+	/**
+	* BulkLookupLocal : Bulk Lookup Implementation with LocalAssoc
+	*
+	* @param stptr
+	*   ::identt::utils::SharedTable::pointer stptr
+	*
+	* @param query
+	*   ::identt::query::BulkLookupDataT*  blact
+	*
+	* @param start
+	*   size_t start of lookup
+	*
+	* @param end
+	*   size_t end of lookup
+	*
+	* @return
+	*   none
+	*/
+	void BulkLookupLocal(
+	    ::identt::utils::SharedTable::pointer stptr,
+	    ::identt::query::BulkLookupDataT* blact,
+	    size_t start, size_t end);
 
 };
 } // namespace query

@@ -52,6 +52,9 @@ void ::identt::store::StoreTrans::StoreTrans::Commit(::identt::utils::SharedTabl
 		bool status = hclient.SendToRemote(stptr,lastslave,::identt::hrpc::R_BUFFTRANS,trans,true);
 		if (!status) stptr->lastslave.Set("");
 	}
+	// add to cache if set
+	if (stptr->lookup_uses_local.Get() )
+		stptr->dbcache->AddToCache(trans);
 }
 
 /**
@@ -82,7 +85,8 @@ bool ::identt::store::StoreTrans::StoreTrans::CommitData(::identt::utils::Shared
 	for (auto i=0; i<trans->item_size(); ++i) {
 		if (! trans->mutable_item(i)->to_del() ) {
 			batch.Put(trans->mutable_item(i)->key(), trans->mutable_item(i)->value() );
-		} else {
+		}
+		else {
 			batch.Delete(trans->mutable_item(i)->key());
 		}
 	}

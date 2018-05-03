@@ -5,7 +5,6 @@ Matrix Identity Server
 ## Code is WIP
 
 This code is work in progress and is to change frequently.
-Major change: server-to-server port is now separate from matrix port
 
 ## What is it
 
@@ -118,6 +117,13 @@ phone_number="919999999999" token="512048" sid="1112" sh ../test/test_validate_m
 phone_number="919999999999" token="512048" sid="1112" sh ../test/test_3pid_getValidated3pid.sh 
 phone_number="919999999999" token="512048" sid="1112" sh ../test/test_3pid_bind.sh 
 ```
+
+## Changelog
+
+- 0.46: enabled optional local lookups query from cache
+- 0.45: enabled optional local lookups query
+- 0.44: enabled optional parallel bulk query
+
 
 ## Acknowledgements
 

@@ -231,28 +231,6 @@ CFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib
 ./configure --enable-static=yes --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
 }
 
-# Building nanomsg 1.1.2
-
-function build_nanomsg () {
-local MVERSION=1.1.2
-local MSOURCEFILE=${IDENTT_TPSRC}/nanomsg-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/nanomsg-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/nanomsg/nn.h ] ; then echo "nanomsg already installed"; return ; fi
-if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "https://github.com/nanomsg/nanomsg/archive/${MVERSION}.tar.gz"
-	fi
-	cd ${IDENTT_TEMP}
-	tar -zxf ${MSOURCEFILE}
-fi
-mkdir -p ${MWORKDIR}/build
-cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
-..  && make && make install
-}
-
 # Building googletest git-f1a87d7
 
 function build_googletest () {
@@ -264,7 +242,9 @@ if [ ! -d ${MWORKDIR} ] ; then
 	cd ${IDENTT_TEMP}
 	if [ ! -f ${MSOURCEFILE} ] ; then
 		git clone https://github.com/google/googletest.git googletest-${MVERSION}
+		cd ${MWORKDIR}
 		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
+		cd ${IDENTT_TEMP}
 		tar -zcf ${MSOURCEFILE} googletest-${MVERSION}
 	else
 		tar -zxf ${MSOURCEFILE}
@@ -277,115 +257,6 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdpa
 ..  && make && make install
 }
 
-# Building libzmq git-44f96a3
-
-function build_libzmq () {
-local MVERSION=git-44f96a3
-local MSOURCEFILE=${IDENTT_TPSRC}/libzmq-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/libzmq-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/zmq.h ] ; then
-	if [ $# -eq 0 ] ; then echo "libzmq already installed"; fi
-	return;
-fi
-if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/zeromq/libzmq.git libzmq-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} libzmq-${MVERSION}
-	else
-		tar -zxf ${MSOURCEFILE}
-	fi
-	mkdir -p ${MWORKDIR}/build
-fi
-cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake \
-	-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
-	-DWITH_LIBSODIUM=On \
-	..  && make && make install
-}
-
-# Building azmq git-d3171f7
-
-function build_azmq () {
-build_libzmq 1
-local MVERSION=git-d3171f7
-local MSOURCEFILE=${IDENTT_TPSRC}/azmq-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/azmq-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/azmq/context.hpp ] ; then
-	if [ $# -eq 0 ] ; then echo "azmq already installed"; fi
-	return;
-fi
-if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/zeromq/azmq.git azmq-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} azmq-${MVERSION}
-	else
-		tar -zxf ${MSOURCEFILE}
-	fi
-	mkdir -p ${MWORKDIR}/build
-fi
-cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
-}
-
-
-# Building zmqpp git-89dc262
-
-function build_zmqpp () {
-build_libzmq 1
-local MVERSION=git-89dc262
-local MSOURCEFILE=${IDENTT_TPSRC}/zmqpp-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/zmqpp-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/zmqpp/zmqpp.hpp ] ; then
-	if [ $# -eq 0 ] ; then echo "zmqpp already installed"; fi
-	return;
-fi
-if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/zeromq/zmqpp.git zmqpp-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} zmqpp-${MVERSION}
-	else
-		tar -zxf ${MSOURCEFILE}
-	fi
-	mkdir -p ${MWORKDIR}/build
-fi
-cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
-}
-
-# Building czmq git-364bab5
-
-function build_czmq () {
-build_libzmq 1
-build_rocks_compression_lz4 1
-local MVERSION=git-364bab5
-local MSOURCEFILE=${IDENTT_TPSRC}/czmq-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/czmq-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/czmq.h ] ; then
-	if [ $# -ne 0 ] ; then echo "czmq already installed"; fi
-	return;
-fi
-if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/zeromq/czmq.git czmq-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} czmq-${MVERSION}
-	else
-		tar -zxf ${MSOURCEFILE}
-	fi
-	mkdir -p ${MWORKDIR}/build
-fi
-cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
-}
-
 ### Control ####
 
 build_gperftools
@@ -395,9 +266,4 @@ build_rocks_compression
 #build_leveldb
 build_rocksdb
 build_sodium
-#build_nanomsg
 #build_googletest
-#build_libzmq
-#build_czmq
-#build_azmq
-#build_zmqpp

@@ -32,9 +32,11 @@
  */
 #include "WorkServer.hpp"
 #include <store/StoreLevel.hpp>
+#include <store/StoreCache.hpp>
 #include <crypto/CryptoTraits.hpp>
 #include <query/bin2ascii.h>
 
+#include <store/LocalAssocTable.hpp>
 
 identt::work::WorkServer::WorkServer(identt::utils::SharedTable::pointer stptr)
 	: identt::utils::ServerBase(stptr)
@@ -90,11 +92,11 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 
 		// logdb
 #ifdef IDENTT_USE_SEPARATE_LOGDB
-			identt::store::StoreLevel p{NULL};
-			p.Initialize(logdatadir,logcachesize,last_pkey,last_lkey);
-			sharedtable->logdb.Set( p.getDB() );
+		identt::store::StoreLevel p {NULL};
+		p.Initialize(logdatadir,logcachesize,last_pkey,last_lkey);
+		sharedtable->logdb.Set( p.getDB() );
 #else
-			sharedtable->logdb.Set( s.getDB() );
+		sharedtable->logdb.Set( s.getDB() );
 #endif
 
 		// if resets last_lkey
@@ -104,7 +106,32 @@ void identt::work::WorkServer::init(identt::utils::ServerBase::ParamsListT param
 		sharedtable->keyring[ THREEPID_DEFAULT_ALGO_WITH_ID ] =
 		    ::identt::crypto::CryptoTraits::CreateFromSeed(THREEPID_DEFAULT_ALGO,hostseed);
 
-	} catch (identt::JdException& e) {
+		// populate cache
+		if ( sharedtable->lookup_uses_local.Get() ) {
+			LOG(INFO) << "Using Cache ";
+
+			// if temp
+			::identt::store::LocalAssocTable sth_table(sharedtable->maindb.Get());
+			::identt::store::LocalAssocT sth;
+
+			DLOG(INFO) << "Using Cache table ok";
+			size_t addc=0;
+			sth_table.ScanTable(0,UINT_LEAST64_MAX,[this,&addc](::identt::store::LocalAssocT* record) {
+				DLOG(INFO) << "Using Cache loop start: " << addc;
+				std::string medium_address = this->sharedtable->dbcache->EncodeSecondaryKey<std::string,std::string>(
+				                                 ::identt::store::U_LOCALASSOC_MEDIUM_ADDRESS,
+				                                 record->medium(),record->address() );
+				std::string value;
+				record->SerializeToString(&value);
+				this->sharedtable->dbcache->SetAssoc(medium_address, value);
+				DLOG(INFO) << "Using Cache loop done: " << addc;
+				++addc;
+			});
+			DLOG(INFO) << "Cache Added" << addc;
+		}
+
+	}
+	catch (identt::JdException& e) {
 		DLOG(INFO) << "WorkServer init failed: " << e.what() << std::endl;
 		std::rethrow_exception(std::current_exception());
 	}

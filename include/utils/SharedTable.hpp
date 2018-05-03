@@ -43,6 +43,7 @@
 #include <utils/SharedMap.hpp>
 
 #include <store/StoreLevel.hpp>
+#include <store/StoreCache.hpp>
 #include <crypto/CryptoBase.hpp>
 
 #define IDENTT_CURRTIME_MS std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
@@ -59,12 +60,15 @@ public:
 	using SharedString = SharedObject<std::string>;
 	using SharedDBPointer = SharedObject<dbpointer>;
 	using SharedBool = SharedObject<bool>;
+	using SharedInt = SharedObject<size_t>;
 
 	using SharedRemote = SharedPairMap<std::string,uint64_t,uint64_t>;
 	using RemoteMapT = SharedPairMap<std::string,uint64_t,uint64_t>::PairMapT;
 
 	using SharedTrans = SharedMap<uint64_t,std::string>;
 	using KeyRingT = std::unordered_map<std::string,std::shared_ptr<identt::crypto::CryptoBase> >;
+
+	using SharedCache = identt::store::StoreCache::pointer;
 
 	/**
 	* public stable to be used directly , never updated after init by code
@@ -76,6 +80,9 @@ public:
 
 	// map of shared transactions
 	SharedTrans transactions;
+
+	// shared cache
+	SharedCache dbcache;
 
 	// string shared
 	SharedString master;
@@ -96,6 +103,7 @@ public:
 	SharedBool lookup_requires_key;
 	SharedBool invite_requires_key;
 	SharedBool dont_send_sms;
+	SharedBool lookup_uses_local;
 
 	/**
 	* make noncopyable
@@ -122,7 +130,8 @@ public:
 	* @return
 	*   pointer
 	*/
-	pointer share() {
+	pointer share()
+	{
 		return shared_from_this();
 	}
 
@@ -142,7 +151,9 @@ private:
 	* @return
 	*   none
 	*/
-	SharedTable() {}
+	SharedTable()
+		: dbcache ( identt::store::StoreCache::create() )
+	{}
 
 };
 } // namespace utils
