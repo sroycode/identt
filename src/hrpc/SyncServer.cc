@@ -44,7 +44,7 @@
 #include <hrpc/HrpcClient.hpp>
 #include <hrpc/RemoteKeeper.hpp>
 
-#define IDENTT_SYNC_FIRST_CHUNK_SIZE 100
+#define IDENTT_SYNC_FIRST_CHUNK_SIZE 10000
 #define IDENTT_SYNC_CHUNK_SIZE 100
 
 /**
@@ -178,6 +178,7 @@ void identt::hrpc::SyncServer::SyncFirst()
 			if (trans.id() != (sharedtable->logcounter.Get()+1)) break; // out of sync
 			storetrans.Commit(sharedtable,&trans,false); // commit as slave
 		}
+		LOG(INFO) << "Synced upto: " << data.lastid() << " / " << data.currid();
 		if ( data.lastid() == data.currid() )  break;
 		std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 	}

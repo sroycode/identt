@@ -1,12 +1,12 @@
 /**
  * @project identt
  * @file src/hrpc/HrpcClient.cc
- * @author  S Roychowdhury <sroycode AT gmail DOT com>
+ * @author  S Roychowdhury
  * @version 1.0.0
  *
  * @section LICENSE
  *
- * Copyright (c) 2017 S Roychowdhury.
+ * Copyright (c) 2018 S Roychowdhury
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,12 +33,12 @@
  *
  */
 
-#include <query/SydentQuery.hpp> // define on top
-#include <hrpc/HrpcClient.hpp>
+#include "query/SydentQuery.hpp" // define on top
+#include "hrpc/HrpcClient.hpp"
 #include <google/protobuf/descriptor.h>
 #include "../proto/Query.pb.h"
 #include "../proto/Hrpc.pb.h"
-#include <cpr/cpr.h>
+#include "cpr/cpr.h"
 
 /**
 * constructor
@@ -68,10 +68,11 @@ bool ::identt::hrpc::HrpcClient::SendToMaster(
 
 		auto r = cpr::Post(
 		             cpr::Url{endpoint},
-		             cpr::Body{tmpstr},
+		             cpr::Body{b64_encode(tmpstr)},
 		cpr::Header{
 			{"Service-Name", std::to_string(service_id) },
 			{"Content-Type", "application/proto"},
+			{"Proto-Transfer-Encoding", "base64"},
 			{"Shared-Secret", stptr->shared_secret.Get()}
 		});
 		if (r.status_code != 200)
@@ -85,9 +86,13 @@ bool ::identt::hrpc::HrpcClient::SendToMaster(
 				throw ::identt::BadDataException(r.text.c_str(), M_UNKNOWN);
 			// rethrow the error from other side
 		}
-		if (!msg->ParseFromString(r.text))
-			throw identt::BadDataException("Bad Received Protobuf Data from master");
-	} catch (...) {
+		bool data_ok = (r.header["Proto-Transfer-Encoding"] == "base64" ) ?
+		               msg->ParseFromString(b64_decode(r.text)) : msg->ParseFromString(r.text);
+
+		if (!data_ok)
+			throw identt::BadDataException("Bad Received Protobuf Data Format from master endpoint: " + endpoint);
+	}
+	catch (...) {
 		if (nothrow) return false;
 		std::rethrow_exception(std::current_exception());
 	}
@@ -112,10 +117,11 @@ bool ::identt::hrpc::HrpcClient::SendToRemote(::identt::utils::SharedTable::poin
 
 		auto r = cpr::Post(
 		             cpr::Url{endpoint},
-		             cpr::Body{tmpstr},
+		             cpr::Body{b64_encode(tmpstr)},
 		cpr::Header{
 			{"Service-Name", std::to_string(service_id) },
 			{"Content-Type", "application/proto"},
+			{"Proto-Transfer-Encoding", "base64"},
 			{"Shared-Secret", stptr->shared_secret.Get()}
 		});
 		if (r.status_code != 200)
@@ -124,10 +130,14 @@ bool ::identt::hrpc::HrpcClient::SendToRemote(::identt::utils::SharedTable::poin
 		// rethrow the error from other side
 		if (r.header["Service-Error"].length()>0)
 			throw ::identt::BadDataException(r.text.c_str());
-		if (!msg->ParseFromString(r.text)) {
-			throw identt::BadDataException("Bad Received Protobuf Data Format from remote");
-		}
-	} catch (...) {
+
+		bool data_ok = (r.header["Proto-Transfer-Encoding"] == "base64" ) ?
+		               msg->ParseFromString(b64_decode(r.text)) : msg->ParseFromString(r.text);
+
+		if (!data_ok)
+			throw identt::BadDataException("Bad Received Protobuf Data Format from remote from endpoint: " + endpoint);
+	}
+	catch (...) {
 		if (nothrow) return false;
 		std::rethrow_exception(std::current_exception());
 	}

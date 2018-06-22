@@ -1,12 +1,12 @@
 /**
  * @project identt
  * @file include/hrpc/ProtoServiceBase.hpp
- * @author  S Roychowdhury <sroycode AT gmail DOT com>
+ * @author  S Roychowdhury
  * @version 1.0.0
  *
  * @section LICENSE
  *
- * Copyright (c) 2017 S Roychowdhury.
+ * Copyright (c) 2018 S Roychowdhury
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,7 +33,7 @@
 #ifndef _IDENTT_HRPC_PROTO_SERVICE_BASE_HPP_
 #define _IDENTT_HRPC_PROTO_SERVICE_BASE_HPP_
 
-#include <utils/BaseUtils.hpp>
+#include "utils/BaseUtils.hpp"
 #include "../proto/Hrpc.pb.h"
 
 namespace identt {
@@ -57,7 +57,9 @@ protected:
 		auto it=request->header.find("Content-Type");
 		if(it==request->header.end())it=request->header.find("Accept");
 		if(it==request->header.end()) return false;
-		return ( it->second.compare(0,17,"application/proto",17)==0);
+		if ( it->second.compare(0,17,"application/proto",17)!=0) return false;
+		it=request->header.find("Proto-Transfer-Encoding");
+		return ( it->second.compare(0,6,"base64",6)==0);
 	}
 
 	/**
@@ -116,7 +118,36 @@ protected:
 	{
 		*response << "HTTP/" << request->http_version << " 200 OK\r\n";
 		*response << "Service-Name: " << ServiceName(request) << "\r\n";
-		*response << "Content-Type: application/proto" << "\r\n";
+		*response << "Content-Type: " << "application/proto" << "\r\n";
+		*response << "Proto-Transfer-Encoding: " << "base64" << "\r\n";
+		*response << "Content-Length: " << payload.length() << "\r\n";
+		*response << "\r\n" << payload.c_str();
+	}
+
+	/**
+	* ServiceOKAction : OK Action template for service
+	*
+	* @param response
+	*   typename HttpServerT::RespPtr response
+	*
+	* @param request
+	*   typename HttpServerT::ReqPtr request
+	*
+	* @param payload
+	*   std::string&& payload
+	*
+	* @return
+	*   none
+	*/
+	void ServiceOKAction(
+	    typename HttpServerT::RespPtr response,
+	    typename HttpServerT::ReqPtr request,
+	    std::string&& payload)
+	{
+		*response << "HTTP/" << request->http_version << " 200 OK\r\n";
+		*response << "Service-Name: " << ServiceName(request) << "\r\n";
+		*response << "Content-Type: " << "application/proto" << "\r\n";
+		*response << "Proto-Transfer-Encoding: " << "base64" << "\r\n";
 		*response << "Content-Length: " << payload.length() << "\r\n";
 		*response << "\r\n" << payload.c_str();
 	}

@@ -1,12 +1,12 @@
 /**
  * @project identt
  * @file include/hrpc/HrpcClient.hpp
- * @author  S Roychowdhury <sroycode AT gmail DOT com>
+ * @author  S Roychowdhury
  * @version 1.0.0
  *
  * @section LICENSE
  *
- * Copyright (c) 2017 S Roychowdhury.
+ * Copyright (c) 2018 S Roychowdhury
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,10 +33,12 @@
 #ifndef _IDENTT_HRPC_HRPC_CLIENT_HPP_
 #define _IDENTT_HRPC_HRPC_CLIENT_HPP_
 
-#include <utils/BaseUtils.hpp>
-#include <utils/SharedTable.hpp>
+#include "utils/BaseUtils.hpp"
+#include "utils/SharedTable.hpp"
 #include <google/protobuf/message.h>
 #include "../proto/Hrpc.pb.h"
+
+#include "query/bin2ascii.h"
 
 namespace identt {
 namespace hrpc {

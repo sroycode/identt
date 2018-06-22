@@ -1,12 +1,12 @@
 /**
  * @project identt
  * @file include/hrpc/HrpcMasterEndpointService.hpp
- * @author  S Roychowdhury <sroycode AT gmail DOT com>
+ * @author  S Roychowdhury
  * @version 1.0.0
  *
  * @section LICENSE
  *
- * Copyright (c) 2017 S Roychowdhury.
+ * Copyright (c) 2018 S Roychowdhury
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,18 +33,18 @@
 #ifndef _IDENTT_HRPC_MASTER_ENDPOINT_SERVICE_HPP_
 #define _IDENTT_HRPC_MASTER_ENDPOINT_SERVICE_HPP_
 
-#include <query/QueryBase.hpp>
-#include <hrpc/ProtoServiceBase.hpp>
-#include <store/InviteService.hpp>
-#include <store/LookupService.hpp>
-#include <store/MailSmsService.hpp>
-#include <store/PubKeyService.hpp>
-#include <store/ThreePidService.hpp>
-#include <store/ValidateService.hpp>
-#include <store/BlobDataService.hpp>
-#include <store/StoreTrans.hpp>
 
-#include <hrpc/RemoteKeeper.hpp>
+#include "query/QueryBase.hpp"
+#include "hrpc/ProtoServiceBase.hpp"
+#include "store/InviteService.hpp"
+#include "store/LookupService.hpp"
+#include "store/MailSmsService.hpp"
+#include "store/PubKeyService.hpp"
+#include "store/ThreePidService.hpp"
+#include "store/ValidateService.hpp"
+#include "store/BlobDataService.hpp"
+#include "store/StoreTrans.hpp"
+#include "hrpc/RemoteKeeper.hpp"
 
 namespace identt {
 namespace hrpc {
@@ -91,7 +91,8 @@ public:
 			IDENTT_PARALLEL_ONE([this,stptr,response,request] {
 				std::string output;
 				int ecode=M_UNKNOWN;
-				try {
+				try
+				{
 					if (!this->ProtoRequest(request))
 						throw identt::BadDataException("Only Protobuf Supported");
 					if (!this->SharedSecretOK(request,stptr->shared_secret.Get()))
@@ -103,11 +104,15 @@ public:
 					if (!stptr->is_master.Get()) throw identt::BadDataException("System Not Master");
 
 					// start here
-					switch(sname)
-					{
+					switch(sname) {
+					default: {
+						DLOG(INFO) << request->path;
+						throw identt::BadDataException("Service Name unknown or unimplemented");
+						break;
+					}
 					case ::identt::hrpc::M_REQUESTTOKEN : {
 						identt::query::RequestTokenDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::ValidateService service; //RequestTokenAction
@@ -119,7 +124,7 @@ public:
 					}
 					case ::identt::hrpc::M_SUBMITTOKEN : {
 						identt::query::SubmitTokenDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::ValidateService service; //SubmitTokenAction
@@ -131,7 +136,7 @@ public:
 					}
 					case ::identt::hrpc::M_GETVALIDATED3PID : {
 						identt::query::GetValidated3pidDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::ThreePidService service; //GetValidated3pidAction
@@ -143,7 +148,7 @@ public:
 					}
 					case ::identt::hrpc::M_BIND3PID : {
 						identt::query::Bind3pidDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::ThreePidService service; //Bind3pidAction
@@ -155,7 +160,7 @@ public:
 					}
 					case ::identt::hrpc::M_LOOKUP : {
 						identt::query::LookupDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::LookupService service; //LookupAction
@@ -167,7 +172,7 @@ public:
 					}
 					case ::identt::hrpc::M_BULKLOOKUP : {
 						identt::query::BulkLookupDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::LookupService service; //BulkLookupAction
@@ -179,7 +184,7 @@ public:
 					}
 					case ::identt::hrpc::M_GETPUBKEY : {
 						identt::query::PubKeyT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::PubKeyService service; //GetPubKeyAction
@@ -191,7 +196,7 @@ public:
 					}
 					case ::identt::hrpc::M_GETPUBKEYVALID : {
 						identt::query::PubKeyT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::PubKeyService service; //GetPubKeyValidAction
@@ -203,7 +208,7 @@ public:
 					}
 					case ::identt::hrpc::M_GETEPHEMERALVALID : {
 						identt::query::PubKeyT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::PubKeyService service; //GetEphemeralValidAction
@@ -215,7 +220,7 @@ public:
 					}
 					case ::identt::hrpc::M_STOREINVITE : {
 						identt::query::StoreInviteDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::InviteService service; //StoreInviteAction
@@ -227,7 +232,7 @@ public:
 					}
 					case ::identt::hrpc::M_PENDING : {
 						identt::mail::MailQueryT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::MailSmsService service; //PendingAction
@@ -239,7 +244,7 @@ public:
 					}
 					case ::identt::hrpc::M_GETACCESSKEY : {
 						identt::query::GetAccessDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::BlobDataService service; // GetAccessKeyAction
@@ -251,7 +256,7 @@ public:
 					}
 					case ::identt::hrpc::M_SETBLOBDATA : {
 						identt::query::SetBlobDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::BlobDataService service; // GetBlobDataAction
@@ -263,7 +268,7 @@ public:
 					}
 					case ::identt::hrpc::M_GETBLOBDATA : {
 						identt::query::GetBlobDataT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::BlobDataService service; // GetBlobDataAction
@@ -273,13 +278,9 @@ public:
 						DLOG(INFO) << request->path;
 						break;
 					}
-					default:
-						DLOG(INFO) << request->path;
-						throw identt::BadDataException("Service Name unknown or unimplemented");
-						break;
 					}
-					ecode=0; // something reached here
 					// end here
+					ecode=0; // something reached here
 
 				} catch (::identt::query::SydentException& e)
 				{
@@ -298,8 +299,15 @@ public:
 					ecode=M_UNKNOWN; // default
 					output="Unknown Error";
 				}
-				if (ecode==0) this->ServiceOKAction(response,request,output);
-				else this->ServiceErrAction(response,request,ecode,output);
+
+				if (ecode==0)
+				{
+					this->ServiceOKAction(response,request,b64_encode(output));
+				}
+				else
+				{
+					this->ServiceErrAction(response,request,ecode,output);
+				}
 			});
 		};
 	}

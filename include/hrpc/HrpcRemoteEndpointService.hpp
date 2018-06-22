@@ -1,12 +1,12 @@
 /**
  * @project identt
  * @file include/hrpc/HrpcRemoteEndpointService.hpp
- * @author  S Roychowdhury <sroycode AT gmail DOT com>
+ * @author  S Roychowdhury
  * @version 1.0.0
  *
  * @section LICENSE
  *
- * Copyright (c) 2017 S Roychowdhury.
+ * Copyright (c) 2018 S Roychowdhury
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,12 +33,12 @@
 #ifndef _IDENTT_HRPC_REMOTE_ENDPOINT_SERVICE_HPP_
 #define _IDENTT_HRPC_REMOTE_ENDPOINT_SERVICE_HPP_
 
-#include <query/QueryBase.hpp>
-#include <hrpc/ProtoServiceBase.hpp>
-#include <store/StoreTrans.hpp>
+#include "query/QueryBase.hpp"
+#include "hrpc/ProtoServiceBase.hpp"
+#include "store/StoreTrans.hpp"
 
-#include <hrpc/RemoteKeeper.hpp>
-#include <hrpc/HrpcClient.hpp>
+#include "hrpc/RemoteKeeper.hpp"
+#include "hrpc/HrpcClient.hpp"
 
 namespace identt {
 namespace hrpc {
@@ -85,7 +85,8 @@ public:
 			IDENTT_PARALLEL_ONE([this,stptr,rkeeper,response,request] {
 				std::string output;
 				int ecode=M_UNKNOWN;
-				try {
+				try
+				{
 					if (!this->ProtoRequest(request))
 						throw identt::BadDataException("Only Protobuf Supported");
 					if (!this->SharedSecretOK(request,stptr->shared_secret.Get()))
@@ -96,11 +97,10 @@ public:
 					if (!stptr->is_ready.Get()) throw identt::BadDataException("System Not Ready");
 
 					// start here
-					switch(sname)
-					{
+					switch(sname) {
 					case ::identt::hrpc::R_REGISTER : {
 						identt::hrpc::StateT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						// update remote in list
@@ -117,7 +117,7 @@ public:
 					}
 					case ::identt::hrpc::R_READONE : {
 						identt::store::TransactionT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						identt::store::StoreTrans service; //ReadOne
@@ -129,7 +129,7 @@ public:
 					}
 					case ::identt::hrpc::R_TRANSLOG : {
 						identt::store::TransListT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						// check if counter is current
@@ -145,7 +145,8 @@ public:
 							// so future pushes can go to this
 							if (stptr->lastslave.Get().empty())
 								stptr->lastslave.Set(data.endpoint());
-						} else {
+						}
+						else {
 							// if counter is not current
 							identt::store::StoreTrans service; //ReadLog
 							service.ReadLog(stptr, &data);
@@ -157,7 +158,7 @@ public:
 					}
 					case ::identt::hrpc::R_SETINFO : {
 						identt::hrpc::StateT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						// update remotes only if from master
@@ -171,7 +172,7 @@ public:
 					}
 					case ::identt::hrpc::R_ADDHOST : {
 						identt::hrpc::RemoteT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// action
 						// update remotes only if from master
@@ -186,7 +187,7 @@ public:
 					}
 					case ::identt::hrpc::R_BUFFTRANS : {
 						identt::store::TransactionT data;
-						if (!data.ParseFromString( request->content.string() ))
+						if (!data.ParseFromString( b64_decode(request->content.string()) ))
 							throw identt::BadDataException("Bad Protobuf Format");
 						// update only if from master
 						if (stptr->is_master.Get())
@@ -206,17 +207,21 @@ public:
 					ecode=0; // something reached here
 					// end here
 
-				} catch (std::exception& e)
-				{
-					ecode=M_UNKNOWN; // default
-					output=e.what();
-				} catch (...)
+				}
+				catch (...)
 				{
 					ecode=M_UNKNOWN; // default
 					output="Unknown Error";
 				}
-				if (ecode==0) this->ServiceOKAction(response,request,output);
-				else this->ServiceErrAction(response,request,ecode,output);
+
+				if (ecode==0)
+				{
+					this->ServiceOKAction(response,request,b64_encode(output));
+				}
+				else
+				{
+					this->ServiceErrAction(response,request,ecode,output);
+				}
 			});
 		};
 	}
