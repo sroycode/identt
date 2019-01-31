@@ -11,15 +11,21 @@ if [ -z ${IDENTT_TPSRC} ] ; then
 	export IDENTT_TPSRC=/opt/backup
 fi
 
+CMAKE_CMD="cmake -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_C_FLAGS=-fPIC"
+
+if [ -f "/etc/redhat-release" ] ; then
+  . /opt/rh/devtoolset-7/enable
+  export BOOST_ROOT=/opt/local/boost
+  CMAKE_CMD="cmake3 -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_C_FLAGS=-fPIC -DBOOST_ROOT=${BOOST_ROOT}"
+  CXXFLAGS="-std=c++11"
+fi
+
+
 export PATH=${PATH}:${IDENTT_SOURCE}/thirdparty/bin
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${IDENTT_SOURCE}/thirdparty/lib:${IDENTT_SOURCE}/thirdparty/lib64
 export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:${IDENTT_SOURCE}/thirdparty/lib:${IDENTT_SOURCE}/thirdparty/lib64
 export LD_RUN_PATH=${LD_RUN_PATH}:${IDENTT_SOURCE}/thirdparty/lib:${IDENTT_SOURCE}/thirdparty/lib64
-
-if [ `uname` = 'Linux' ] ; then
-	if [ -z ${BOOST_ROOT} ] ; then echo "PLEASE DEFINE BOOST_ROOT"; exit 1; fi
-	alias cmake=cmake3 -DBOOST_ROOT="$BOOST_ROOT"
-fi
+export CMAKE_CMD
 
 mkdir -p ${IDENTT_SOURCE} ${IDENTT_TEMP}
 
@@ -29,66 +35,78 @@ mkdir -p ${IDENTT_SOURCE} ${IDENTT_TEMP}
 
 function build_gperftools () {
 local MVERSION=2.5
-local MSOURCEFILE=${IDENTT_TPSRC}/gperftools-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/gperftools-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/gperftools/tcmalloc.h ] ; then echo "gperftools already installed"; return ; fi
-if [ ! -d ${MWORKDIR} ] ; then
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "https://github.com/gperftools/gperftools/releases/download/gperftools-${MVERSION}/gperftools-${MVERSION}.tar.gz"
-	fi
-	cd ${IDENTT_TEMP}
-	tar -zxf ${MSOURCEFILE}
-	cd ${MWORKDIR}
-	#patch < ${IDENTT_SOURCE}/scripts/gperftools-${MVERSION}.patch
-	cd ${IDENTT_TEMP}
-fi
-cd ${MWORKDIR}
-./configure --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
-}
-
-# Build protobuf 3.3.0
-
-function build_protobuf () {
-local MVERSION=3.3.0
-local MSOURCEFILE=${IDENTT_TPSRC}/protobuf-cpp-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/protobuf-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/lib/libprotobuf.a ] ; then
-	if [ $# -eq 0 ] ; then echo "protobuf already installed"; return ; fi
+local MPROGNAME=gperftools-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/${MPROGNAME}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/gperftools/tcmalloc.h ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "https://github.com/google/protobuf/releases/download/v${MVERSION}/protobuf-cpp-${MVERSION}.tar.gz"
+		wget -O ${MSOURCEFILE} "https://github.com/gperftools/gperftools/releases/download/gperftools-${MVERSION}/gperftools-${MVERSION}.tar.gz"
+		if [ $? -ne 0 ] ; then echo "$MWORKDIR wget failed"; exit 1 ; fi
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
 	cd ${MWORKDIR}
-	sh autogen.sh
+	cd ${IDENTT_TEMP}
 fi
 cd ${MWORKDIR}
+CXXFLAGS="$CXXFLAGS -fPIC" CFLAGS="$CFLAGS -fPIC" \
 ./configure --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
+}
+
+# Build protobuf 3.5.0
+
+function build_protobuf () {
+local MVERSION=3.5.0
+local MPROGNAME=protobuf-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/protobuf-all-${MVERSION}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/lib/libprotobuf.a ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
+	return;
+fi
+if [ ! -d ${MWORKDIR} ] ; then
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		wget -O ${MSOURCEFILE} "https://github.com/google/protobuf/releases/download/v${MVERSION}/protobuf-all-${MVERSION}.tar.gz"
+		if [ $? -ne 0 ] ; then echo "$MWORKDIR wget failed"; exit 1 ; fi
+	fi
+	cd ${IDENTT_TEMP}
+	tar -zxf ${MSOURCEFILE}
+fi
+cd ${MWORKDIR}
+CXXFLAGS="$CXXFLAGS -fPIC" CFLAGS="$CFLAGS -fPIC" \
+./configure --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
 # Building snappy 1.1.7
 
 function build_snappy () {
 local MVERSION=1.1.7
-local MSOURCEFILE=${IDENTT_TPSRC}/snappy-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/snappy-${MVERSION}
+local MPROGNAME=snappy-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/${MPROGNAME}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
 if [ -f ${IDENTT_SOURCE}/thirdparty/include/snappy.h ] ; then 
-	if [ $# -eq 0 ] ; then echo "snappy already installed"; fi
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
 	if [ ! -f ${MSOURCEFILE} ] ; then
 		wget -O ${MSOURCEFILE} "https://github.com/google/snappy/archive/1.1.7.tar.gz"
+		if [ $? -ne 0 ] ; then echo "$MWORKDIR wget failed"; exit 1 ; fi
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
 	mkdir -p ${MWORKDIR}/build
 fi
 cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
+${CMAKE_CMD} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 
 }
 
@@ -96,68 +114,49 @@ PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cma
 # Building leveldb 1.20
 
 function build_leveldb () {
-build_rocks_compression 1
 build_snappy 1
 local MVERSION=1.20
-local MSOURCEFILE=${IDENTT_TPSRC}/leveldb-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/leveldb-${MVERSION}
+local MPROGNAME=leveldb-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/${MPROGNAME}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
 if [ -f ${IDENTT_SOURCE}/thirdparty/include/leveldb/db.h ] ; then
-	if [ $# -ne 0 ] ; then echo "leveldb already installed"; fi
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
 	if [ ! -f ${MSOURCEFILE} ] ; then
 		wget -O ${MSOURCEFILE} "https://github.com/google/leveldb/archive/v${MVERSION}.tar.gz"
+		if [ $? -ne 0 ] ; then echo "$MWORKDIR wget failed"; exit 1 ; fi
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
 fi
 cd ${MWORKDIR}
-PLATFORM_CXXFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include" \
+PLATFORM_CXXFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -fPIC" \
 PLATFORM_LDFLAGS="-L ${IDENTT_SOURCE}/thirdparty/lib -L${IDENTT_SOURCE}/thirdparty/lib64" \
 make \
 && cp out-static/libleveldb.a ${IDENTT_SOURCE}/thirdparty/lib/ \
 && cp -r include/leveldb ${IDENTT_SOURCE}/thirdparty/include/leveldb
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
-# Building rocksdb 5.8
-
-function build_rocksdb () {
-build_rocks_compression 1
-build_snappy 1
-local MVERSION=5.8
-local MSOURCEFILE=${IDENTT_TPSRC}/rocksdb-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/rocksdb-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/rocksdb/db.h ] ; then echo "rocksdb already installed"; return ; fi
-if [ ! -d ${MWORKDIR} ] ; then
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "https://github.com/facebook/rocksdb/archive/rocksdb-${MVERSION}.tar.gz"
-	fi
-	cd ${IDENTT_TEMP}
-	tar -zxf ${MSOURCEFILE}
-	mv rocksdb-rocksdb-${MVERSION} rocksdb-${MVERSION}
-fi
-cd ${MWORKDIR}
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
-CFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib -L${IDENTT_SOURCE}/thirdparty/lib64" \
-INSTALL_PATH=${IDENTT_SOURCE}/thirdparty/ make static_lib \
-&& INSTALL_PATH=${IDENTT_SOURCE}/thirdparty/ make install
-}
 
 # Building compression libs to link rocksdb
 function build_rocks_compression () {
 build_rocks_compression_zlib $1
 build_rocks_compression_bzip2 $1
 build_rocks_compression_lz4 $1
+build_rocks_compression_zstd $1
 }
 
 # Building compression libz to link rocksdb
 function build_rocks_compression_zlib () {
 local MVERSION=1.2.11
 local MSOURCEFILE=${IDENTT_TPSRC}/zlib-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/zlib-${MVERSION}
+local MPROGNAME=zlib-${MVERSION}
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
 if [ -f ${IDENTT_SOURCE}/thirdparty/include/zlib.h ] ; then
-	if [ $# -eq 0 ] ; then echo "zlib already installed"; fi
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
@@ -169,36 +168,40 @@ if [ ! -d ${MWORKDIR} ] ; then
 fi
 cd ${MWORKDIR}
 CFLAGS='-fPIC' ./configure --static --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
 # Building compression bzip2 to link rocksdb
 function build_rocks_compression_bzip2 () {
 local MVERSION=1.0.6
 local MSOURCEFILE=${IDENTT_TPSRC}/bzip2-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/bzip2-${MVERSION}
+local MPROGNAME=bzip2-${MVERSION}
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
 if [ -f ${IDENTT_SOURCE}/thirdparty/include/bzlib.h ] ; then
-	if [ $# -eq 0 ] ; then echo "bz2 already installed"; fi
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "http://www.bzip.org/${MVERSION}/bzip2-${MVERSION}.tar.gz"
+		wget -O ${MSOURCEFILE} "http://distfiles.gentoo.org/distfiles/bzip2-${MVERSION}.tar.gz"
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
 fi
 cd ${MWORKDIR}
-make CFLAGS='-fPIC -O2 -g -D_FILE_OFFSET_BITS=64' && make install PREFIX=${IDENTT_SOURCE}/thirdparty
+make CFLAGS='-fPIC' && make install PREFIX=${IDENTT_SOURCE}/thirdparty
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
 # Building compression lz4 
 
 function build_rocks_compression_lz4 () {
-local MVERSION=1.8.0
+local MVERSION=1.8.3
 local MSOURCEFILE=${IDENTT_TPSRC}/lz4-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/lz4-${MVERSION}
+local MPROGNAME=lz4-${MVERSION}
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
 if [ -f ${IDENTT_SOURCE}/thirdparty/lib/liblz4.a ] ; then
-	if [ $# -eq 0 ] ; then echo "lz4 already installed"; fi
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
@@ -210,62 +213,81 @@ if [ ! -d ${MWORKDIR} ] ; then
 fi
 cd ${MWORKDIR}
 make CFLAGS='-fPIC' && make install prefix=${IDENTT_SOURCE}/thirdparty
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
-# Building Libsodium 1.0.12
+# Building compression zstd 1.3.8
 
-function build_sodium () {
-local MVERSION=1.0.12
-local MSOURCEFILE=${IDENTT_TPSRC}/libsodium-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/libsodium-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/sodium.h ] ; then echo "libsodium already installed"; return ; fi
+function build_rocks_compression_zstd () {
+local MVERSION=1.3.8
+local MSOURCEFILE=${IDENTT_TPSRC}/zstd-${MVERSION}.tar.gz
+local MPROGNAME=zstd-${MVERSION}
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/lib/libzstd.a ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
+	return;
+fi
 if [ ! -d ${MWORKDIR} ] ; then
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "https://github.com/jedisct1/libsodium/releases/download/${MVERSION}/libsodium-${MVERSION}.tar.gz"
+		wget -O ${MSOURCEFILE} "https://github.com/facebook/zstd/archive/v${MVERSION}.tar.gz"
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
 fi
 cd ${MWORKDIR}
-CFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib" \
-./configure --enable-static=yes --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
+make CFLAGS='-fPIC' && make install prefix=${IDENTT_SOURCE}/thirdparty
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
-# Building nanomsg 1.1.2
+# Building rocksdb 5.8.8
 
-function build_nanomsg () {
-local MVERSION=1.1.2
-local MSOURCEFILE=${IDENTT_TPSRC}/nanomsg-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/nanomsg-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/nanomsg/nn.h ] ; then echo "nanomsg already installed"; return ; fi
+function build_rocksdb () {
+build_rocks_compression 1
+build_snappy 1
+local MVERSION=5.8.8
+local MSOURCEFILE=${IDENTT_TPSRC}/rocksdb-${MVERSION}.tar.gz
+local MPROGNAME=rocksdb-${MVERSION}
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/rocksdb/db.h ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
+	return;
+fi
 if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		wget -O ${MSOURCEFILE} "https://github.com/nanomsg/nanomsg/archive/${MVERSION}.tar.gz"
+		wget -O ${MSOURCEFILE} "https://github.com/facebook/rocksdb/archive/rocksdb-${MVERSION}.tar.gz"
 	fi
 	cd ${IDENTT_TEMP}
 	tar -zxf ${MSOURCEFILE}
+	mv rocksdb-rocksdb-${MVERSION} ${MPROGNAME}
 fi
-mkdir -p ${MWORKDIR}/build
-cd ${MWORKDIR}/build
+cd ${MWORKDIR}
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
-..  && make && make install
+CFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib -L${IDENTT_SOURCE}/thirdparty/lib64 -fPIC" \
+CXXFLAGS="-I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib -L${IDENTT_SOURCE}/thirdparty/lib64 -fPIC" \
+INSTALL_PATH=${IDENTT_SOURCE}/thirdparty/ make static_lib \
+&& INSTALL_PATH=${IDENTT_SOURCE}/thirdparty/ make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
 # Building googletest git-f1a87d7
 
 function build_googletest () {
 local MVERSION=git-f1a87d7
-local MSOURCEFILE=${IDENTT_TPSRC}/googletest-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/googletest-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/gtest/gtest.h ] ; then echo "googletest already installed"; return ; fi
+local MPROGNAME=googletest-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/${MPROGNAME}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/gtest/gtest.h ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
+	return;
+fi
 if [ ! -d ${MWORKDIR} ] ; then
 	cd ${IDENTT_TEMP}
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/google/googletest.git googletest-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} googletest-${MVERSION}
+		git clone --single-branch -b master https://github.com/google/googletest.git ${MPROGNAME}
+		if [ $? -ne 0 ] ; then echo "${MPROGNAME} git clone failed"; exit 1 ; fi
+		cd ${MWORKDIR} && git checkout -b "`echo ${MVERSION} | sed 's/git-//'`" && cd ${IDENTT_TEMP}
+		if [ $? -ne 0 ] ; then echo "${MPROGNAME} git checkout failed"; exit 1 ; fi
+		tar -zcf ${MSOURCEFILE} ${MPROGNAME}
 	else
 		tar -zxf ${MSOURCEFILE}
 	fi
@@ -273,117 +295,131 @@ if [ ! -d ${MWORKDIR} ] ; then
 fi
 cd ${MWORKDIR}/build
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
+${CMAKE_CMD} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
 ..  && make && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
-# Building libzmq git-44f96a3
+# Building ctemplate git-4b7e6c5
 
-function build_libzmq () {
-local MVERSION=git-44f96a3
-local MSOURCEFILE=${IDENTT_TPSRC}/libzmq-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/libzmq-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/zmq.h ] ; then
-	if [ $# -eq 0 ] ; then echo "libzmq already installed"; fi
+function build_ctemplate () {
+local MVERSION=git-4b7e6c5
+local MPROGNAME=ctemplate-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/${MPROGNAME}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/lib/pkgconfig/libctemplate.pc ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
 	return;
 fi
 if [ ! -d ${MWORKDIR} ] ; then
 	cd ${IDENTT_TEMP}
 	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/zeromq/libzmq.git libzmq-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} libzmq-${MVERSION}
+		git clone --single-branch -b master https://github.com/OlafvdSpek/ctemplate.git  ${MPROGNAME}
+		if [ $? -ne 0 ] ; then echo "${MPROGNAME} git clone failed"; exit 1 ; fi
+		cd ${MWORKDIR} && git checkout -b "`echo ${MVERSION} | sed 's/git-//'`" && cd ${IDENTT_TEMP}
+		if [ $? -ne 0 ] ; then echo "${MPROGNAME} git checkout failed"; exit 1 ; fi
+
+		cd ${MWORKDIR}
+		sh autogen.sh
+		if [ `uname` = 'Darwin' ] ; then
+			sed -i .bkp 's/env python2/env python2.7/' src/htmlparser/generate_fsm.py
+		fi
+		cd ${IDENTT_TEMP}
+		tar -zcf ${MSOURCEFILE} ${MPROGNAME}
 	else
 		tar -zxf ${MSOURCEFILE}
 	fi
-	mkdir -p ${MWORKDIR}/build
 fi
-cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake \
-	-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty \
-	-DWITH_LIBSODIUM=On \
-	..  && make && make install
-}
-
-# Building azmq git-d3171f7
-
-function build_azmq () {
-build_libzmq 1
-local MVERSION=git-d3171f7
-local MSOURCEFILE=${IDENTT_TPSRC}/azmq-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/azmq-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/azmq/context.hpp ] ; then
-	if [ $# -eq 0 ] ; then echo "azmq already installed"; fi
-	return;
-fi
-if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/zeromq/azmq.git azmq-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} azmq-${MVERSION}
-	else
-		tar -zxf ${MSOURCEFILE}
-	fi
-	mkdir -p ${MWORKDIR}/build
-fi
-cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
-}
-
-
-# Building zmqpp git-89dc262
-
-function build_zmqpp () {
-build_libzmq 1
-local MVERSION=git-89dc262
-local MSOURCEFILE=${IDENTT_TPSRC}/zmqpp-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/zmqpp-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/zmqpp/zmqpp.hpp ] ; then
-	if [ $# -eq 0 ] ; then echo "zmqpp already installed"; fi
-	return;
-fi
-if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/zeromq/zmqpp.git zmqpp-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} zmqpp-${MVERSION}
-	else
-		tar -zxf ${MSOURCEFILE}
-	fi
-	mkdir -p ${MWORKDIR}/build
-fi
-cd ${MWORKDIR}/build
-PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
-}
-
-# Building czmq git-364bab5
-
-function build_czmq () {
-build_libzmq 1
-build_rocks_compression_lz4 1
-local MVERSION=git-364bab5
-local MSOURCEFILE=${IDENTT_TPSRC}/czmq-${MVERSION}.tar.gz
-local MWORKDIR=${IDENTT_TEMP}/czmq-${MVERSION}
-if [ -f ${IDENTT_SOURCE}/thirdparty/include/czmq.h ] ; then
-	if [ $# -ne 0 ] ; then echo "czmq already installed"; fi
-	return;
-fi
-if [ ! -d ${MWORKDIR} ] ; then
-	cd ${IDENTT_TEMP}
-	if [ ! -f ${MSOURCEFILE} ] ; then
-		git clone https://github.com/zeromq/czmq.git czmq-${MVERSION}
-		git checkout "`echo ${MVERSION} | sed 's/git-//'`"
-		tar -zcf ${MSOURCEFILE} czmq-${MVERSION}
-	else
-		tar -zxf ${MSOURCEFILE}
-	fi
-	mkdir -p ${MWORKDIR}/build
-fi
-cd ${MWORKDIR}/build
+cd ${MWORKDIR}/
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${IDENTT_SOURCE}/thirdparty/lib/pkgconfig \
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdparty ..  && make && make install
+CXXFLAGS="$CXXFLAGS -fPIC" CFLAGS="$CFLAGS -fPIC" \
+./configure --prefix=${IDENTT_SOURCE}/thirdparty && make CXXFLAGS="$CXXFLAGS -std=c++14" && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
+}
+
+# Building Libsodium git-e45fadf ( 1.0.17 )
+
+function build_sodium () {
+local MVERSION=git-e45fadf
+local MPROGNAME=libsodium-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/${MPROGNAME}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/sodium.h ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
+	return;
+fi
+if [ ! -d ${MWORKDIR} ] ; then
+	cd ${IDENTT_TEMP}
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		git clone --single-branch -b master https://github.com/jedisct1/libsodium.git ${MPROGNAME}
+		if [ $? -ne 0 ] ; then echo "${MPROGNAME} git clone failed"; exit 1 ; fi
+		cd ${MWORKDIR} && git checkout -b "`echo ${MVERSION} | sed 's/git-//'`" && cd ${IDENTT_TEMP}
+		if [ $? -ne 0 ] ; then echo "${MPROGNAME} git checkout failed"; exit 1 ; fi
+		tar -zcf ${MSOURCEFILE} ${MPROGNAME}
+	else
+		tar -zxf ${MSOURCEFILE}
+	fi
+fi
+cd ${MWORKDIR}
+sh autogen.sh && \
+CFLAGS="-O2 -I ${IDENTT_SOURCE}/thirdparty/include -L${IDENTT_SOURCE}/thirdparty/lib -fPIC" \
+./configure --enable-static=yes --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
+}
+
+# Building Cityhash git-8af9b8c
+
+function build_cityhash () {
+local MVERSION=git-8af9b8c
+local MPROGNAME=cityhash-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/${MPROGNAME}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/city.h ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
+	return;
+fi
+if [ ! -d ${MWORKDIR} ] ; then
+	cd ${IDENTT_TEMP}
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		git clone --single-branch -b master https://github.com/google/cityhash.git ${MPROGNAME}
+		if [ $? -ne 0 ] ; then echo "${MPROGNAME} git clone failed"; exit 1 ; fi
+		cd ${MWORKDIR} && git checkout -b "`echo ${MVERSION} | sed 's/git-//'`" && cd ${IDENTT_TEMP}
+		if [ $? -ne 0 ] ; then echo "${MPROGNAME} git checkout failed"; exit 1 ; fi
+		tar -zcf ${MSOURCEFILE} ${MPROGNAME}
+	else
+		tar -zxf ${MSOURCEFILE}
+	fi
+fi
+cd ${MWORKDIR}
+CXXFLAGS="$CXXFLAGS -fPIC" CFLAGS="$CFLAGS -fPIC" \
+./configure --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
+}
+
+# Building sparsehash 2.0.3
+
+function build_sparsehash () {
+local MVERSION=2.0.3
+local MPROGNAME=sparsehash-${MVERSION}
+local MSOURCEFILE=${IDENTT_TPSRC}/${MPROGNAME}.tar.gz
+local MWORKDIR=${IDENTT_TEMP}/${MPROGNAME}
+if [ -f ${IDENTT_SOURCE}/thirdparty/include/sparsehash/type_traits.h ] ; then
+	if [ $# -eq 0 ] ; then echo "${MPROGNAME} already installed"; fi
+	return;
+fi
+if [ ! -d ${MWORKDIR} ] ; then
+	if [ ! -f ${MSOURCEFILE} ] ; then
+		wget -O ${MSOURCEFILE} "https://github.com/sparsehash/sparsehash/archive/sparsehash-${MVERSION}.tar.gz"
+		if [ $? -ne 0 ] ; then echo "$MWORKDIR wget failed"; exit 1 ; fi
+	fi
+	cd ${IDENTT_TEMP}
+	tar -zxf ${MSOURCEFILE}
+	mv sparsehash-sparsehash-${MVERSION} ${MPROGNAME}
+fi
+cd ${MWORKDIR}
+CXXFLAGS="$CXXFLAGS -fPIC" CFLAGS="$CFLAGS -fPIC" \
+./configure --prefix=${IDENTT_SOURCE}/thirdparty && make && make install
+if [ $? -ne 0 ] ; then echo "$MWORKDIR install failed"; exit 1 ; fi
 }
 
 ### Control ####
@@ -391,13 +427,10 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${IDENTT_SOURCE}/thirdpa
 build_gperftools
 build_protobuf
 build_snappy
-build_rocks_compression
+
 #build_leveldb
 build_rocksdb
+build_googletest
+build_ctemplate
+
 build_sodium
-#build_nanomsg
-#build_googletest
-#build_libzmq
-#build_czmq
-#build_azmq
-#build_zmqpp

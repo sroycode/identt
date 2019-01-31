@@ -35,6 +35,11 @@ find_library(ROCKSDB_LIBRARY_LZ4 NAMES liblz4.a
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
 )
+find_library(ROCKSDB_LIBRARY_ZSTD NAMES libzstd.a
+	HINTS
+	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
+	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
+)
 find_library(ROCKSDB_LIBRARY_SNAPPY NAMES libsnappy.a
 	HINTS
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
@@ -46,6 +51,7 @@ set(ROCKSDB_LIBRARY
 	${ROCKSDB_LIBRARY_ZIP}
 	${ROCKSDB_LIBRARY_BZIP}
 	${ROCKSDB_LIBRARY_LZ4}
+	${ROCKSDB_LIBRARY_ZSTD}
 	${ROCKSDB_LIBRARY_SNAPPY}
 	)
 
