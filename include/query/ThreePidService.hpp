@@ -247,9 +247,13 @@ public:
 					// post to synapse endpoint
 					std::vector<std::string> splitres;
 					boost::algorithm::split(splitres, bpa.mutable_subtok()->mxid() , boost::algorithm::is_any_of(":") );
-					if (splitres.size()==2)
+					if (splitres.size()>=2)
 					{
-						std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
+						// handle non 443 ports
+						std::string up =splitres[1];
+						for (auto i=2;i<splitres.size();++i) up += ":" + splitres[i];
+
+						std::string url =  "https://" + up + "/_matrix/federation/v1/3pid/onbind";
 						HttpClient mclient;
 						std::string ret;
 						bool status = mclient.PostJson(stptr,url,output,ret,true);
@@ -324,7 +328,11 @@ public:
 					boost::algorithm::split(splitres, bpa.mutable_subtok()->mxid() , boost::algorithm::is_any_of(":") );
 					if (splitres.size()==2)
 					{
-						std::string url =  "https://" + splitres[1] + "/_matrix/federation/v1/3pid/onbind";
+						// handle non 443 ports
+						std::string up =splitres[1];
+						for (auto i=2;i<splitres.size();++i) up += ":" + splitres[i];
+
+						std::string url =  "https://" + up + "/_matrix/federation/v1/3pid/onbind";
 						HttpClient mclient;
 						std::string ret;
 						bool status = mclient.PostJson(stptr,url,output,ret,true);
