@@ -101,7 +101,8 @@ phone_number="919999999999" token="512048" sid="1112" sh ../test/test_3pid_bind.
 
 ## Changelog
 
-- 0.50: changed compilation docs and added docker
+- 0.50: changed compilation docs and added docker , base to ubuntu 
+- 0.47: last stable built for centos based systems
 
 ## Acknowledgements
 
