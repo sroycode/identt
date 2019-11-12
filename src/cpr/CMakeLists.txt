@@ -17,3 +17,6 @@ set(IDENTT_CPR_SOURCES
 )
 
 add_library(identt_cpr STATIC ${IDENTT_CPR_SOURCES})
+target_link_libraries(identt_cpr
+	${CURL_LIBRARIES}
+)

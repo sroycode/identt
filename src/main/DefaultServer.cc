@@ -66,7 +66,7 @@ DEFINE_bool(daemon, false, "Start as daemon");
 #include <utils/SharedTable.hpp>
 
 #include "DefaultServer.hh"
-#include "../work/WorkServer.hpp"
+#include "WorkServer.hpp"
 #include "../http/WebServer.hpp"
 #include "../hrpc/SyncServer.hpp"
 
