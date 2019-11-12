@@ -2,7 +2,7 @@
 
 Matrix Identity Server
 
-[![Build Status](https://travis-ci.org/sroycode/identt.svg?branch=devel)](https://travis-ci.org/sroycode/identt)
+[![Build Status](https://travis-ci.org/sroycode/identt.svg?branch=master)](https://travis-ci.org/sroycode/identt)
 [![GitHub (pre-)release](https://img.shields.io/github/release-pre/sroycode/identt.svg)](https://github.com/sroycode/identt)
 
 ## Code is WIP
