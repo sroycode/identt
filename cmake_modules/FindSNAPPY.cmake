@@ -16,7 +16,7 @@ find_path(SNAPPY_INCLUDE_DIR snappy.h
 find_library(SNAPPY_LIBRARY NAMES snappy
 	HINTS ${PC_SNAPPY_LIBDIR} ${PC_SNAPPY_LIBRARY_DIRS}
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
-	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
+	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib /usr/lib/x86_64-linux-gnu
 )
 
 set(SNAPPY_LIBRARIES ${SNAPPY_LIBRARY} )

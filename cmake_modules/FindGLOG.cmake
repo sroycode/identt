@@ -19,7 +19,7 @@ find_path(GLOG_INCLUDE_DIR glog/logging.h
 
 find_library(GLOG_LIBRARY glog libglog
        HINTS ${PC_GLOG_LIBDIR} ${PC_GLOG_LIBRARY_DIRS} ${PROJECT_SOURCE_DIR}/thirdparty/lib
-       /usr/lib64 /usr/lib /opt/local/lib /usr/local/lib64 /usr/local/lib)
+       /usr/lib64 /usr/lib /opt/local/lib /usr/local/lib64 /usr/local/lib /usr/lib/x86_64-linux-gnu)
 
 if (CMAKE_VERSION LESS 2.8.3)
 	find_package_handle_standard_args(GLOG DEFAULT_MSG GLOG_INCLUDE_DIR GLOG_LIBRARY)

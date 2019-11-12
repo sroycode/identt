@@ -7,11 +7,14 @@ endif()
 project(IDENTT_DIM LANGUAGES CXX)
 
 # IDENTT version string
-set(IDENTT_VERSION_MAJOR "0")
-set(IDENTT_VERSION_MINOR "1")
-set(IDENTT_VERSION_PATCH "1")
+set(IDENTT_VERSION_MAJOR "1")
+set(IDENTT_VERSION_MINOR "0")
+set(IDENTT_VERSION_PATCH "0")
 set(IDENTT_VERSION_STRING "${IDENTT_VERSION_MAJOR}.${IDENTT_VERSION_MINOR}.${IDENTT_VERSION_PATCH}")
 set(IDENTT_VERSION_PHASE "prerelease/${CMAKE_BUILD_TYPE}")
+
+# build documenation
+option(IDENTT_BUILD_DOCS "Build Docs." OFF)
 
 # build tools
 option(IDENTT_BUILD_TOOLS "Build Loader and tools." ON)
@@ -23,8 +26,13 @@ option(IDENTT_BUILD_WITH_ROCKSDB "Build internal store rocksdb." ON)
 # static library unused
 option(IDENTT_BUILD_STATIC "Build static library." OFF)
 
+# prefer static
+#SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+
+# ctemplate support 
+option(IDENTT_BUILD_WITH_CTEMPLATE "Build ctemplate support." ON)
+
 # https inactive
-#option(IDENTT_BUILD_WITH_SSL "Build ssl support." OFF)
 option(IDENTT_BUILD_WITH_SSL "Build ssl support." OFF)
 
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
@@ -101,6 +109,9 @@ endif(CCACHE_FOUND)
 set( ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${PROJECT_SOURCE_DIR}/thirdparty/lib/pkgconfig" )
 set( ENV{CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}/thirdparty:$ENV{CMAKE_PREFIX_PATH}" )
 
+## include proto
+include_directories(${PROJECT_SOURCE_DIR}/proto)
+
 # Required Packages
 
 #find_package(threads REQUIRED)
@@ -108,6 +119,7 @@ find_package(Boost 1.59.0 COMPONENTS coroutine chrono system thread context date
 find_package(GLOG REQUIRED)
 find_package(GFLAGS REQUIRED)
 find_package(TCMALLOC REQUIRED)
+find_package(ICU REQUIRED)
 find_package(SNAPPY 1.1.0 REQUIRED)
 find_package(Protobuf 3.1.0 REQUIRED)
 find_package(Sodium 1.0.1 REQUIRED)
@@ -117,6 +129,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${GLOG_INCLUDE_DIRS})
 include_directories(${GFLAGS_INCLUDE_DIRS})
 include_directories(${TCMALLOC_INCLUDE_DIRS})
+include_directories(${ICU_INCLUDE_DIRS})
 include_directories(${SNAPPY_INCLUDE_DIRS})
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 include_directories(${Sodium_INCLUDE_DIRS})
@@ -132,6 +145,7 @@ set(IDENTT_LIB_DEPS
 	${GLOG_LIBRARIES}
 	${GFLAGS_LIBRARIES}
 	${TCMALLOC_LIBRARIES}
+	${ICU_LIBRARIES}
 	${SNAPPY_LIBRARIES}
 	${PROTOBUF_LIBRARIES}
 	${Sodium_LIBRARIES}
@@ -176,6 +190,13 @@ endif()
 
 # Optional Interfaces
 
+if (IDENTT_BUILD_WITH_CTEMPLATE)
+	find_package(CTEMPLATE REQUIRED)
+	include_directories(${CTEMPLATE_INCLUDE_DIRS})
+	set(IDENTT_LIB_DEPS ${IDENTT_LIB_DEPS} ${CTEMPLATE_LIBRARIES})
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIDENTT_BUILD_WITH_CTEMPLATE=1")
+endif()
+
 if (IDENTT_BUILD_WITH_SSL)
 	find_package(OpenSSL REQUIRED)
 	include_directories(${OPENSSL_INCLUDE_DIR})
@@ -183,8 +204,31 @@ if (IDENTT_BUILD_WITH_SSL)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIDENTT_BUILD_WITH_SSL=1")
 endif()
 
+if (IDENTT_BUILD_DOCS)
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+	# set input and output files
+	set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+	set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+	# request to configure the file
+	configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+	message("Doxygen build started")
+
+	# note the option ALL which allows to build the docs together with the application
+	add_custom_target( docs ALL
+		COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "Generating API documentation with Doxygen"
+	VERBATIM )
+	else (DOXYGEN_FOUND)
+		message("Doxygen need to be installed to generate the doxygen documentation")
+	endif (DOXYGEN_FOUND)
+endif()
+
 # Flags and Options
 
+add_definitions("-Wfatal-errors")
 # Clang-specific options
 if (CMAKE_COMPILER_IS_CLANG OR CMAKE_COMPILER_IS_APPLECLANG)
 add_definitions ("-Wno-deprecated")
@@ -212,3 +256,5 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_subdirectory(proto)
 add_subdirectory(src)
 
+## for templates
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/templates/ DESTINATION share/identt)

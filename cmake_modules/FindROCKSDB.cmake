@@ -14,33 +14,33 @@ find_path(ROCKSDB_INCLUDE_DIR rocksdb/db.h
 	/usr/include /usr/local/include /opt/local/include
 )
 
-find_library(ROCKSDB_LIBRARY_MAIN NAMES librocksdb.a
+find_library(ROCKSDB_LIBRARY_MAIN NAMES rocksdb
 	HINTS ${PC_ROCKSDB_LIBDIR} ${PC_ROCKSDB_LIBRARY_DIRS}
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
 )
 
-find_library(ROCKSDB_LIBRARY_ZIP NAMES libz.a
+find_library(ROCKSDB_LIBRARY_ZIP NAMES z
 	HINTS
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
 )
-find_library(ROCKSDB_LIBRARY_BZIP NAMES libbz2.a libbzip2.a
+find_library(ROCKSDB_LIBRARY_BZIP NAMES bz2 bzip2
 	HINTS
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
 )
-find_library(ROCKSDB_LIBRARY_LZ4 NAMES liblz4.a
+#find_library(ROCKSDB_LIBRARY_LZ4 NAMES lz4
+#	HINTS
+#	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
+#	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
+#)
+find_library(ROCKSDB_LIBRARY_ZSTD NAMES zstd
 	HINTS
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
 )
-find_library(ROCKSDB_LIBRARY_ZSTD NAMES libzstd.a
-	HINTS
-	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
-	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
-)
-find_library(ROCKSDB_LIBRARY_SNAPPY NAMES libsnappy.a
+find_library(ROCKSDB_LIBRARY_SNAPPY NAMES snappy
 	HINTS
 	${PROJECT_SOURCE_DIR}/thirdparty/lib64 ${PROJECT_SOURCE_DIR}/thirdparty/lib
 	/usr/lib /usr/lib64 /usr/local/lib /opt/local/lib
@@ -50,7 +50,7 @@ set(ROCKSDB_LIBRARY
 	${ROCKSDB_LIBRARY_MAIN}
 	${ROCKSDB_LIBRARY_ZIP}
 	${ROCKSDB_LIBRARY_BZIP}
-	${ROCKSDB_LIBRARY_LZ4}
+#	${ROCKSDB_LIBRARY_LZ4}
 	${ROCKSDB_LIBRARY_ZSTD}
 	${ROCKSDB_LIBRARY_SNAPPY}
 	)

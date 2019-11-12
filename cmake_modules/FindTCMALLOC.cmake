@@ -16,7 +16,7 @@ find_path(TCMALLOC_INCLUDE_DIR gperftools/tcmalloc.h
 
 find_library(TCMALLOC_LIBRARY NAMES libtcmalloc.a
        HINTS ${PC_TCMALLOC_LIBDIR} ${PC_TCMALLOC_LIBRARY_DIRS} ${PROJECT_SOURCE_DIR}/thirdparty/lib
-       /usr/lib64 /usr/lib /opt/local/lib /usr/local/lib64 /usr/local/lib)
+       /usr/lib64 /usr/lib /opt/local/lib /usr/local/lib64 /usr/local/lib /usr/lib/x86_64-linux-gnu)
 
 set(TCMALLOC_LIBRARIES ${TCMALLOC_LIBRARY})
 set(TCMALLOC_INCLUDE_DIRS ${TCMALLOC_INCLUDE_DIR} )

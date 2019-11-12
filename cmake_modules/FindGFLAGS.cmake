@@ -19,7 +19,7 @@ find_path(GFLAGS_INCLUDE_DIR gflags/gflags.h
 
 find_library(GFLAGS_LIBRARY gflags libflags
        HINTS ${PC_GFLAGS_LIBDIR} ${PC_GFLAGS_LIBRARY_DIRS} ${PROJECT_SOURCE_DIR}/thirdparty/lib
-       /usr/lib64 /usr/lib /opt/local/lib /usr/local/lib64 /usr/local/lib)
+       /usr/lib64 /usr/lib /opt/local/lib /usr/local/lib64 /usr/local/lib /usr/lib/x86_64-linux-gnu)
 
 if (CMAKE_VERSION LESS 2.8.3)
 	find_package_handle_standard_args(GFLAGS DEFAULT_MSG GFLAGS_INCLUDE_DIR GFLAGS_LIBRARY)

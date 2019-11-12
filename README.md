@@ -2,6 +2,9 @@
 
 Matrix Identity Server
 
+[![Build Status](https://travis-ci.org/sroycode/identt.svg?branch=devel)](https://travis-ci.org/sroycode/identt)
+[![GitHub (pre-)release](https://img.shields.io/github/release-pre/sroycode/identt.svg)](https://github.com/sroycode/identt)
+
 ## Code is WIP
 
 This code is work in progress and is to change frequently.
@@ -28,36 +31,14 @@ In addition there are some utilities
 For replication , the service listens to two ports , you can expose the main port to public, the second port is for
 communication between servers.
 
-## Creating Development Environment
+## Run using Docker
 
-You need to install these tools using standard utils.
-- cmake 3+,
-- boost 1.58+
-- clang++/gcc5 ( supporting C++11)
-- autoconf automake etc ( for thirdparty tools )
-- icu4c
-- glog and gflags.
-- libcurl 7.0+ 
-- httpie for testing
+The easiest way to take it for a spin is by using docker , follow the instructions in README.DOCKER.md
 
-The ones below can be compiled from source if you need,there is a helper `scripts/thirdparty.sh`
-- gperftools 2.5
-- protobuf 3.1.0
-- snappy 1.1.3
-- rocksdb compression libs zlib , bzip2 , lz4 - preferably static (*)
-- rocksdb 5.2.1  ( script installs above headers ) (*)
-
-Items marked with asterix (*) should preferably be compiled from source
-On mac the homebrew versions work. For Centos 7 see README.LINUX.md.
-
-## Installing thirdparty packages using scripts/thirdparty.sh
-
-Please set the environment ( See .profile.centos7 and .profile.mac ). There are two environment variables
-`IDENTT_SOURCE` should be set to the top level directory of the package. 
-`IDENTT_TPSRC` is where the source code packages are downloaded ( defaults to /opt/backup ).
-Order is important since rocksdb needs snappy.
 
 ## Compiling
+
+For instructions on setting up the development environment see README.COMPILE.md
 
 Create a build directory
 
@@ -120,9 +101,7 @@ phone_number="919999999999" token="512048" sid="1112" sh ../test/test_3pid_bind.
 
 ## Changelog
 
-- 0.46: enabled optional local lookups query from cache
-- 0.45: enabled optional local lookups query
-- 0.44: enabled optional parallel bulk query
+- 1.00: changed compilation docs and added docker
 
 
 ## Acknowledgements
