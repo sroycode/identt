@@ -607,22 +607,20 @@ INPUT                  = \
 @CMAKE_CURRENT_SOURCE_DIR@/include/libcuckoo \
 @CMAKE_CURRENT_SOURCE_DIR@/include/query \
 @CMAKE_CURRENT_SOURCE_DIR@/include/rapidjson \
-@CMAKE_CURRENT_SOURCE_DIR@/include/remote \
 @CMAKE_CURRENT_SOURCE_DIR@/include/sparsepp \
 @CMAKE_CURRENT_SOURCE_DIR@/include/store \
 @CMAKE_CURRENT_SOURCE_DIR@/include/utils \
-@CMAKE_CURRENT_SOURCE_DIR@/include/xapian \
+@CMAKE_CURRENT_SOURCE_DIR@/include/crypto \
 @CMAKE_CURRENT_SOURCE_DIR@/src \
 @CMAKE_CURRENT_SOURCE_DIR@/src/async++ \
 @CMAKE_CURRENT_SOURCE_DIR@/src/cpr \
 @CMAKE_CURRENT_SOURCE_DIR@/src/hrpc \
 @CMAKE_CURRENT_SOURCE_DIR@/src/http \
 @CMAKE_CURRENT_SOURCE_DIR@/src/query \
-@CMAKE_CURRENT_SOURCE_DIR@/src/remote \
 @CMAKE_CURRENT_SOURCE_DIR@/src/store \
 @CMAKE_CURRENT_SOURCE_DIR@/src/tools \
 @CMAKE_CURRENT_SOURCE_DIR@/src/utils \
-@CMAKE_CURRENT_SOURCE_DIR@/src/xapian \
+@CMAKE_CURRENT_SOURCE_DIR@/src/crypto \
 @CMAKE_CURRENT_SOURCE_DIR@/src/main
 
 # This tag can be used to specify the character encoding of the source files
