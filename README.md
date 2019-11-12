@@ -103,7 +103,6 @@ phone_number="919999999999" token="512048" sid="1112" sh ../test/test_3pid_bind.
 
 - 1.00: changed compilation docs and added docker
 
-
 ## Acknowledgements
 
 This project uses code from
