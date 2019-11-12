@@ -1,0 +1,46 @@
+dist: bionic
+
+addons:
+  apt:
+    packages:
+      - software-properties-common
+      - ccache
+      - cmake
+      - make
+      - libtool
+      - pkg-config
+      - g++
+      - gcc
+      - lcov
+      - libboost-all-dev
+      - libcurl4-openssl-dev
+      - zlib1g-dev
+      - liblz4-dev
+      - libgoogle-glog-dev
+      - libgflags-dev
+      - libgoogle-perftools-dev
+      - libsnappy-dev
+      - libbz2-dev
+      - libz-dev
+      - libctemplate-dev
+      - libtbb-dev
+      - libzstd-dev
+      - libsodium-dev
+
+language: cpp
+
+branches:
+  only:
+  - master
+
+before_install:
+- sudo apt-add-repository -y ppa:exonum/rocksdb 
+- sudo apt-add-repository -y ppa:maarten-fonville/protobuf 
+- sudo apt-get update -y -qq
+- sudo apt-get install -y protobuf-compiler librocksdb-dev libprotobuf-dev
+
+script:
+- mkdir -p build
+- cd build
+- cmake ..
+- make
