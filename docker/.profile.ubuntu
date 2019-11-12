@@ -1,5 +1,0 @@
-export NHOME=/home/ubuntu/tmp/n_store
-export RHOME=/home/ubuntu/tmp/z_store
-export THOME=/home/ubuntu/tmp/z_data
-export SHARED_SECRET="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-export OSMFIL=planet-190812.osm.pbf
