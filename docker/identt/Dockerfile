@@ -29,7 +29,7 @@ RUN apt-get -y update -qq && \
 WORKDIR /app
 
 #ENV MVERSION devel
-ENV MVERSION v0.51
+ENV MVERSION v0.52
 
 RUN git clone https://github.com/sroycode/identt.git \
 	&& cd identt \
