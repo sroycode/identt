@@ -1,12 +1,12 @@
 /**
  * @project identt
  * @file src/hrpc/SyncServer.cc
- * @author  S Roychowdhury <sroycode AT gmail DOT com>
+ * @author  S Roychowdhury < sroycode at gmail dot com >
  * @version 1.0.0
  *
  * @section LICENSE
  *
- * Copyright (c) 2017 S Roychowdhury.
+ * Copyright (c) 2018-2019 S Roychowdhury
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -30,7 +30,7 @@
  *  SyncServer.cc :  Sync Service
  *
  */
-#include <async++.h>
+#include <future>
 #include <chrono>
 #include <thread>
 #include <functional>
@@ -44,16 +44,16 @@
 #include <hrpc/HrpcClient.hpp>
 #include <hrpc/RemoteKeeper.hpp>
 
-#define IDENTT_SYNC_FIRST_CHUNK_SIZE 10000
-#define IDENTT_SYNC_CHUNK_SIZE 100
+#define IDENTT_SYNC_FIRST_CHUNK_SIZE 1000
+#define IDENTT_SYNC_CHUNK_SIZE 1000
 
 /**
 * Constructor : private default Constructor
 *
 */
 
-identt::hrpc::SyncServer::SyncServer(boost::asio::io_service& io_service_, identt::utils::SharedTable::pointer stptr)
-	: identt::utils::ServerBase(stptr),io_service(io_service_),is_init(false)
+identt::hrpc::SyncServer::SyncServer(std::shared_ptr<::identt::http::io_whatever> io_whatever_, identt::utils::SharedTable::pointer stptr)
+	: identt::utils::ServerBase(stptr),io_whatever(io_whatever_),is_init(false)
 {
 	DLOG(INFO) << "SyncServer Created" << std::endl;
 }
@@ -96,7 +96,7 @@ void identt::hrpc::SyncServer::init(identt::utils::ServerBase::ParamsListT param
 
 		if (sharedtable->is_master.Get()) {
 			// set this in async loop
-			async::spawn([this] {
+			std::async( std::launch::async, [this] {
 				this->MasterLoop();
 			});
 		} else {
@@ -106,14 +106,17 @@ void identt::hrpc::SyncServer::init(identt::utils::ServerBase::ParamsListT param
 			this->SyncFirst();
 
 			// set this in async loop
-			async::spawn([this] {
+			std::async( std::launch::async, [this] {
 				this->SyncFromMaster();
 				// if upgraded to master
 				this->MasterLoop();
 			});
 		}
 
-		server = std::make_shared<HttpServerT>(io_service,host,port);
+		server = std::make_shared<HttpServerT>(port);
+		server->io_whatever = io_whatever;
+		server->config.address=host;
+
 		is_init=true;
 		DLOG(INFO) << "SyncServer init 1 here" << std::endl;
 		{
@@ -122,7 +125,7 @@ void identt::hrpc::SyncServer::init(identt::utils::ServerBase::ParamsListT param
 		DLOG(INFO) << "SyncServer init 2 here" << std::endl;
 		server->start();
 
-	} catch (identt::JdException& e) {
+	} catch (identt::BaseException& e) {
 		DLOG(INFO) << "SyncServer init failed: " << e.what() << std::endl;
 		std::rethrow_exception(std::current_exception());
 	}
@@ -178,7 +181,6 @@ void identt::hrpc::SyncServer::SyncFirst()
 			if (trans.id() != (sharedtable->logcounter.Get()+1)) break; // out of sync
 			storetrans.Commit(sharedtable,&trans,false); // commit as slave
 		}
-		LOG(INFO) << "Synced upto: " << data.lastid() << " / " << data.currid();
 		if ( data.lastid() == data.currid() )  break;
 		std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 	}

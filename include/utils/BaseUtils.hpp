@@ -72,6 +72,8 @@ public:
 	}
 };
 
+using BaseException = JdException;
+
 class InitialException : public JdException {
 	using JdException::JdException;
 };

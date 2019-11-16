@@ -1,12 +1,12 @@
 /**
  * @project identt
  * @file include/http/StatusCode.hpp
- * @author  S Roychowdhury <sroycode AT gmail DOT com>
+ * @author  S Roychowdhury < sroycode at gmail dot com >
  * @version 1.0.0
  *
  * @section LICENSE
  *
- * Copyright (c) 2017 S Roychowdhury.
+ * Copyright (c) 2018-2019 S Roychowdhury
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,13 +27,16 @@
  *
  * @section DESCRIPTION
  *
- *  StatusCode.hpp :
+ *  StatusCode.hpp :  status codes http for Web Server ( Modified from eidheim/Simple-Web-Server )
  *
  */
 #ifndef _IDENTT_HTTP_STATUS_CODE_HPP_
 #define _IDENTT_HTTP_STATUS_CODE_HPP_
 
+#include <cstdlib>
+#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace identt {
@@ -104,9 +107,9 @@ enum class StatusCode {
 	server_error_network_authentication_required
 };
 
-const static std::vector<std::pair<StatusCode, std::string>> &status_codes() noexcept
+inline const std::map<StatusCode, std::string> &status_code_strings()
 {
-	const static std::vector<std::pair<StatusCode, std::string>> status_codes = {
+	static const std::map<StatusCode, std::string> status_code_strings = {
 		{StatusCode::unknown, ""},
 		{StatusCode::information_continue, "100 Continue"},
 		{StatusCode::information_switching_protocols, "101 Switching Protocols"},
@@ -170,28 +173,45 @@ const static std::vector<std::pair<StatusCode, std::string>> &status_codes() noe
 		{StatusCode::server_error_not_extended, "510 Not Extended"},
 		{StatusCode::server_error_network_authentication_required, "511 Network Authentication Required"}
 	};
-	return status_codes;
+	return status_code_strings;
 }
 
-inline StatusCode status_code(const std::string &status_code_str) noexcept
+inline StatusCode status_code(const std::string &status_code_string) noexcept
 {
-	for(auto &status_code : status_codes()) {
-		if(status_code.second == status_code_str)
-			return status_code.first;
-	}
-	return StatusCode::unknown;
+	if(status_code_string.size() < 3)
+		return StatusCode::unknown;
+
+	auto number = status_code_string.substr(0, 3);
+	if(number[0] < '0' || number[0] > '9' || number[1] < '0' || number[1] > '9' || number[2] < '0' || number[2] > '9')
+		return StatusCode::unknown;
+
+	class StringToStatusCode : public std::unordered_map<std::string, identt::http::StatusCode> {
+	public:
+		StringToStatusCode()
+		{
+			for(auto &status_code : status_code_strings())
+				emplace(status_code.second.substr(0, 3), status_code.first);
+		}
+	};
+	static StringToStatusCode string_to_status_code;
+
+	auto pos = string_to_status_code.find(number);
+	if(pos == string_to_status_code.end())
+		return static_cast<StatusCode>(atoi(number.c_str()));
+	return pos->second;
 }
 
 inline const std::string &status_code(StatusCode status_code_enum) noexcept
 {
-	for(auto &status_code : status_codes()) {
-		if(status_code.first == status_code_enum)
-			return status_code.second;
+	auto pos = status_code_strings().find(status_code_enum);
+	if(pos == status_code_strings().end()) {
+		static std::string empty_string;
+		return empty_string;
 	}
-	return status_codes()[0].second;
+	return pos->second;
 }
-
 } // namespace http
 } // namespace identt
 
 #endif /* _IDENTT_HTTP_STATUS_CODE_HPP_ */
+
