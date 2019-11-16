@@ -112,6 +112,12 @@ set( ENV{CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}/thirdparty:$ENV{CMAKE_PREFIX_
 ## include proto
 include_directories(${PROJECT_SOURCE_DIR}/proto)
 
+set(Boost_USE_MULTITHREADED ON)
+# hack to disable broken cmake for boost-1.71
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+set(Boost_NO_BOOST_CMAKE ON)
+endif()
+
 # Required Packages
 
 #find_package(threads REQUIRED)
