@@ -34,11 +34,12 @@ ENV MVERSION v0.50
 RUN git clone https://github.com/sroycode/identt.git \
 	&& cd identt \
 	&& git checkout ${MVERSION} \
-	&& mkdir -p build \
+	&& mkdir -p build templates \
 	&& cd build \
 	&& cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. && make && make install
 
 COPY identt.conf /usr/local/etc/identt.conf
+COPY run_identt.sh /usr/local/bin/run_identt.sh
 
 EXPOSE 9091
 EXPOSE 9092

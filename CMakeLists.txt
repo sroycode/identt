@@ -30,7 +30,7 @@ option(IDENTT_BUILD_STATIC "Build static library." OFF)
 #SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 
 # ctemplate support 
-option(IDENTT_BUILD_WITH_CTEMPLATE "Build ctemplate support." ON)
+option(IDENTT_BUILD_WITH_CTEMPLATE "Build ctemplate support." OFF)
 
 # https inactive
 option(IDENTT_BUILD_WITH_SSL "Build ssl support." OFF)
